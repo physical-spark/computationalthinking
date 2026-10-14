@@ -14,12 +14,17 @@ image_archive=$(mktemp /tmp/ct-image.XXXXXX.tar.gz)
 trap 'rm -f "$image_archive"' EXIT
 cat > "$image_archive"
 sudo k3s ctr images import "$image_archive"
-sudo k3s ctr images ls -q | grep -Fx "docker.io/library/ct-app:$commit"
+reference="docker.io/library/ct-app:$commit"
+sudo k3s ctr images ls -q | grep -Fx "$reference"
+image_digest=$(sudo k3s ctr images ls | awk -v reference="$reference" '$1 == reference {print $3}')
+[[ "$image_digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+immutable="docker.io/library/ct-app@$image_digest"
+sudo k3s ctr images tag --force "$reference" "$immutable"
 if sudo k3s kubectl -n computationalthinking get deployment app >/dev/null 2>&1; then
   "$repo/scripts/backup.sh" predeploy
 fi
 git checkout --detach "$commit"
-sed "s/__TAG__/$commit/g" k8s/resources.yaml | sudo k3s kubectl apply -f -
+sed "s|ct-app:__TAG__|$immutable|g" k8s/resources.yaml | sudo k3s kubectl apply -f -
 if ! sudo k3s kubectl -n computationalthinking rollout status deployment/postgres --timeout=120s || ! sudo k3s kubectl -n computationalthinking rollout status deployment/app --timeout=180s || ! sudo k3s kubectl -n computationalthinking rollout status deployment/runner --timeout=120s; then
   sudo k3s kubectl -n computationalthinking rollout undo deployment/app || true
   sudo k3s kubectl -n computationalthinking rollout undo deployment/runner || true
@@ -27,4 +32,4 @@ if ! sudo k3s kubectl -n computationalthinking rollout status deployment/postgre
 fi
 curl --fail --retry 3 http://10.43.200.54/healthz
 curl --fail --retry 3 http://10.43.200.55/healthz
-printf '\nDeployed commit %s\n' "$commit"
+printf '\nDeployed commit %s with image %s\n' "$commit" "$image_digest"

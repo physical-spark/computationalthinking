@@ -1,6 +1,5 @@
 """Run on prod with a downloaded web-client JSON kept outside this repository."""
 import json
-import os
 import subprocess
 import sys
 from pathlib import Path
