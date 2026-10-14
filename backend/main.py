@@ -63,7 +63,7 @@ if os.environ.get("GOOGLE_CLIENT_ID"):
         server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
         client_kwargs={"scope": "openid email"},
     )
-DB = Annotated[DBSession, Depends(database)]
+DB = Annotated[DBSession, Depends(database, scope="function")]
 
 
 def data(row):

@@ -1,6 +1,6 @@
 """Install as a per-user LaunchAgent on the operator Mac; no secrets in Git."""
 
-import os, subprocess
+import subprocess, time
 from pathlib import Path
 
 folder = Path.home() / "Library/Application Support/ComputationalThinking/backups"
@@ -19,6 +19,8 @@ subprocess.run(
     ],
     check=True,
 )
-for p in folder.glob("*.gpg"):
+for p in folder.glob("ct-*.dump.gpg"):
     p.chmod(0o600)
+    if time.time() - p.stat().st_mtime > 7 * 86400:
+        p.unlink()
 print("Encrypted offsite snapshots synchronized:", len(list(folder.glob("*.gpg"))))
