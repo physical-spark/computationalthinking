@@ -1,0 +1,7 @@
+[Unit]
+Description=Daily Computational Thinking database backup
+[Timer]
+OnCalendar=*-*-* 19:50:00 UTC
+Persistent=true
+[Install]
+WantedBy=timers.target

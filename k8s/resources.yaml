@@ -1,0 +1,128 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: computationalthinking
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-data
+  namespace: computationalthinking
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests: {storage: 5Gi}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: computationalthinking
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector:
+    matchLabels: {app: ct-postgres}
+  template:
+    metadata:
+      labels: {app: ct-postgres}
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:17-bookworm
+          envFrom:
+            - secretRef: {name: ct-secrets}
+          env:
+            - {name: PGDATA, value: /var/lib/postgresql/data/pgdata}
+          ports: [{containerPort: 5432}]
+          readinessProbe:
+            exec: {command: [sh, -c, 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"']}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests: {cpu: 100m, memory: 128Mi}
+            limits: {cpu: 1000m, memory: 768Mi}
+          volumeMounts: [{name: data, mountPath: /var/lib/postgresql/data}]
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: postgres-data}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: postgres, namespace: computationalthinking}
+spec:
+  selector: {app: ct-postgres}
+  ports: [{port: 5432, targetPort: 5432}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: app, namespace: computationalthinking}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: ct-app}
+  template:
+    metadata:
+      labels: {app: ct-app}
+    spec:
+      securityContext: {runAsNonRoot: true, runAsUser: 10001, runAsGroup: 10001}
+      initContainers:
+        - name: migrate
+          image: ct-app:__TAG__
+          imagePullPolicy: Never
+          command: [alembic, upgrade, head]
+          envFrom: [{secretRef: {name: ct-secrets}}]
+      containers:
+        - name: app
+          image: ct-app:__TAG__
+          imagePullPolicy: Never
+          ports: [{containerPort: 8000}]
+          envFrom: [{secretRef: {name: ct-secrets}}]
+          readinessProbe: {httpGet: {path: /healthz, port: 8000}, initialDelaySeconds: 3, periodSeconds: 5}
+          livenessProbe: {httpGet: {path: /healthz, port: 8000}, initialDelaySeconds: 30, periodSeconds: 15}
+          resources:
+            requests: {cpu: 100m, memory: 128Mi}
+            limits: {cpu: 1000m, memory: 512Mi}
+          securityContext: {allowPrivilegeEscalation: false, capabilities: {drop: [ALL]}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: app, namespace: computationalthinking}
+spec:
+  clusterIP: 10.43.200.54
+  selector: {app: ct-app}
+  ports: [{port: 80, targetPort: 8000}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: runner, namespace: computationalthinking}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: ct-runner}
+  template:
+    metadata:
+      labels: {app: ct-runner}
+    spec:
+      securityContext: {runAsNonRoot: true, runAsUser: 10001, runAsGroup: 10001}
+      containers:
+        - name: runner
+          image: ct-app:__TAG__
+          imagePullPolicy: Never
+          command: [uvicorn, backend.runner_server:app, --host, 0.0.0.0, --port, '8080']
+          env: [{name: APP_ORIGIN, value: 'https://computationalthinking.futurereadycampus.com'}]
+          ports: [{containerPort: 8080}]
+          readinessProbe: {httpGet: {path: /healthz, port: 8080}, initialDelaySeconds: 3, periodSeconds: 5}
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {cpu: 500m, memory: 256Mi}
+          securityContext: {allowPrivilegeEscalation: false, capabilities: {drop: [ALL]}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: runner, namespace: computationalthinking}
+spec:
+  clusterIP: 10.43.200.55
+  selector: {app: ct-runner}
+  ports: [{port: 80, targetPort: 8080}]

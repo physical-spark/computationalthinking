@@ -1,0 +1,65 @@
+name: Verify and deploy
+on:
+  push: {branches: [main]}
+  workflow_dispatch:
+concurrency:
+  group: computationalthinking-deploy
+  cancel-in-progress: false
+permissions: {contents: read}
+jobs:
+  verify-and-deploy:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:17-bookworm
+        env: {POSTGRES_USER: ct, POSTGRES_PASSWORD: ci-only-password, POSTGRES_DB: ct_test}
+        ports: ['5432:5432']
+        options: --health-cmd 'pg_isready -U ct -d ct_test' --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm, cache-dependency-path: 'web/package-lock.json'}
+      - uses: astral-sh/setup-uv@v6
+        with: {version: '0.11.24', python-version: '3.12.1'}
+      - name: Install frontend dependencies
+        run: npm ci --prefix web && npm ci --prefix runner
+      - name: Build and validate all content
+        run: ./scripts/prepare_runtime.sh
+      - name: Backend permissions and data preservation
+        env:
+          CT_TEST_DATABASE_URL: postgresql+psycopg://ct:ci-only-password@localhost:5432/ct_test
+        run: uv run pytest -q && uv run ruff check backend
+      - name: Browser tests
+        env:
+          VITE_CONTENT_LANGUAGE: ko
+        run: |
+          npm run build --prefix web
+          npm run build --prefix runner
+          cd web
+          npx playwright install --with-deps chromium
+          npx playwright test
+      - name: Build ARM64 deployment image
+        run: |
+          docker build -t ct-app:${{ github.sha }} .
+          docker image inspect ct-app:${{ github.sha }} --format '{{.Id}}' > image-digest.txt
+          docker save ct-app:${{ github.sha }} | gzip > image.tar.gz
+      - name: Deploy over restricted SSH
+        env:
+          CT_DEPLOY_KEY: ${{ secrets.CT_DEPLOY_KEY }}
+          CT_KNOWN_HOSTS: ${{ secrets.CT_KNOWN_HOSTS }}
+          CT_DEPLOY_HOST: ${{ secrets.CT_DEPLOY_HOST }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$CT_DEPLOY_KEY" > ~/.ssh/ct-deploy
+          printf '%s\n' "$CT_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/ct-deploy ~/.ssh/known_hosts
+          ssh -i ~/.ssh/ct-deploy -o IdentitiesOnly=yes ubuntu@"$CT_DEPLOY_HOST" "deploy ${{ github.sha }}" < image.tar.gz
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verification
+          path: |
+            content/translation-report.json
+            image-digest.txt
+            web/test-results/

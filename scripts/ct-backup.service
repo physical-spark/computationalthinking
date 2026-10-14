@@ -1,0 +1,6 @@
+[Unit]
+Description=Computational Thinking database backup
+[Service]
+Type=oneshot
+User=ubuntu
+ExecStart=/home/ubuntu/workspace/org_physical-spark/computationalthinking/scripts/backup.sh
