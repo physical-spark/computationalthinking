@@ -2,6 +2,7 @@
 
 import sys, json, shutil, tarfile, io, hashlib, html, re
 from pathlib import Path
+from pprint import pformat
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "vendor/futurecoder"))
@@ -44,6 +45,8 @@ for ci, ch in enumerate(chapters):
             }
         )
 for i, p in enumerate(PROJECTS):
+    args, expected = p["tests"][0]
+    call = p["function"] + "(" + ", ".join(pformat(arg, width=60) for arg in args) + ")"
     out.append(
         {
             "id": p["id"],
@@ -58,7 +61,7 @@ for i, p in enumerate(PROJECTS):
                 {
                     "id": p["id"] + ".solve",
                     "name": "solve",
-                    "text": f"<p><strong>목표:</strong> {html.escape(p['goal'])}</p><p>{html.escape(p['description'])}</p><p>입력 예시와 기대 결과</p><pre><code>{html.escape(str(p['tests'][0]))}</code></pre>",
+                    "text": f"<p><strong>목표:</strong> {html.escape(p['goal'])}</p><p>{html.escape(p['description'])}</p><p>함수를 이렇게 호출하면</p><pre><code>{html.escape(call)}</code></pre><p>다음 값을 반환해야 합니다.</p><pre><code>{html.escape(pformat(expected, width=60))}</code></pre>",
                     "hints": [html.escape(x) for x in p["hints"]],
                     "solution": {
                         "tokens": list(p["solution"]),
