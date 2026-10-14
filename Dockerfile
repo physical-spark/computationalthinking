@@ -17,6 +17,7 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 ENV PATH=/app/.venv/bin:$PATH
 COPY backend backend
+COPY scripts/load_test.py scripts/load_test.py
 COPY alembic.ini ./
 COPY content/course.json content/course.json
 COPY --from=frontend /build/web/dist web/dist

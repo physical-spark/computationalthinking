@@ -122,16 +122,22 @@ def published_course():
     return json.loads((ROOT / "content/course.json").read_text())
 
 
-def validate_step(step, version=None):
+def validate_step(step, version=None, gradable=False):
     catalog = ROOT / "content/course.json"
     if not catalog.exists():
         fail(503, "학습 콘텐츠를 준비 중입니다.")
     course = published_course()
     known = {s["id"] for p in course["pages"] for s in p["steps"]}
+    if gradable and any(
+        s["id"] == step and s["reading"] for p in course["pages"] for s in p["steps"]
+    ):
+        fail(422, "읽기 단계는 코드 통과로 기록하지 않습니다.")
     if step not in known:
         fail(422, "알 수 없는 학습 단계입니다.")
-    if version is not None and version != course["version"]:
-        fail(409, "학습 자료가 갱신되었습니다. 코드를 보관한 뒤 새로고침해 주세요.")
+    # Browser attempts retain their original content version, including uploads
+    # queued before a release. Stable IDs represent the same learning objective.
+    if version is not None and (not version or any(ord(c) < 32 for c in version)):
+        fail(422, "학습 자료 판본을 확인해 주세요.")
 
 
 def rows(db, model, user):
@@ -233,7 +239,7 @@ def progress(request: Request, db: DB):
 
 class StepPayload(BaseModel):
     step_id: str = Field(max_length=200)
-    version: str = Field(max_length=80)
+    version: str = Field(min_length=1, max_length=80)
 
 
 class ViewPayload(StepPayload):
@@ -287,6 +293,47 @@ def draft(p: DraftPayload, request: Request, db: DB):
     return data(existing)
 
 
+@app.post("/api/v1/drafts/resolve")
+def resolve_draft(p: DraftPayload, request: Request, db: DB):
+    u = identity(request, db)
+    validate_step(p.step_id, p.version)
+    draft = db.get(Draft, (u.id, p.step_id), with_for_update=True)
+    if not draft or draft.revision != p.revision:
+        fail(409, "서버 코드가 다시 변경되었습니다. 새로고침 후 두 버전을 확인해 주세요.")
+    if draft.code != p.code:
+        db.add(
+            DraftConflict(
+                learner_id=u.id, step_id=p.step_id, code=draft.code, version=draft.version
+            )
+        )
+        draft.code = p.code
+        draft.revision += 1
+        draft.updated = time.time()
+    db.flush()
+    return data(draft)
+
+
+class AlternativePayload(StepPayload):
+    id: UUID
+    code: str = Field(max_length=64000)
+
+
+@app.post("/api/v1/draft-alternatives")
+def save_alternative(p: AlternativePayload, request: Request, db: DB):
+    u = identity(request, db)
+    validate_step(p.step_id)
+    old = db.get(DraftConflict, str(p.id))
+    if old and old.learner_id != u.id:
+        fail(409, "이미 사용된 요청 번호입니다.")
+    if not old:
+        db.add(
+            DraftConflict(
+                id=str(p.id), learner_id=u.id, step_id=p.step_id, code=p.code, version=p.version
+            )
+        )
+    return {"ok": True}
+
+
 class AttemptPayload(StepPayload):
     id: UUID
     code: str = Field(max_length=64000)
@@ -297,7 +344,7 @@ class AttemptPayload(StepPayload):
 @app.post("/api/v1/attempts")
 def attempt(p: AttemptPayload, request: Request, db: DB):
     u = identity(request, db)
-    validate_step(p.step_id, p.version)
+    validate_step(p.step_id, p.version, gradable=True)
     existing = db.get(Attempt, str(p.id))
     if existing:
         if existing.learner_id != u.id:

@@ -26,7 +26,7 @@ for ci, ch in enumerate(chapters):
                     **s,
                     "id": p["slug"] + "." + s["name"],
                     "mode": getattr(cls, "expected_code_source", None)
-                    or ("shell" if ci < 3 and p["slug"] != "WritingPrograms" else "editor"),
+                    or ("editor" if "\n" in getattr(cls, "program", "") else "shell"),
                     "starter": "",
                     "reading": s["name"] == "final_text",
                 }
@@ -76,6 +76,10 @@ for i, p in enumerate(PROJECTS):
         }
     )
 content = {"language": lang, "upstream": "def491c2a348371f56249d05c64e0cf70f33ac2b", "pages": out}
+content["runtime_version"] = hashlib.sha256(
+    (ROOT / "runtime/module1.py").read_bytes()
+    + b"".join(p.read_bytes() for p in sorted((ROOT / "vendor/futurecoder/core").rglob("*.py")))
+).hexdigest()[:16]
 content["version"] = hashlib.sha256(
     json.dumps(content, ensure_ascii=False, sort_keys=True).encode()
 ).hexdigest()[:16]
@@ -88,7 +92,10 @@ with (
 ):
     for member in original:
         output.addfile(member, original.extractfile(member) if member.isfile() else None)
-    for path, name in [(ROOT / "runtime/module1.py", "module1.py")]:
+    for path, name in [
+        (ROOT / "runtime/module1.py", "module1.py"),
+        (ROOT / "runtime/regression.py", "regression.py"),
+    ]:
         data = path.read_bytes()
         info = tarfile.TarInfo(name)
         info.size = len(data)

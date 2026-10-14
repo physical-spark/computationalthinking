@@ -33,6 +33,7 @@ jobs:
       - name: Browser tests
         env:
           VITE_CONTENT_LANGUAGE: ko
+          VITE_TEST_DRIVER: '1'
         run: |
           npm run build --prefix web
           npm run build --prefix runner

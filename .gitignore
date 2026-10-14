@@ -23,3 +23,6 @@ vendor/futurecoder/translations/codes.json
 web/*.tsbuildinfo
 runner/public/service-worker.js
 vendor/futurecoder/.github/
+
+vendor/futurecoder/translations/locales/ko/
+content/translation-errors.json

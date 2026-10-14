@@ -124,4 +124,18 @@ def test_unknown_content_rejected(client, task):
     assert (
         client.post("/api/v1/view", json={**task, "step_id": "not-a-real-step"}).status_code == 422
     )
-    assert client.post("/api/v1/view", json={**task, "version": "stale"}).status_code == 409
+    assert (
+        client.post("/api/v1/view", json={**task, "version": "previous-release"}).status_code == 200
+    )
+    assert client.get("/api/v1/progress").json()["progress"][0]["version"] == "previous-release"
+
+
+def test_explicit_draft_resolution_preserves_server_alternative(client, task):
+    client.put("/api/v1/drafts", json={**task, "code": "server version", "revision": 0})
+    result = client.post(
+        "/api/v1/drafts/resolve", json={**task, "code": "browser version", "revision": 1}
+    )
+    assert result.status_code == 200 and result.json()["revision"] == 2
+    state = client.get("/api/v1/progress").json()
+    assert state["drafts"][0]["code"] == "browser version"
+    assert state["conflicts"][0]["code"] == "server version"

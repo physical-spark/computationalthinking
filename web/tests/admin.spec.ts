@@ -1,0 +1,81 @@
+import { test, expect, request as requestFactory } from "@playwright/test";
+import { execFileSync } from "node:child_process";
+import { resolve } from "node:path";
+test("administrator reviews a class and privately answers a student", async ({
+  page,
+  request,
+}) => {
+  await page.goto("/");
+  await expect(
+    page.getByRole("button", { name: "질문함", exact: true }),
+  ).toBeVisible();
+  const me = await (await page.request.get("/api/v1/me")).json();
+  const db =
+    "sqlite:///.cache/" + (process.env.CI ? "e2e" : "migration") + ".db";
+  execFileSync(
+    "uv",
+    [
+      "run",
+      "python",
+      "-c",
+      'import os; from backend.db import SessionLocal; from backend.models import Learner\nwith SessionLocal.begin() as db:\n u=db.get(Learner,os.environ["CT_TEST_LEARNER"]);u.admin=True;u.google_sub="synthetic-browser-owner-"+u.id',
+    ],
+    {
+      cwd: resolve(process.cwd(), ".."),
+      env: { ...process.env, DATABASE_URL: db, CT_TEST_LEARNER: me.id },
+    },
+  );
+  await page.goto("/admin");
+  await expect(
+    page.getByRole("heading", { name: "수업의 흐름 살펴보기" }),
+  ).toBeVisible();
+  const name = "브라우저 검증 " + Date.now();
+  const nickname = "질문하는 학생 " + Date.now();
+  const question = "연산 순서를 어떻게 확인하나요? " + Date.now();
+  await page.getByLabel("새 반 이름").fill(name);
+  await page.getByRole("button", { name: "반 만들기", exact: true }).click();
+  await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
+  const cohort = (
+    await (await page.request.get("/api/v1/admin/cohorts")).json()
+  ).find((c: any) => c.name === name);
+  expect(cohort).toBeTruthy();
+  const student = await requestFactory.newContext({
+    baseURL: "http://localhost:5173",
+    extraHTTPHeaders: { Origin: "http://localhost:5173" },
+  });
+  await student.get("/api/v1/me");
+  await student.patch("/api/v1/me", { data: { nickname } });
+  await student.post("/api/v1/cohorts/join", { data: { code: cohort.code } });
+  const course = await (await student.get("/api/v1/course")).json();
+  const qid = crypto.randomUUID();
+  await student.post("/api/v1/questions", {
+    data: {
+      id: qid,
+      step_id: course.pages[0].steps[0].id,
+      body: question,
+    },
+  });
+  await page.getByRole("combobox", { name: /반 선택/ }).selectOption(cohort.id);
+  await expect(
+    page.getByRole("button", { name: nickname, exact: true }),
+  ).toBeVisible();
+  const thread = page.getByRole("article").filter({ hasText: question });
+  await thread
+    .getByLabel("답변", { exact: true })
+    .fill("괄호를 먼저 계산한 뒤 결과를 비교해 보세요.");
+  await thread.getByRole("button", { name: "답변 저장", exact: true }).click();
+  await expect(
+    page.getByText("괄호를 먼저 계산한 뒤 결과를 비교해 보세요.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  const own = await (await student.get("/api/v1/questions")).json();
+  expect(own[0].replies[0].body).toContain("괄호");
+  expect((await student.get("/api/v1/admin/learners")).status()).toBe(403);
+  expect(
+    (
+      await page.request.get("/api/v1/admin/export.csv?cohort=" + cohort.id)
+    ).status(),
+  ).toBe(200);
+  await student.dispose();
+});

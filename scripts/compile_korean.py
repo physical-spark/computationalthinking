@@ -23,15 +23,26 @@ translated.metadata = {
 }
 for entry in source:
     text = overrides.get(entry.msgid, drafts.get(entry.msgid, {}).get("text"))
+    if (
+        entry.msgid.startswith("code_bits.")
+        or entry.msgid.endswith(".program")
+        or ".output_prediction_choices." in entry.msgid
+    ):
+        text = entry.msgstr
     if text is None:
         missing.append(entry.msgid)
         continue
-    if sorted(re.findall(r"__\w+__", text)) != sorted(re.findall(r"__\w+__", entry.msgstr)):
+    if re.findall(r"__\w+__", text) != re.findall(r"__\w+__", entry.msgstr):
         problems.append((entry.msgid, "template markers"))
     if sorted(re.findall(r"`[^`\n]+`", text)) != sorted(re.findall(r"`[^`\n]+`", entry.msgstr)):
         problems.append((entry.msgid, "inline code"))
     if entry.msgid.startswith("code_bits.") and text != entry.msgstr:
         problems.append((entry.msgid, "code bit changed"))
+    for marker in re.findall(r"__code\d+__", text):
+        if not re.search(r"^ *" + marker + r"\s*$", text, re.MULTILINE):
+            problems.append((entry.msgid, "code block marker must occupy its own line"))
+    if re.search(r"</?think>|/no_think|ZXQ\d|<\|im_", text):
+        problems.append((entry.msgid, "generation artifact"))
     translated.append(polib.POEntry(msgid=entry.msgid, msgstr=text))
 report = {
     "total": len(source),

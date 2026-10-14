@@ -10,6 +10,7 @@ uv tool run --from poetry poetry install --no-interaction
 FUTURECODER_LANGUAGE=en uv tool run --from poetry poetry run python -m translations.generate_po_file
 FIX_CORE_IMPORTS=1 FUTURECODER_LANGUAGE=en uv tool run --from poetry poetry run python -m scripts.generate_static_files
 uv tool run --from poetry poetry run pytest tests/test_steps.py -q
+uv tool run --from poetry poetry run python ../../runtime/regression.py ko
 uv tool run --from poetry poetry run python ../../scripts/build_content.py ko
 cd ../..
 mkdir -p runner/public/pyodide
