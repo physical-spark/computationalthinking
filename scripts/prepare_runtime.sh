@@ -12,6 +12,7 @@ FIX_CORE_IMPORTS=1 FUTURECODER_LANGUAGE=en uv tool run --from poetry poetry run 
 uv tool run --from poetry poetry run pytest tests/test_steps.py -q
 uv tool run --from poetry poetry run python ../../runtime/regression.py ko
 uv tool run --from poetry poetry run python ../../scripts/build_content.py ko
+uv tool run --from poetry poetry run python ../../scripts/collect_licenses.py
 cd ../..
 mkdir -p runner/public/pyodide
 cp runner/node_modules/pyodide/pyodide.{mjs,asm.js,asm.wasm} runner/node_modules/pyodide/python_stdlib.zip runner/node_modules/pyodide/pyodide-lock.json runner/public/pyodide/
