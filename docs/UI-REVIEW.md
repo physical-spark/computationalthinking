@@ -36,3 +36,7 @@ React, native controls, CodeMirror 6 and project CSS. Learning screen, class adm
 ## Verdict
 
 Approve for inspected domains and states; this is not a claim of complete WCAG conformance. Full screen-reader narration remains follow-up verification; automated checks do not establish complete WCAG conformance.
+
+## First-task follow-up — 2026-10-15 evening
+
+Scope: first Python load, keyboard submission while loading, delayed initialization, restart and desktop return from the reading layout. A HIGH writing/recovery issue was confirmed: preparation had no stage information or recovery action, and early Enter was silently ignored. App.tsx now reports preparation stages and the action to take; Runner.tsx bounds initialization waiting and restarts the iframe without discarding code. The new browser regression forces a stalled iframe, advances a virtual clock, checks the delay message, then reconnects real Pyodide and verifies Enter execution. A public HTTPS smoke also verifies this path and refresh/rerun. This is a scoped follow-up, not a new claim of full interface or screen-reader review.

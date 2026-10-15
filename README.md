@@ -81,3 +81,9 @@ python -m backend.cli grant-admin <learner-id>
 Futurecoder의 고정 원본 판본은 `alexmojaki/futurecoder`의 `def491c2a348371f56249d05c64e0cf70f33ac2b`입니다. 실행 코어와 교재 원본을 `vendor/futurecoder/`에 보관하며 [원본 라이선스](vendor/futurecoder/LICENSE.txt)를 유지합니다. 한국어 번역, 새 화면, 계정·관리 API와 모의실습을 추가했습니다. 원본과 별개의 비공식 프로젝트입니다. 사용하지 않는 원본 GitHub CI 설정은 자격증명 재게시를 피하기 위해 제외했습니다.
 
 이 저장소의 코드는 MIT입니다. 외부 패키지와 Pyodide/Python 런타임은 각 패키지의 라이선스가 적용됩니다. 기존 비공개 교안 원본, 학생 데이터, DB와 자격증명은 공개 저장소에 포함하지 않습니다.
+
+## 공개 주소에서 첫 실행 확인
+
+Python 준비 단계가 표시되는 동안 코드를 작성할 수 있습니다. 준비가 지연되면 `Python 다시 준비하기`로 코드 내용을 유지하면서 실행기만 다시 연결합니다. 준비 완료 후 Enter 또는 실행 버튼을 사용합니다.
+
+`node scripts/verify_public.cjs`는 새 익명 브라우저로 운영 HTTPS의 첫 과제, 재시도, 새로고침 후 재실행을 확인하고 `.cache/public-verification/`에 화면과 결과를 남깁니다. 운영자 로그인 세션을 사용하지 않으며 별도의 익명 학습 기록이 생성됩니다.
