@@ -7,8 +7,8 @@ from pathlib import Path
 if len(sys.argv) != 2:
     raise SystemExit('Usage: python3 scripts/configure_google.py /private/path/client.json')
 source = Path(sys.argv[1]).resolve()
-root = Path(__file__).resolve().parents[1]
-if source.is_relative_to(root):
+root = Path('/home/ubuntu/workspace/org_physical-spark/computationalthinking').resolve()
+if source == root or root in source.parents:
     raise SystemExit('Keep OAuth credential files outside the public repository')
 web = json.loads(source.read_text()).get('web', {})
 callback = 'https://computationalthinking.futurereadycampus.com/auth/google/callback'
