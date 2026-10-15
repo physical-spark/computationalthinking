@@ -103,6 +103,7 @@ const shot = (name) => resolve(output, `futurecoder-${stamp}-${name}.png`);
     await expect(mobilePage.locator("iframe")).toHaveCount(0);
     expect(mobileRequests.filter((url) => /pyodide|python-core|computationalthinking-runner/.test(url))).toEqual([]);
     await mobilePage.getByLabel("내가 생각한 풀이", { exact: true }).fill("입력한 식이 어떤 규칙으로 결과가 되는지 내 말로 설명해 보고 싶다.");
+    await mobilePage.evaluate(() => window.scrollTo(0, 0));
     await mobilePage.screenshot({ path: shot("mobile-thinking"), fullPage: true });
     await mobilePage.request.post("https://computationalthinking.futurereadycampus.com/api/v1/logout", { headers: { Origin: "https://computationalthinking.futurereadycampus.com" }, data: {} });
     await mobile.close();
