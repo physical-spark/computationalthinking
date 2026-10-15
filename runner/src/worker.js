@@ -11,7 +11,7 @@ const reloader = new PyodideFatalErrorReloader(async () => {
   const { loadPyodide } = await import(/* @vite-ignore */ loaderUrl);
   self.postMessage({ diagnostic: "Python 엔진을 초기화합니다." });
   const py = await loadPyodideAndPackage(
-    { url: "/python-core.tar", format: "tar" },
+    { url: __CT_PYTHON_CORE_URL__, format: "gztar" },
     () => loadPyodide({ indexURL: "/pyodide/" }),
   );
   self.postMessage({ diagnostic: "학습 코어를 초기화합니다." });

@@ -62,6 +62,7 @@ test("a stalled first load reports delay and can restart without losing code", a
       .filter({ hasText: "실행 파일 준비가 지연되고 있습니다." }),
   ).toBeVisible();
   await expect(editor).toHaveText("1+2");
+  await page.screenshot({ path: testInfo.outputPath("runner-load-delay.png") });
   stalled = false;
   await page.clock.resume();
   await page.getByRole("button", { name: "Python 다시 준비하기" }).click();
@@ -72,6 +73,7 @@ test("a stalled first load reports delay and can restart without losing code", a
   await editor.press("Enter");
   await expect(page.getByLabel("Python 실행 결과")).toContainText("3");
   await expect(page.getByText("✓ 통과", { exact: true })).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath("runner-recovered.png") });
   await page.setViewportSize({ width: 390, height: 900 });
   await expect(page.locator("iframe")).toHaveCount(0);
   stalled = true;
