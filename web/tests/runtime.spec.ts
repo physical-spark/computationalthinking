@@ -36,7 +36,7 @@ test("complete curriculum fixtures pass inside Pyodide", async ({ page }) => {
 
 test("a stalled first load reports delay and can restart without losing code", async ({
   page,
-}) => {
+}, testInfo) => {
   await page.clock.install();
   let stalled = true;
   await page.route("http://localhost:5174/?parent=*", async (route) => {
