@@ -14,6 +14,7 @@ export type RunEntry = {
 export type RunnerHandle = {
   run: (entry: RunEntry) => void;
   stop: () => void;
+  restart: () => void;
   input: (text: string) => void;
 };
 const origin = import.meta.env.VITE_RUNNER_ORIGIN || "http://localhost:5174";
@@ -24,6 +25,7 @@ const Runner = forwardRef<
     onResult: (r: any) => void;
     onInput: () => void;
     onState: (s: string) => void;
+    onProgress: (s: string) => void;
   }
 >((props, ref) => {
   const iframe = useRef<HTMLIFrameElement>(null);
@@ -67,6 +69,11 @@ const Runner = forwardRef<
       props.onState("running");
       send("run", { id: active.current, entry });
     },
+    restart() {
+      reset(
+        "Python 실행 환경을 다시 준비합니다. 작성한 코드는 그대로 보관됩니다.",
+      );
+    },
     stop() {
       if (active.current) {
         send("stop");
@@ -84,6 +91,17 @@ const Runner = forwardRef<
     },
   }));
   useEffect(() => {
+    ready.current = false;
+    active.current = null;
+    latest.current.onState("loading");
+    latest.current.onProgress("실행 환경에 연결합니다.");
+    clear();
+    timer.current = setTimeout(() => {
+      latest.current.onProgress(
+        "실행 파일 준비가 지연되고 있습니다. 연결 상태를 확인하고 다시 준비해 주세요. 작성한 코드는 유지됩니다.",
+      );
+      latest.current.onState("error");
+    }, 120000);
     function message(e: MessageEvent) {
       if (
         e.source !== iframe.current?.contentWindow ||
@@ -92,8 +110,14 @@ const Runner = forwardRef<
       )
         return;
       const d = e.data;
+      if (d.type === "progress" && typeof d.message === "string") {
+        latest.current.onProgress(d.message.slice(0, 500));
+        return;
+      }
       if (d.type === "ready") {
+        clear();
         ready.current = true;
+        latest.current.onProgress("실행 준비 완료");
         latest.current.onState("ready");
         return;
       }
@@ -117,6 +141,9 @@ const Runner = forwardRef<
       if (d.type === "error") {
         clear();
         active.current = null;
+        latest.current.onProgress(
+          d.message || "실행 환경을 준비하지 못했습니다. 다시 준비해 주세요.",
+        );
         latest.current.onOutput((d.message || "실행 환경 오류") + "\n");
         latest.current.onState(ready.current ? "ready" : "error");
       }
@@ -126,7 +153,7 @@ const Runner = forwardRef<
       clear();
       window.removeEventListener("message", message);
     };
-  }, []);
+  }, [generation]);
   return (
     <iframe
       key={generation}
@@ -134,6 +161,7 @@ const Runner = forwardRef<
       className="runner-frame"
       title="격리된 Python 실행 환경"
       src={origin + "/?parent=" + encodeURIComponent(location.origin)}
+      onLoad={() => send("connect")}
       sandbox="allow-scripts allow-same-origin"
     />
   );

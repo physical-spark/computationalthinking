@@ -14,26 +14,40 @@ const parentOrigin = allowed.has(candidate)
 const send = (type, data = {}) =>
   parent.postMessage({ channel: "ct-runner", type, ...data }, parentOrigin);
 let client, activeId;
+let isReady = false;
+let bootMessage = "실행 환경에 연결합니다.";
+function progress(message) {
+  bootMessage = message;
+  document.getElementById("status").textContent = message;
+  send("progress", { message });
+}
 async function boot() {
-  document.getElementById("status").textContent = "입출력 통신을 준비합니다.";
+  progress("입출력 통신을 준비합니다.");
   await navigator.serviceWorker.register("/service-worker.js", { scope: "/" });
   await navigator.serviceWorker.ready;
   if (!navigator.serviceWorker.controller)
-    await new Promise((resolve) =>
-      navigator.serviceWorker.addEventListener("controllerchange", resolve, {
-        once: true,
-      }),
-    );
-  document.getElementById("status").textContent =
-    "Python 실행 파일을 불러옵니다.";
+    await new Promise((resolve) => {
+      const controlled = () => {
+        if (!navigator.serviceWorker.controller) return;
+        navigator.serviceWorker.removeEventListener(
+          "controllerchange",
+          controlled,
+        );
+        resolve();
+      };
+      navigator.serviceWorker.addEventListener("controllerchange", controlled);
+      controlled();
+    });
+  progress(
+    "Python 실행 파일을 내려받습니다. 처음 접속하면 시간이 걸릴 수 있습니다.",
+  );
   client = new PyodideClient(
     () => {
       const worker = new Worker(new URL("./worker.js", import.meta.url), {
         type: "module",
       });
       worker.addEventListener("message", (e) => {
-        if (e.data?.diagnostic)
-          document.getElementById("status").textContent = e.data.diagnostic;
+        if (e.data?.diagnostic) progress(e.data.diagnostic);
       });
       worker.addEventListener("error", (e) => {
         document.getElementById("status").textContent =
@@ -47,7 +61,8 @@ async function boot() {
   await client.workerProxy.ready();
   if (import.meta.env.VITE_TEST_DRIVER === "1")
     window.ctVerify = () => client.workerProxy.regression();
-  document.getElementById("status").textContent = "실행 준비 완료";
+  isReady = true;
+  progress("실행 준비 완료");
   send("ready");
 }
 window.addEventListener("message", async (event) => {
@@ -58,6 +73,11 @@ window.addEventListener("message", async (event) => {
   )
     return;
   const { type, id, entry, text } = event.data;
+  if (type === "connect") {
+    send("progress", { message: bootMessage });
+    if (isReady) send("ready");
+    return;
+  }
   if (type === "input" && typeof text === "string" && text.length <= 4000) {
     await client?.writeMessage(text);
     return;

@@ -1183,3 +1183,16 @@ td code {
     fill: CanvasText;
   }
 }
+
+.runner-status {
+  padding: 1rem;
+  margin: 1rem;
+  border: 1px solid #78988c;
+  border-radius: 12px;
+  background: #203b3d;
+  color: #e5ece6;
+}
+.runner-status p {
+  margin: 0 0 0.75rem;
+  line-height: 1.6;
+}

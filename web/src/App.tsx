@@ -146,6 +146,7 @@ export default function App() {
     [output, setOutput] = useState(""),
     [mode, setMode] = useState("editor"),
     [runnerState, setRunnerState] = useState("loading"),
+    [runnerDetail, setRunnerDetail] = useState("실행 환경에 연결합니다."),
     [mobile, setMobile] = useState(matchMedia("(max-width: 900px)").matches),
     [navOpen, setNavOpen] = useState(false),
     [hints, setHints] = useState(0),
@@ -423,6 +424,16 @@ export default function App() {
   }
   function run() {
     if (!step || !page) return;
+    if (runnerState !== "ready") {
+      setNotice(
+        runnerState === "loading"
+          ? "Python을 준비하고 있습니다. ‘실행 준비 완료’가 표시되면 다시 실행해 주세요. 작성한 코드는 유지됩니다."
+          : runnerState === "error"
+            ? "‘Python 다시 준비하기’를 선택한 뒤 실행해 주세요. 작성한 코드는 유지됩니다."
+            : "현재 실행을 마치거나 중지한 뒤 다시 실행해 주세요.",
+      );
+      return;
+    }
     setOutput("");
     pendingOutput.current = "";
     setTrace([]);
@@ -987,6 +998,18 @@ export default function App() {
                   중지
                 </button>
               </div>
+              {["loading", "error"].includes(runnerState) && (
+                <div className="runner-status">
+                  <p role="status">{runnerDetail}</p>
+                  <p>
+                    처음 접속하면 Python 실행 파일을 내려받습니다. 준비하는 동안
+                    코드를 작성할 수 있습니다.
+                  </p>
+                  <button onClick={() => runner.current?.restart()}>
+                    Python 다시 준비하기
+                  </button>
+                </div>
+              )}
               <Suspense fallback={<p>편집기 준비 중</p>}>
                 <Editor
                   shell={mode === "shell"}
@@ -1109,11 +1132,6 @@ export default function App() {
                   Birdseye 표현식 결과 열기 ↗
                 </a>
               )}
-              {runnerState === "error" && (
-                <button onClick={() => location.reload()}>
-                  실행 환경 다시 연결하기
-                </button>
-              )}
               <Runner
                 ref={runner}
                 onOutput={(s) => {
@@ -1126,6 +1144,7 @@ export default function App() {
                 onResult={result}
                 onInput={() => {}}
                 onState={setRunnerState}
+                onProgress={setRunnerDetail}
               />
               <p className="keyboard-tip">
                 Ctrl / ⌘ + Enter로 실행 · 입력 기다림에는 아래 입력 칸을
