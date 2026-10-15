@@ -1,6 +1,7 @@
 import csv
 import hashlib
 import io
+import ipaddress
 import json
 import os
 import secrets
@@ -89,6 +90,19 @@ def throttle(db, key, limit, seconds=3600):
     ).scalar_one()
     if count > limit:
         fail(429, "요청이 많습니다. 잠시 기다린 뒤 다시 시도해 주세요.")
+
+
+def client_ip(request):
+    peer = request.client.host if request.client else "unknown"
+    # Production's ClusterIP is reached through the host's Cloudflare Tunnel.
+    # Cloudflare overwrites this header; never enable this for a public origin.
+    if os.environ.get("TRUST_CLOUDFLARE_IP") == "true":
+        try:
+            if ipaddress.ip_address(peer).is_private:
+                return str(ipaddress.ip_address(request.headers["cf-connecting-ip"]))
+        except (ValueError, KeyError):
+            pass
+    return peer
 
 
 def identity(request, db):
@@ -180,7 +194,7 @@ def me(request: Request, response: Response, db: DB):
     try:
         u = identity(request, db)
     except HTTPException:
-        ip = request.client.host if request.client else "unknown"
+        ip = client_ip(request)
         throttle(db, "new:" + digest(SECRET + ip), 120, 60)
         u = Learner(nickname="학습자 " + secrets.token_hex(3))
         db.add(u)
@@ -418,7 +432,7 @@ def question(p: QuestionPayload, request: Request, db: DB):
     throttle(db, "question:" + u.id, 10)
     throttle(
         db,
-        "question-ip:" + digest(SECRET + (request.client.host if request.client else "unknown")),
+        "question-ip:" + digest(SECRET + client_ip(request)),
         60,
     )
     db.add(Question(id=str(p.id), learner_id=u.id, step_id=p.step_id, body=p.body))
@@ -458,7 +472,7 @@ def join(p: JoinPayload, request: Request, db: DB):
     throttle(db, "join:" + u.id, 10, 60)
     throttle(
         db,
-        "join-ip:" + digest(SECRET + (request.client.host if request.client else "unknown")),
+        "join-ip:" + digest(SECRET + client_ip(request)),
         60,
         60,
     )

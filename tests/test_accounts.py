@@ -139,3 +139,24 @@ def test_explicit_draft_resolution_preserves_server_alternative(client, task):
     state = client.get("/api/v1/progress").json()
     assert state["drafts"][0]["code"] == "browser version"
     assert state["conflicts"][0]["code"] == "server version"
+
+
+def test_proxy_ip_is_explicit_and_validated(monkeypatch):
+    from starlette.requests import Request
+    from backend.main import client_ip
+
+    def request(peer, header):
+        return Request(
+            {
+                "type": "http",
+                "client": (peer, 1234),
+                "headers": [(b"cf-connecting-ip", header.encode())],
+            }
+        )
+
+    monkeypatch.delenv("TRUST_CLOUDFLARE_IP", raising=False)
+    assert client_ip(request("10.42.0.1", "203.0.113.9")) == "10.42.0.1"
+    monkeypatch.setenv("TRUST_CLOUDFLARE_IP", "true")
+    assert client_ip(request("10.42.0.1", "203.0.113.9")) == "203.0.113.9"
+    assert client_ip(request("10.42.0.1", "invalid")) == "10.42.0.1"
+    assert client_ip(request("8.8.8.8", "203.0.113.9")) == "8.8.8.8"
