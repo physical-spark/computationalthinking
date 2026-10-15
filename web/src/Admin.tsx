@@ -265,6 +265,9 @@ export default function Admin() {
           .map((q) => (
             <article className="question-card" key={q.id}>
               <p>
+                <strong>{q.nickname || "학습자"}</strong>
+              </p>
+              <p>
                 <code>{q.step_id}</code> ·{" "}
                 {q.resolved ? "답변 완료" : "답변 기다림"}
               </p>

@@ -277,7 +277,16 @@ export default function App() {
     return () => window.removeEventListener("hashchange", change);
   }, [course]);
   useEffect(() => {
-    if (!step || !user || !course) return;
+    const label =
+      location.pathname === "/admin"
+        ? "수업 관리"
+        : location.pathname === "/privacy"
+          ? "학습 기록 안내"
+          : page?.title || "Python 학습";
+    document.title = label + " · 컴퓨팅 사고력";
+  }, [page?.title]);
+  useEffect(() => {
+    if (location.pathname !== "/" || !step || !user || !course) return;
     const draftKey = "ct-draft:" + user.id + ":" + step.id;
     const stored = localGet<any>(draftKey, null);
     const local =
@@ -320,7 +329,6 @@ export default function App() {
       step_id: step.id,
       version: course.version,
     }).catch(() => setSaved("연결되면 진도를 저장합니다."));
-    document.title = page?.title + " · 컴퓨팅 사고력";
     heading.current?.focus();
   }, [current, !!course, !!user]);
   useEffect(() => {
@@ -348,7 +356,7 @@ export default function App() {
     };
   }, [user?.id]);
   useEffect(() => {
-    if (!step || !user || !course) return;
+    if (location.pathname !== "/" || !step || !user || !course) return;
     const key = "ct-draft:" + user.id + ":" + step.id;
     const stored = localGet<any>(key, null);
     const baseline = typeof stored === "object" && stored ? stored.revision : 0;
@@ -427,7 +435,7 @@ export default function App() {
     });
   }
   async function commitResult(result: any) {
-    if (!step || !user || !course) return;
+    if (location.pathname !== "/" || !step || !user || !course) return;
     if (step.reading) {
       setNotice(
         "실험 결과를 확인했습니다. 준비가 되면 다음 단계로 이동하세요.",

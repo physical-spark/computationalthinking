@@ -65,7 +65,12 @@ def test_question_and_reply_privacy(client, other, administrator, task):
         ).status_code
         == 200
     )
+    assert (
+        administrator.get("/api/v1/admin/questions").json()[0]["nickname"]
+        == other.get("/api/v1/me").json()["nickname"]
+    )
     own = other.get("/api/v1/questions").json()[0]
+    assert "nickname" not in own
     assert own["unread"] and own["replies"][0]["body"]
     other.post("/api/v1/questions/" + q["id"] + "/read", json={})
     assert not other.get("/api/v1/questions").json()[0]["unread"]

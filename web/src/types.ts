@@ -44,6 +44,7 @@ export type Draft = {
 };
 export type Progress = { step_id: string; passed: boolean; viewed: boolean };
 export type Question = {
+  nickname?: string;
   id: string;
   learner_id: string;
   step_id: string;

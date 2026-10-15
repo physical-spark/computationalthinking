@@ -25,7 +25,17 @@ test("administrator reviews a class and privately answers a student", async ({
       env: { ...process.env, DATABASE_URL: db, CT_TEST_LEARNER: me.id },
     },
   );
+  const learningWrites: string[] = [];
+  page.on("request", (r) => {
+    if (
+      new URL(page.url()).pathname === "/admin" &&
+      ["/api/v1/view", "/api/v1/drafts"].includes(new URL(r.url()).pathname) &&
+      ["POST", "PUT"].includes(r.method())
+    )
+      learningWrites.push(r.url());
+  });
   await page.goto("/admin");
+  await expect(page).toHaveTitle("수업 관리 · 컴퓨팅 사고력");
   await expect(
     page.getByRole("heading", { name: "수업의 흐름 살펴보기" }),
   ).toBeVisible();
@@ -77,5 +87,7 @@ test("administrator reviews a class and privately answers a student", async ({
       await page.request.get("/api/v1/admin/export.csv?cohort=" + cohort.id)
     ).status(),
   ).toBe(200);
+  expect(learningWrites).toEqual([]);
+  await expect(thread.getByText(nickname, { exact: true })).toBeVisible();
   await student.dispose();
 });

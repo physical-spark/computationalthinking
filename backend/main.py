@@ -587,8 +587,12 @@ def learner(lid: str, request: Request, db: DB):
 def admin_questions(request: Request, db: DB):
     admin(request, db)
     return [
-        question_json(q, db)
-        for q in db.scalars(select(Question).order_by(Question.created.desc())).all()
+        {**question_json(q, db), "nickname": nickname}
+        for q, nickname in db.execute(
+            select(Question, Learner.nickname)
+            .join(Learner, Learner.id == Question.learner_id)
+            .order_by(Question.created.desc())
+        ).all()
     ]
 
 
