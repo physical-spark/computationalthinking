@@ -25,11 +25,9 @@ if sudo k3s kubectl -n computationalthinking get deployment app >/dev/null 2>&1;
 fi
 git checkout --detach "$commit"
 sed "s|ct-app:__TAG__|$immutable|g" k8s/resources.yaml | sudo k3s kubectl apply -f -
-if ! sudo k3s kubectl -n computationalthinking rollout status deployment/postgres --timeout=120s || ! sudo k3s kubectl -n computationalthinking rollout status deployment/app --timeout=180s || ! sudo k3s kubectl -n computationalthinking rollout status deployment/runner --timeout=120s; then
+if ! sudo k3s kubectl -n computationalthinking rollout status deployment/postgres --timeout=120s || ! sudo k3s kubectl -n computationalthinking rollout status deployment/app --timeout=180s || ! sudo k3s kubectl -n computationalthinking rollout status deployment/runner --timeout=120s || ! curl --fail --retry 8 --retry-connrefused --retry-delay 1 --max-time 5 http://10.43.200.54/healthz || ! curl --fail --retry 8 --retry-connrefused --retry-delay 1 --max-time 5 http://10.43.200.55/healthz; then
   sudo k3s kubectl -n computationalthinking rollout undo deployment/app || true
   sudo k3s kubectl -n computationalthinking rollout undo deployment/runner || true
   exit 1
 fi
-curl --fail --retry 3 http://10.43.200.54/healthz
-curl --fail --retry 3 http://10.43.200.55/healthz
 printf '\nDeployed commit %s with image %s\n' "$commit" "$image_digest"
