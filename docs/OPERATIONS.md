@@ -37,3 +37,19 @@ namespace: `computationalthinking`
 ## 학습 자료 판본
 
 브라우저에서 보류한 과거 판본의 실행·복습 기록도 원래 판본과 함께 저장합니다. 단순한 설명 수정 때문에 기록이 유실되거나 전송 대기열이 막히지 않도록 합니다. 같은 문제 ID는 같은 학습 목표를 뜻하며, 학습 목표와 통과 조건 자체를 바꾸는 새 과제에는 새 ID를 사용합니다. 통과는 학생 브라우저가 보고한 학습 기록이며 서버 검증 성적이 아닙니다.
+
+## 현재 운영 설정
+
+Google 프로젝트는 `frc-computational-thinking`입니다. 웹 클라이언트는 해당 프로젝트의 Google Auth Platform에 있으며 Audience는 External / In production입니다. 애플리케이션 홈페이지와 개인정보 안내 URL을 등록했습니다. 실제 소유자의 첫 연결과 관리자 지정 결과는 STATUS에서 확인합니다.
+
+OAuth JSON을 내려받으면 공개 저장소 밖에 보관한 뒤 서버에서 다음을 실행합니다. 이 도구는 정확한 콜백 등록을 검사하고 비밀값을 출력하지 않습니다.
+
+```sh
+python3 scripts/configure_google.py /home/ubuntu/.config/ct-google-client.json
+```
+
+공개 origin은 Cloudflare Tunnel을 통한 ClusterIP만 제공합니다. 이 구성에서만 `TRUST_CLOUDFLARE_IP=true`로 Cloudflare가 덮어쓰는 `CF-Connecting-IP`를 요청 제한에 사용합니다. 직접 인터넷에 origin을 노출할 때는 이 옵션을 끄거나 신뢰할 프록시 경계를 다시 구성해야 합니다.
+
+최근 성공 배포 이미지 두 개는 `/home/ubuntu/ct-images`에 압축 보관합니다. 노드의 이미지 정리로 이전 이미지가 사라져도 롤백 전에 이 사본을 다시 가져옵니다. 학생 DB는 되돌리지 않습니다.
+
+서버 백업 timer는 매일 19:50 UTC에 동작합니다. 운영자 Mac의 LaunchAgent `com.physical-spark.computationalthinking-backup`은 매일 05:05 KST 및 로그인 시 암호화 사본을 동기화합니다. Mac이 켜져 있고 해당 사용자 세션과 SSH 연결이 가능해야 합니다. 서버와 Mac 사본은 7일간 보존합니다. Mac의 사본과 복원 키는 `~/Library/Application Support/ComputationalThinking/`의 권한 제한된 폴더에 보관하며 Git에 넣지 않습니다.

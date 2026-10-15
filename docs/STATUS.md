@@ -1,13 +1,21 @@
-# Implementation and verification ledger
+# Implementation and verification ledger — 2026-10-15
 
-Upstream: alexmojaki/futurecoder def491c2a348371f56249d05c64e0cf70f33ac2b (MIT).
+Public app: https://computationalthinking.futurereadycampus.com
+Administrator: https://computationalthinking.futurereadycampus.com/admin
+Public source: https://github.com/physical-spark/computationalthinking
 
-- Korean content: all 1,689 source terms, 12 chapters / 61 pages / 257 original tasks. Eight additional simulated projects, 69 pages / 265 graded tasks total. Protected code, output choices, inline code and templates validated with zero missing entries. Translation is local-model draft plus 112 reviewed corrections, not a claim that every sentence has received human editorial review.
-- Original grading: 285 stored scenarios pass natively in English and Korean, and in browser Pyodide with Korean content.
-- Module 1: all eight reference solutions pass in browser; deliberately wrong solutions fail in unit tests.
-- Backend: 11 tests pass locally on SQLite; PostgreSQL verification runs in CI. Ownership, private questions, CSRF, revisions, idempotency, classroom codes and anonymous-to-account merge covered.
-- Browser: input, stop, Snoop, local Python Tutor-style trace, Birdseye, drafts/refresh, private administrator replies and 320/390/768px reading without runtime downloads verified. Populated mobile/desktop axe checks pass. See UI-REVIEW.md for scope and unverified checks.
-- Production deployment, DNS, encrypted backup restore and disposable 30-learner load check: pending deployment verification.
-- Real Google OAuth and owner administrator grant: pending owner OAuth client configuration. Anonymous learning remains available without it.
+Upstream: alexmojaki/futurecoder `def491c2a348371f56249d05c64e0cf70f33ac2b` (MIT). Korean content version: `b490be0ae3bc8f69`.
 
-Do not describe this as the fully accepted public release until production, Google connection, backup restoration and the remaining acceptance checks are verified.
+- Content: all 1,689 source terms, 12 chapters / 61 pages / 257 original tasks. Eight additional simulated projects bring the total to 69 pages / 265 graded tasks. Protected code, output choices, inline code and templates validated with zero missing entries. Translation combines a local-model draft and 112 reviewed corrections; every sentence has not received human editorial review.
+- Grading: 285 original stored scenarios pass natively in English and Korean and in browser Pyodide with Korean content. All eight Module 1 reference solutions pass in the browser; deliberately wrong solutions fail the unit checks.
+- Backend: 12 tests pass locally on SQLite and in CI on PostgreSQL. Ownership, private questions, CSRF, revisions, idempotency, classroom codes, anonymous-to-account merge and trusted proxy boundaries are covered.
+- Browser: 11 tests pass, covering input, interruption, Snoop, local Python Tutor-style trace, Birdseye, drafts/refresh, private administrator replies, all original fixtures and all eight projects. Mobile 320/390/768px reading does not load the editor or Python runtime. Populated mobile/desktop axe checks pass. Actual 200% zoom and keyboard dialog behavior were inspected; see [UI review](UI-REVIEW.md) for scope.
+- Public HTTPS: app and isolated runner return successfully through the existing Cloudflare Tunnel. Actual public browser execution, refresh restoration, private question save, student administrator denial and mobile reading passed. Existing Course Studio Access protection remains in place.
+- Google: External / In production configured. The owner completed the real Google callback. The same anonymous learner retained its code, passed task and private questions after connection. Administrator role was assigned explicitly by server CLI; the authenticated administrator page and a private reply were verified in the real browser.
+- Capacity: 30 concurrent synthetic learners, 480 API requests, zero errors, p95 0.608 seconds and maximum 1.234 seconds. This was an internal server/API check using a disposable PostgreSQL database; it does not measure Cloudflare latency or student-device Python execution speed.
+- Recovery: encrypted production backup restored successfully into an isolated database, including records created after Google connection. A separate disposable deployment successfully returned to a healthy image after a deliberately missing image. This verifies Kubernetes rollback mechanics; it was not a forced failure of the live deployment pipeline. Two recent image archives are retained for recovery after node image garbage collection.
+- Offsite: encrypted snapshots synchronize to the operator Mac, with seven-day retention. The daily Mac job requires that Mac, its user session and SSH connectivity to be available. This is not an always-on independent cloud backup.
+
+Application deployment: `5ef7f51`. [Verification and deployment run](https://github.com/physical-spark/computationalthinking/actions/runs/38661404324). Documentation-only updates may follow without replacing the deployed application image.
+
+See [release evidence](RELEASE-VERIFICATION.md) and [operations](OPERATIONS.md). The public service is available; translation editing and full screen-reader narration remain follow-up quality work rather than verified claims.

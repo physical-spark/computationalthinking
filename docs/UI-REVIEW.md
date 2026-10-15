@@ -27,8 +27,12 @@ React, native controls, CodeMirror 6 and project CSS. Learning screen, class adm
 - `VITE_TEST_DRIVER=1 npx playwright test`: real Pyodide grading, original 285 fixtures, input/stop/debuggers, all eight Module 1 solutions, draft refresh, private admin reply and mobile reading. Administrator test was refined to target its unique synthetic student/thread when repeated against an existing development database.
 - `npx playwright test tests/accessibility.spec.ts`: zero axe violations in populated 390px and 1440px learning screens.
 - Chrome: inspected Module 1 split layout, SVG, native controls and code text rendering at desktop width.
-- Not verified: full screen-reader narration and an actual 200% browser zoom session. Mobile effective widths are covered separately. Actual Google consent UI is pending owner credentials.
+- Aside at actual 200% browser zoom: learning content, SVG stage controls and question dialog remained reachable. Tab moved to the SVG control; Escape closed the question dialog and returned focus to its button. Restored browser zoom to 100%.
+- Public HTTPS browser smoke: grading, draft/pass restoration, private question save, student administrator denial and mobile reading passed.
+- Real owner Google callback: completed. Anonymous code, task pass and private questions remained attached to the same learner; explicit administrator access and a private reply were verified.
+- Administrator navigation does not initialize a learning step or autosave a draft. Browser regression checks assert that /admin sends neither a view mutation nor a draft mutation. Administrator question cards identify their author by nickname.
+- Not verified: full screen-reader narration.
 
 ## Verdict
 
-Approve for inspected domains and states; this is not a claim of complete WCAG conformance. The unverified checks above remain release acceptance work.
+Approve for inspected domains and states; this is not a claim of complete WCAG conformance. Full screen-reader narration remains follow-up verification; automated checks do not establish complete WCAG conformance.

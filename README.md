@@ -53,11 +53,14 @@ http://localhost:5173 에서 학습합니다. 두 출처를 분리하며, 실행
 ```sh
 uv run pytest -q
 uv run ruff check backend
-npm run build --prefix web
+VITE_TEST_DRIVER=1 npm run build --prefix web
+VITE_TEST_DRIVER=1 npm run build --prefix runner
 cd web
 npx playwright install chromium
-npx playwright test
+VITE_CONTENT_LANGUAGE=ko VITE_TEST_DRIVER=1 npx playwright test
 ```
+
+브라우저 검증은 개발용 API·화면·실행기 포트를 사용합니다. 기존 개발 서버를 중지한 상태에서 실행하면 Playwright가 테스트용 서버를 시작합니다. `VITE_TEST_DRIVER=1`은 회귀 검사 전용이며 운영 빌드에는 사용하지 않습니다.
 
 전체 번역 검사는 `scripts/compile_korean.py`가 수행합니다. 원본 키·코드·치환 문자가 누락되면 빌드를 중지합니다. 번역 초안은 로컬 Qwen으로 작성하며, 검토한 수정은 `content/ko-overrides.json`에서 관리합니다. 모델은 서비스를 이용하는 학생의 코드를 처리하지 않습니다.
 
