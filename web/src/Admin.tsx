@@ -221,12 +221,12 @@ export default function Admin() {
                 <pre>{a.code}</pre>
               </details>
             ))}
-          <h3>선택 복습</h3>
+          <h3>생각·복습 기록</h3>
           {detail.reflections.map((r: any) => (
             <article key={r.id}>
               <code>{r.step_id}</code>
               <p>선택지: {r.choice === null ? "미선택" : r.choice + 1}</p>
-              <p>{r.explanation || "자기 설명 미작성"}</p>
+              <p>{r.explanation || "생각 기록 미작성"}</p>
             </article>
           ))}
         </section>

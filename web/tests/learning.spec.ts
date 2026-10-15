@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 async function start(page: any) {
-  await page.goto("/");
+  await page.goto("/#WritingPrograms.editor_hello_world");
   await expect(page.getByRole("button", { name: "▶ 실행" })).toBeEnabled({
     timeout: 60000,
   });
@@ -12,7 +12,6 @@ test("input, stop, snoop, local tracing and birdseye work", async ({
   page,
 }) => {
   await start(page);
-  await page.getByLabel("실행 방식", { exact: true }).selectOption("editor");
   await code(page, 'print(input("Name? "))');
   await page.getByRole("button", { name: "▶ 실행" }).click();
   await expect(page.getByLabel("Python 입력", { exact: true })).toBeVisible();
@@ -29,23 +28,23 @@ test("input, stop, snoop, local tracing and birdseye work", async ({
   await expect(page.getByRole("button", { name: "▶ 실행" })).toBeEnabled({
     timeout: 30000,
   });
-  await page.getByLabel("실행 방식", { exact: true }).selectOption("snoop");
+  await page.getByText("코드 흐름 살펴보기", { exact: true }).click();
   await code(page, "x = 2\nprint(x + 3)");
-  await page.getByRole("button", { name: "▶ 실행" }).click();
+  await page
+    .getByRole("button", { name: "변수 변화 보기", exact: true })
+    .click();
   await expect(page.getByLabel("Python 실행 결과")).toContainText("5", {
     timeout: 30000,
   });
   await expect(page.getByRole("button", { name: "▶ 실행" })).toBeEnabled();
-  await page
-    .getByLabel("실행 방식", { exact: true })
-    .selectOption("pythontutor");
-  await page.getByRole("button", { name: "▶ 실행" }).click();
+  await page.getByRole("button", { name: "한 줄씩 보기", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Python Tutor 방식 · 로컬 단계 보기" }),
   ).toBeVisible();
   await expect(page.getByRole("button", { name: "▶ 실행" })).toBeEnabled();
-  await page.getByLabel("실행 방식", { exact: true }).selectOption("birdseye");
-  await page.getByRole("button", { name: "▶ 실행" }).click();
+  await page
+    .getByRole("button", { name: "표현식 값 보기", exact: true })
+    .click();
   await expect(
     page.getByRole("link", { name: "Birdseye 표현식 결과 열기" }),
   ).toBeVisible();
@@ -61,6 +60,7 @@ test("Module 1, question and draft survive refresh", async ({ page }) => {
   );
   await page.getByRole("button", { name: "▶ 실행" }).click();
   await expect(page.getByText("✓ 통과", { exact: true })).toBeVisible();
+  await page.getByText("관리자에게 질문 남기기", { exact: true }).click();
   await page
     .getByLabel("이 단계에 대한 질문")
     .fill("빈 입력을 먼저 확인하는 이유가 궁금합니다.");
@@ -104,11 +104,15 @@ for (const width of [320, 390, 768])
       ),
     ).toBe(true);
     await page
-      .getByLabel("한두 문장으로 설명하기")
+      .getByLabel("내가 생각한 풀이", { exact: true })
       .fill("입력을 처리해서 결과를 만들었습니다.");
-    await page.getByRole("button", { name: "복습 기록 저장" }).click();
+    await page
+      .getByRole("button", { name: "내 생각 저장", exact: true })
+      .click();
     await expect(
-      page.getByRole("status").filter({ hasText: "선택 복습을 저장했습니다." }),
+      page
+        .getByRole("status")
+        .filter({ hasText: "내 생각을 학습 기록에 저장했습니다." }),
     ).toBeVisible();
   });
 test("all eight Module 1 projects complete in the browser", async ({

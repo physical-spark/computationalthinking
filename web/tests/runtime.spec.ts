@@ -1,4 +1,6 @@
 import { test, expect } from "@playwright/test";
+const runnerOrigin =
+  "http://localhost:" + (process.env.CT_RUNNER_PORT || "5174");
 test("Python runtime loads and checks the first task", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
@@ -24,9 +26,7 @@ test("complete curriculum fixtures pass inside Pyodide", async ({ page }) => {
   await expect(page.getByRole("button", { name: "▶ 실행" })).toBeEnabled({
     timeout: 60000,
   });
-  const frame = page
-    .frames()
-    .find((f) => f.url().startsWith("http://localhost:5174"))!;
+  const frame = page.frames().find((f) => f.url().startsWith(runnerOrigin))!;
   const result = await frame.evaluate(
     async () => await (window as any).ctVerify(),
   );
@@ -39,7 +39,7 @@ test("a stalled first load reports delay and can restart without losing code", a
 }, testInfo) => {
   await page.clock.install();
   let stalled = true;
-  await page.route("http://localhost:5174/?parent=*", async (route) => {
+  await page.route(runnerOrigin + "/?parent=*", async (route) => {
     if (stalled)
       await route.fulfill({
         contentType: "text/html",

@@ -165,3 +165,25 @@ def test_proxy_ip_is_explicit_and_validated(monkeypatch):
     assert client_ip(request("10.42.0.1", "203.0.113.9")) == "203.0.113.9"
     assert client_ip(request("10.42.0.1", "invalid")) == "10.42.0.1"
     assert client_ip(request("8.8.8.8", "203.0.113.9")) == "8.8.8.8"
+
+
+def test_reflections_are_private_idempotent_and_survive_account_merge(client, other, task):
+    guest_id = client.get("/api/v1/me").json()["id"]
+    target_id = other.get("/api/v1/me").json()["id"]
+    note = {
+        **task,
+        "id": str(uuid4()),
+        "explanation": "입력과 처리 규칙을 나눠 생각했습니다.",
+        "choice": None,
+    }
+    assert client.post("/api/v1/reflections", json=note).status_code == 200
+    assert client.post("/api/v1/reflections", json=note).status_code == 200
+    assert len(client.get("/api/v1/progress").json()["reflections"]) == 1
+    assert other.get("/api/v1/progress").json()["reflections"] == []
+    assert other.post("/api/v1/reflections", json=note).status_code == 409
+    with SessionLocal.begin() as db:
+        merge_guest(db, db.get(Learner, guest_id), db.get(Learner, target_id))
+    restored = other.get("/api/v1/progress").json()["reflections"]
+    assert len(restored) == 1
+    assert restored[0]["explanation"] == note["explanation"]
+    assert restored[0]["learner_id"] == target_id

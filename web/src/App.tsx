@@ -15,10 +15,12 @@ import type {
   Page,
   Progress,
   Question,
+  Reflection,
   Step,
   User,
 } from "./types";
 import Diagram from "./Diagram";
+import { ThinkingGoal, ThinkingJournal } from "./Thinking";
 import Runner, { type RunnerHandle } from "./Runner";
 const Editor = lazy(() => import("./Editor"));
 const Admin = lazy(() => import("./Admin"));
@@ -144,7 +146,6 @@ export default function App() {
     [code, setCode] = useState(""),
     [saved, setSaved] = useState("저장 준비"),
     [output, setOutput] = useState(""),
-    [mode, setMode] = useState("editor"),
     [runnerState, setRunnerState] = useState("loading"),
     [runnerDetail, setRunnerDetail] = useState("실행 환경에 연결합니다."),
     [mobile, setMobile] = useState(matchMedia("(max-width: 900px)").matches),
@@ -162,6 +163,7 @@ export default function App() {
     [explanation, setExplanation] = useState(""),
     [question, setQuestion] = useState(""),
     [questions, setQuestions] = useState<Question[]>([]),
+    [reflections, setReflections] = useState<Reflection[]>([]),
     [parsons, setParsons] = useState<string[]>([]),
     [parsonsOpen, setParsonsOpen] = useState(false);
   const pendingOutput = useRef("");
@@ -182,6 +184,7 @@ export default function App() {
   const selected = all.find((x) => x.step.id === current) || all[0];
   const page = selected?.page,
     step = selected?.step;
+  const mode = step?.mode || "editor";
   const index = all.findIndex((x) => x.step.id === current);
   const next = all[index + 1];
   const previous = all[index - 1];
@@ -194,6 +197,7 @@ export default function App() {
     setProgress(p.progress);
     setDrafts(p.drafts);
     setConflicts(p.conflicts);
+    setReflections(p.reflections || []);
   }
   useEffect(() => {
     (async () => {
@@ -232,6 +236,25 @@ export default function App() {
               }
             }
           }
+          if (connecting !== me.id) {
+            for (const key of Object.keys(localStorage)) {
+              const prefix = "ct-reflection:" + connecting + ":";
+              if (!key.startsWith(prefix)) continue;
+              const note = localGet<any>(key, null);
+              if (!note?.dirty) continue;
+              const stepId = key.slice(prefix.length);
+              note.pendingId ||= crypto.randomUUID();
+              localSet(key, note);
+              localSet("ct-reflection:" + me.id + ":" + stepId, note);
+              await queueEvent(me.id, "/api/v1/reflections", {
+                id: note.pendingId,
+                step_id: stepId,
+                version: note.version || "offline-reflection",
+                explanation: note.explanation || "",
+                choice: note.choice ?? null,
+              }).catch(() => {});
+            }
+          }
           localStorage.removeItem("ct-connecting-user");
         }
         setUser(me);
@@ -244,6 +267,7 @@ export default function App() {
         setProgress(p.progress);
         setDrafts(p.drafts);
         setConflicts(p.conflicts);
+        setReflections(p.reflections || []);
         setQuestions(q);
         const originalHash = decodeURIComponent(location.hash.slice(1));
         const hash =
@@ -305,7 +329,6 @@ export default function App() {
         dirty: false,
       });
     setCode(initial);
-    setMode(step.mode);
     setOutput("");
     setHints(0);
     setRevealed(0);
@@ -314,8 +337,23 @@ export default function App() {
     setResultPending(null);
     setTrace([]);
     setDebugUrl("");
-    setChoice(null);
-    setExplanation("");
+    const latestReflection = reflections
+      .filter((r) => r.step_id === step.id)
+      .sort((a, b) => b.created - a.created)[0];
+    const localReflection = localGet<any>(
+      "ct-reflection:" + user.id + ":" + step.id,
+      null,
+    );
+    setChoice(
+      localReflection?.dirty
+        ? (localReflection.choice ?? null)
+        : (latestReflection?.choice ?? localReflection?.choice ?? null),
+    );
+    setExplanation(
+      localReflection?.dirty
+        ? localReflection.explanation
+        : (latestReflection?.explanation ?? localReflection?.explanation ?? ""),
+    );
     setParsonsOpen(false);
     setParsons(
       (step.solution?.lines || []).map(textOf).sort(() => Math.random() - 0.5),
@@ -422,7 +460,7 @@ export default function App() {
     setCode(value);
     setSaved("저장 중");
   }
-  function run() {
+  function run(source = mode) {
     if (!step || !page) return;
     if (runnerState !== "ready") {
       setNotice(
@@ -440,7 +478,7 @@ export default function App() {
     setDebugUrl("");
     runner.current?.run({
       input: code,
-      source: mode,
+      source,
       page_slug: page.id,
       step_name: step.name,
     });
@@ -497,6 +535,49 @@ export default function App() {
         pendingOutput.current = "";
       }
       commitResult(result);
+    }
+  }
+  function rememberReflection(text: string, selected: number | null = choice) {
+    setExplanation(text);
+    const key = "ct-reflection:" + user!.id + ":" + step!.id;
+    if (
+      !localSet(key, {
+        explanation: text,
+        choice: selected,
+        dirty: true,
+        version: course!.version,
+      })
+    )
+      setNotice(
+        "브라우저에 글을 보관하지 못했습니다. ‘내 생각 저장’으로 저장하거나 글을 복사해 주세요.",
+      );
+  }
+  async function saveReflection(quizOnly = false) {
+    if (!step || !user || !course) return;
+    const entry = {
+      id: crypto.randomUUID(),
+      step_id: step.id,
+      version: course.version,
+      choice,
+      explanation,
+    };
+    const key = "ct-reflection:" + user.id + ":" + step.id;
+    try {
+      await queueEvent(user.id, "/api/v1/reflections", entry);
+      setReflections((rs) => [...rs, { ...entry, created: Date.now() / 1000 }]);
+      const current = localGet<any>(key, null);
+      if (current?.explanation === explanation && current?.choice === choice)
+        localSet(key, { ...current, dirty: false });
+      if (currentRef.current === step.id)
+        setNotice(
+          quizOnly
+            ? "선택 복습을 저장했습니다."
+            : "내 생각을 학습 기록에 저장했습니다.",
+        );
+    } catch {
+      setNotice(
+        "연결되면 생각 기록을 저장합니다. 작성한 글은 이 브라우저에 보관됩니다.",
+      );
     }
   }
   async function submitQuestion(e: React.FormEvent) {
@@ -693,6 +774,7 @@ export default function App() {
             </span>
             {passed && <span className="passed-label">✓ 통과</span>}
           </div>
+          <ThinkingGoal step={step} />
           <Diagram key={page.id} index={page.diagram} concept={page.concept} />
           {page.track === "module1" && (
             <p className="simulation-label">
@@ -830,8 +912,20 @@ export default function App() {
               <p>읽기와 코드 통과는 따로 기록합니다.</p>
             </section>
           )}
+          <ThinkingJournal
+            key={step.id}
+            page={page}
+            step={step}
+            answer={explanation}
+            onChange={rememberReflection}
+            onSave={() => saveReflection()}
+            code={code}
+            output={output}
+            passed={passed}
+          />
           {(passed || mobile || step.reading) && (
-            <section className="review">
+            <details className="review">
+              <summary>개념 확인하기 · 선택</summary>
               <span className="eyebrow">선택 복습</span>
               <h2>내가 이해한 것을 확인해 볼까요?</h2>
               <p>건너뛰어도 다음 과제로 이동할 수 있습니다.</p>
@@ -843,7 +937,10 @@ export default function App() {
                       type="radio"
                       name="review"
                       checked={choice === i}
-                      onChange={() => setChoice(i)}
+                      onChange={() => {
+                        setChoice(i);
+                        rememberReflection(explanation, i);
+                      }}
                     />
                     {c}
                   </label>
@@ -856,37 +953,13 @@ export default function App() {
                     : "설명과 그림을 다시 확인하고 생각을 바꿔 보세요."}
                 </p>
               )}
-              <label>
-                한두 문장으로 설명하기
-                <textarea
-                  value={explanation}
-                  onChange={(e) => setExplanation(e.target.value)}
-                  placeholder="어떤 입력을 어떻게 처리했나요?"
-                  maxLength={4000}
-                />
-              </label>
-              <button
-                onClick={async () => {
-                  try {
-                    await queueEvent(user.id, "/api/v1/reflections", {
-                      id: crypto.randomUUID(),
-                      step_id: step.id,
-                      version: course.version,
-                      choice,
-                      explanation,
-                    });
-                    setNotice("선택 복습을 저장했습니다.");
-                  } catch {
-                    setNotice("연결되면 복습 기록을 저장합니다.");
-                  }
-                }}
-              >
+              <button onClick={() => saveReflection(true)}>
                 복습 기록 저장
               </button>
-            </section>
+            </details>
           )}
-          <section className="ask-section">
-            <h2>궁금한 점 남기기</h2>
+          <details className="ask-section">
+            <summary>관리자에게 질문 남기기</summary>
             <p>질문과 답변은 본인과 관리자만 볼 수 있습니다.</p>
             <form onSubmit={submitQuestion}>
               <label>
@@ -902,7 +975,7 @@ export default function App() {
               </label>
               <button>질문 남기기</button>
             </form>
-          </section>
+          </details>
           <div className="lesson-navigation">
             {previous ? (
               <button onClick={() => navigate(previous.step.id)}>
@@ -956,37 +1029,17 @@ export default function App() {
             <section className="coding-pane" aria-label="코드 작성과 실행">
               <div className="coding-top">
                 <div>
-                  <span className="file-dot" />{" "}
-                  {mode === "shell" ? "Python 셸" : "practice.py"}
+                  <span className="file-dot" /> Python
                 </div>
                 <span className="save-state" role="status">
                   {saved}
                 </span>
               </div>
-              <div className="mode-bar">
-                <label>
-                  실행 방식
-                  <select
-                    aria-label="실행 방식"
-                    value={mode}
-                    onChange={(e) => setMode(e.target.value)}
-                    disabled={
-                      runnerState === "running" || runnerState === "input"
-                    }
-                  >
-                    <option value="editor">코드 실행</option>
-                    <option value="shell">셸</option>
-                    <option value="snoop">Snoop · 실행 흐름</option>
-                    <option value="pythontutor">
-                      Python Tutor 방식 · 단계 보기
-                    </option>
-                    <option value="birdseye">Birdseye · 표현식 보기</option>
-                  </select>
-                </label>
+              <div className="mode-bar run-toolbar">
                 <button
                   className="run-button"
                   disabled={runnerState !== "ready"}
-                  onClick={run}
+                  onClick={() => run()}
                 >
                   ▶ 실행
                 </button>
@@ -1132,6 +1185,33 @@ export default function App() {
                   Birdseye 표현식 결과 열기 ↗
                 </a>
               )}
+              <details className="execution-tools">
+                <summary>코드 흐름 살펴보기</summary>
+                <p>
+                  문제에서 필요한 실행 도구는 자동으로 적용됩니다. 더 살펴보고
+                  싶을 때만 아래 도구를 사용하세요.
+                </p>
+                <div className="tool-actions">
+                  <button
+                    disabled={runnerState !== "ready"}
+                    onClick={() => run("snoop")}
+                  >
+                    변수 변화 보기
+                  </button>
+                  <button
+                    disabled={runnerState !== "ready"}
+                    onClick={() => run("pythontutor")}
+                  >
+                    한 줄씩 보기
+                  </button>
+                  <button
+                    disabled={runnerState !== "ready"}
+                    onClick={() => run("birdseye")}
+                  >
+                    표현식 값 보기
+                  </button>
+                </div>
+              </details>
               <Runner
                 ref={runner}
                 onOutput={(s) => {
@@ -1147,8 +1227,8 @@ export default function App() {
                 onProgress={setRunnerDetail}
               />
               <p className="keyboard-tip">
-                Ctrl / ⌘ + Enter로 실행 · 입력 기다림에는 아래 입력 칸을
-                사용하세요.
+                {mode === "shell" ? "Enter로 실행" : "Ctrl / ⌘ + Enter로 실행"}{" "}
+                · 입력 기다림에는 입력 칸을 사용하세요.
               </p>
             </section>
           </>

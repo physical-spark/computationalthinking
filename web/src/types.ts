@@ -1,4 +1,19 @@
+export type Thinking = {
+  focus: string;
+  why: string;
+  question: string;
+  activity: string;
+};
+export type Reflection = {
+  id: string;
+  step_id: string;
+  explanation: string;
+  choice: number | null;
+  created: number;
+  version: string;
+};
 export type Step = {
+  thinking: Thinking;
   id: string;
   name: string;
   text: string;

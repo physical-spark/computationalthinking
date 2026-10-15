@@ -10,8 +10,7 @@ test("administrator reviews a class and privately answers a student", async ({
     page.getByRole("button", { name: "질문함", exact: true }),
   ).toBeVisible();
   const me = await (await page.request.get("/api/v1/me")).json();
-  const db =
-    "sqlite:///.cache/" + (process.env.CI ? "e2e" : "migration") + ".db";
+  const db = process.env.CT_BROWSER_DATABASE || "sqlite:///.cache/e2e.db";
   execFileSync(
     "uv",
     [
@@ -50,8 +49,10 @@ test("administrator reviews a class and privately answers a student", async ({
   ).find((c: any) => c.name === name);
   expect(cohort).toBeTruthy();
   const student = await requestFactory.newContext({
-    baseURL: "http://localhost:5173",
-    extraHTTPHeaders: { Origin: "http://localhost:5173" },
+    baseURL: "http://localhost:" + (process.env.CT_WEB_PORT || "5173"),
+    extraHTTPHeaders: {
+      Origin: "http://localhost:" + (process.env.CT_WEB_PORT || "5173"),
+    },
   });
   await student.get("/api/v1/me");
   await student.patch("/api/v1/me", { data: { nickname } });

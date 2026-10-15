@@ -1196,3 +1196,98 @@ td code {
   margin: 0 0 0.75rem;
   line-height: 1.6;
 }
+
+.thinking-goal {
+  margin: 1.5rem 0;
+  padding: 1.1rem 1.25rem;
+  border-inline-start: 4px solid var(--accent);
+  background: var(--accent-soft);
+  border-radius: 0 12px 12px 0;
+}
+.thinking-goal h2 {
+  font-size: 1.15rem;
+  margin: 0.4rem 0;
+}
+.thinking-goal p {
+  margin: 0;
+}
+.thinking-journal {
+  margin-block: 2rem;
+}
+.thinking-journal h2 {
+  margin: 0.35rem 0 0.75rem;
+}
+.thinking-journal > textarea {
+  width: 100%;
+  min-height: 150px;
+  margin-top: 0.5rem;
+}
+.journal-actions,
+.tool-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-block: 1rem;
+}
+.field-help {
+  font-size: 0.875rem;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.copy-code-choice {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  flex-shrink: 0;
+  accent-color: var(--accent);
+}
+.prompt-preview summary {
+  cursor: pointer;
+  color: var(--accent);
+}
+.prompt-preview textarea {
+  width: 100%;
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+}
+.copy-status {
+  min-height: 1.5em;
+  color: var(--accent);
+}
+#thinking-error {
+  color: var(--danger);
+}
+.run-toolbar {
+  justify-content: flex-end;
+}
+.execution-tools {
+  margin: 1rem;
+  color: #e5ece6;
+}
+.execution-tools summary {
+  cursor: pointer;
+}
+.execution-tools p {
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+@media (max-width: 480px) {
+  .journal-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+.review > summary,
+.ask-section > summary {
+  cursor: pointer;
+  font-weight: 650;
+}
+.ask-section {
+  margin-block: 1.5rem;
+}
