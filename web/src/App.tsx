@@ -281,9 +281,7 @@ export default function App() {
             : me.current_step || c.pages[0].steps[0].id,
         );
         if (new URLSearchParams(location.search).has("login"))
-          setNotice(
-            "Google 로그인을 마치지 못했습니다. 다시 로그인해 주세요.",
-          );
+          setNotice("Google 로그인을 마치지 못했습니다. 다시 로그인해 주세요.");
       } catch (e) {
         setError((e as Error).message);
       }
@@ -1095,8 +1093,8 @@ export default function App() {
                 <div className="runner-status">
                   <p role="status">{runnerDetail}</p>
                   <p>
-                    처음 접속하면 Python 실행 파일을 내려받습니다. 준비하는 동안
-                    코드를 작성할 수 있습니다.
+                    서버에서 실행 환경을 준비합니다. 준비하는 동안 코드를 작성할
+                    수 있습니다. 연결이 끊겨도 작성한 코드는 유지됩니다.
                   </p>
                   <button onClick={() => runner.current?.restart()}>
                     Python 다시 준비하기
@@ -1293,11 +1291,7 @@ export default function App() {
           <button>닫기</button>
         </form>
         <h2 id="account-title">이어서 학습하기</h2>
-        <p>
-          {user.connected
-            ? "Google 계정에 학습 기록을 연결했습니다."
-            : "지금은 이 브라우저에 연결된 익명 학습자입니다. 브라우저 데이터를 지우면 기록에 접근하지 못할 수 있습니다."}
-        </p>
+        <p>Google 계정에 학습 기록을 연결했습니다.</p>
         <form
           onSubmit={async (e) => {
             e.preventDefault();
@@ -1324,37 +1318,6 @@ export default function App() {
           </label>
           <button>닉네임 저장</button>
         </form>
-        {!user.connected &&
-          (user.google_available ? (
-            <a
-              className="button google-button"
-              href="/auth/google/start"
-              onClick={async (e) => {
-                e.preventDefault();
-                try {
-                  const nickname =
-                    account.current?.querySelector<HTMLInputElement>(
-                      'input[name="nickname"]',
-                    )?.value;
-                  if (nickname) await api("/api/v1/me", "PATCH", { nickname });
-                  await flushQueue(user.id);
-                  localSet("ct-connecting-user", user.id);
-                  location.href = "/auth/google/start";
-                } catch {
-                  setNotice(
-                    "먼저 연결을 확인하고 기록을 저장한 뒤 계정을 연결해 주세요.",
-                  );
-                }
-              }}
-            >
-              Google로 기록 연결하기
-            </a>
-          ) : (
-            <p className="muted">
-              Google 연결을 준비 중입니다. 익명 학습과 저장은 사용할 수
-              있습니다.
-            </p>
-          ))}
         {user.connected && (
           <button
             onClick={async () => {
