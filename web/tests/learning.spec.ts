@@ -28,7 +28,6 @@ test("input, stop, snoop, local tracing and birdseye work", async ({
   await expect(page.getByRole("button", { name: "▶ 실행" })).toBeEnabled({
     timeout: 30000,
   });
-  await page.getByText("코드 흐름 살펴보기", { exact: true }).click();
   await code(page, "x = 2\nprint(x + 3)");
   await page
     .getByRole("button", { name: "변수 변화 보기", exact: true })
@@ -60,7 +59,6 @@ test("Module 1, question and draft survive refresh", async ({ page }) => {
   );
   await page.getByRole("button", { name: "▶ 실행" }).click();
   await expect(page.getByText("✓ 통과", { exact: true })).toBeVisible();
-  await page.getByText("관리자에게 질문 남기기", { exact: true }).click();
   await page
     .getByLabel("이 단계에 대한 질문")
     .fill("빈 입력을 먼저 확인하는 이유가 궁금합니다.");
@@ -85,7 +83,7 @@ for (const width of [320, 390, 768])
     await page.setViewportSize({ width, height: 900 });
     const fetched: string[] = [];
     page.on("request", (r) => fetched.push(r.url()));
-    await page.goto("/");
+    await page.goto("/#IntroducingTheShell.first_expression");
     await expect(
       page.getByRole("heading", { name: "코드 읽기", exact: true }),
     ).toBeVisible();
@@ -118,7 +116,7 @@ for (const width of [320, 390, 768])
 test("all eight Module 1 projects complete in the browser", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/#IntroducingTheShell.first_expression");
   await expect(page.getByRole("button", { name: "▶ 실행" })).toBeEnabled({
     timeout: 60000,
   });

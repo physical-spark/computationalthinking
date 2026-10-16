@@ -7,7 +7,7 @@ test("simple execution, reflection restoration and real feedback clipboard", asy
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   const requests: string[] = [];
   page.on("request", (r) => requests.push(r.url()));
-  await page.goto("/");
+  await page.goto("/#IntroducingTheShell.first_expression");
   await expect(page.getByRole("combobox", { name: "실행 방식" })).toHaveCount(
     0,
   );
@@ -84,7 +84,7 @@ test("clipboard denial exposes a selected manual-copy prompt", async ({
       },
     }),
   );
-  await page.goto("/");
+  await page.goto("/#IntroducingTheShell.first_expression");
   await page
     .getByLabel("내가 생각한 풀이", { exact: true })
     .fill("입력한 식과 출력의 차이를 설명하고 싶다.");
@@ -112,7 +112,7 @@ test("clipboard denial exposes a selected manual-copy prompt", async ({
 test("required debugging tools run automatically with one execute button", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/#IntroducingTheShell.first_expression");
   const course = await (await page.request.get("/api/v1/course")).json();
   const examples = [
     ["UnderstandingProgramsWithSnoop", "print_tail_snoop", "snoop"],

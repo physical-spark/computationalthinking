@@ -7,7 +7,7 @@ test("Python runtime loads and checks the first task", async ({ page }) => {
   page.on("console", (m) => {
     if (m.type() === "error") errors.push(m.text());
   });
-  await page.goto("/");
+  await page.goto("/#IntroducingTheShell.first_expression");
   await expect(page.getByRole("button", { name: "▶ 실행" })).toBeEnabled({
     timeout: 60000,
   });
@@ -31,7 +31,7 @@ test("server reconnect preserves editor code and runs without Pyodide", async ({
   });
   const requested: string[] = [];
   page.on("request", (r) => requested.push(r.url()));
-  await page.goto("/");
+  await page.goto("/#IntroducingTheShell.first_expression");
   const run = page.getByRole("button", { name: "▶ 실행" });
   await expect(run).toBeEnabled({ timeout: 60000 });
   const editor = page.getByRole("textbox", { name: "Python 코드 편집기" });

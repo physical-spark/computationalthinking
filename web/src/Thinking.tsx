@@ -92,7 +92,6 @@ export function ThinkingJournal({
   const [manualCopy, setManualCopy] = useState(false);
   const answerField = useRef<HTMLTextAreaElement>(null);
   const previewField = useRef<HTMLTextAreaElement>(null);
-  const preview = useRef<HTMLDetailsElement>(null);
   const prompt = feedbackPrompt({
     page,
     step,
@@ -103,8 +102,7 @@ export function ThinkingJournal({
     includeCode,
   });
   useEffect(() => {
-    if (manualCopy && preview.current && previewField.current) {
-      preview.current.open = true;
+    if (manualCopy && previewField.current) {
       previewField.current.focus();
       previewField.current.select();
     }
@@ -182,16 +180,16 @@ export function ThinkingJournal({
         <button onClick={onSave}>내 생각 저장</button>
         <button onClick={copy}>AI 피드백 요청문 복사</button>
       </div>
-      <details className="prompt-preview" ref={preview}>
-        <summary>복사될 요청문 미리보기</summary>
+      <section className="prompt-preview">
+        <h3>복사될 요청문 미리보기</h3>
         <textarea
           aria-label="AI 피드백 요청문 미리보기"
           readOnly
           value={prompt}
           ref={previewField}
-          rows={12}
+          rows={6}
         />
-      </details>
+      </section>
       <p role="status" className="copy-status">
         {status}
       </p>

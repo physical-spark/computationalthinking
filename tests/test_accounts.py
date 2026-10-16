@@ -125,8 +125,8 @@ def test_merge_preserves_progress_questions_and_both_drafts(client, other, task)
         assert db.get(Question, qid).learner_id == target_id
 
 
-def test_csv_formula_is_escaped(administrator):
-    administrator.patch("/api/v1/me", json={"nickname": "=IMPORTXML(1)"})
+def test_csv_formula_is_escaped(administrator, other):
+    other.patch("/api/v1/me", json={"nickname": "=IMPORTXML(1)"})
     result = administrator.get("/api/v1/admin/export.csv")
     assert result.status_code == 200 and "'=IMPORTXML(1)" in result.text
 
@@ -214,19 +214,19 @@ def test_logged_out_learning_and_websocket_are_denied():
 
 def test_admin_binding_requires_verified_email_and_pins_sub(client, other, monkeypatch):
     from backend.main import bind_configured_admin
-    monkeypatch.setenv("CT_ADMIN_EMAILS", "gichanlee@icloud.com")
+    monkeypatch.setenv("CT_ADMIN_EMAILS", "energy.to.chan@gmail.com")
     uid=client.get("/api/v1/me").json()["id"]
     oid=other.get("/api/v1/me").json()["id"]
     with SessionLocal.begin() as db:
         u=db.get(Learner,uid)
-        bind_configured_admin(db,u,{"email":"gichanlee@icloud.com","email_verified":False})
+        bind_configured_admin(db,u,{"email":"energy.to.chan@gmail.com","email_verified":False})
         assert not u.admin
         bind_configured_admin(db,u,{"email":"someone@example.com","email_verified":True})
         assert not u.admin
-        bind_configured_admin(db,u,{"email":"gichanlee@icloud.com","email_verified":True})
+        bind_configured_admin(db,u,{"email":"energy.to.chan@gmail.com","email_verified":True})
         assert u.admin
         attacker=db.get(Learner,oid)
-        bind_configured_admin(db,attacker,{"email":"gichanlee@icloud.com","email_verified":True})
+        bind_configured_admin(db,attacker,{"email":"energy.to.chan@gmail.com","email_verified":True})
         assert not attacker.admin
 
 
@@ -240,13 +240,46 @@ def test_oauth_callback_preserves_existing_records_and_assigns_configured_admin(
         db.get(Learner,uid).google_sub=None
     class Google:
         async def authorize_redirect(self,*args,**kwargs):return RedirectResponse("https://accounts.google.com/test")
-        async def authorize_access_token(self,*args):return {"userinfo":{"sub":"verified-oauth-sub","email":"gichanlee@icloud.com","email_verified":True}}
+        async def authorize_access_token(self,*args):return {"userinfo":{"sub":"verified-oauth-sub","email":"energy.to.chan@gmail.com","email_verified":True}}
     monkeypatch.setattr(main,"oauth",SimpleNamespace(google=Google()))
     monkeypatch.setenv("GOOGLE_CLIENT_ID","test-client")
-    monkeypatch.setenv("CT_ADMIN_EMAILS","gichanlee@icloud.com")
+    monkeypatch.setenv("CT_ADMIN_EMAILS","energy.to.chan@gmail.com")
     assert client.get("/auth/google/start",follow_redirects=False).status_code==307
     assert client.get("/auth/google/callback",follow_redirects=False).status_code==303
     profile=client.get("/api/v1/me").json()
     assert profile["id"]==uid and profile["admin"] and profile["connected"]
-    assert profile["group_name"]=="로비"
+    assert profile["group_name"] is None
     assert client.get("/api/v1/progress").json()["reflections"][0]["explanation"]=="로그인 전 보존한 생각"
+
+
+def test_administrators_are_not_lobby_or_group_members(administrator, other):
+    profile = administrator.get("/api/v1/me").json()
+    assert profile["admin"] and profile["group_name"] is None
+    assert profile["groups"] == [] and profile["memberships"] == []
+    group = administrator.post("/api/v1/admin/cohorts", json={"name":"관리 테스트"}).json()
+    for target in (None, group["id"]):
+        assert administrator.put("/api/v1/admin/learners/"+profile["id"]+"/group", json={"group_id":target}).status_code == 422
+    for suffix in ("", "?cohort=lobby", "?cohort="+group["id"]):
+        assert profile["id"] not in [u["id"] for u in administrator.get("/api/v1/admin/learners"+suffix).json()]
+    assert other.get("/api/v1/me").json()["group_name"] == "로비"
+
+
+def test_admin_membership_migration_preserves_students_and_history(administrator, other, monkeypatch):
+    import importlib
+    import json
+    from backend.models import Membership, GroupMove
+    migration = importlib.import_module("backend.migrations.versions.20261016_admin_no_groups")
+    aid = administrator.get("/api/v1/me").json()["id"]
+    sid = other.get("/api/v1/me").json()["id"]
+    cid = administrator.post("/api/v1/admin/cohorts", json={"name":"기존 반"}).json()["id"]
+    with SessionLocal.begin() as db:
+        db.add_all([Membership(learner_id=aid,cohort_id=cid), Membership(learner_id=sid,cohort_id=cid)])
+        db.flush()
+        monkeypatch.setattr(migration.op,"get_bind",lambda:db.connection())
+        migration.upgrade()
+        db.expire_all()
+        assert db.get(Membership,(aid,cid)) is None
+        assert db.get(Membership,(sid,cid)) is not None
+        history=db.scalar(select(GroupMove).where(GroupMove.learner_id==aid))
+        assert json.loads(history.previous_groups)==[cid]
+        assert history.group_id is None

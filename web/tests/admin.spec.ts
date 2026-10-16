@@ -6,7 +6,7 @@ test("administrator reviews a class and privately answers a student", async ({
   page,
   request,
 }) => {
-  await page.goto("/");
+  await page.goto("/#IntroducingTheShell.first_expression");
   await expect(
     page.getByRole("button", { name: "질문함", exact: true }),
   ).toBeVisible();

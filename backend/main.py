@@ -211,6 +211,11 @@ def me(request: Request, response: Response, db: DB):
             "group_name": "로비",
         }
     u.active = time.time()
+    groups = (
+        []
+        if u.admin
+        else list(db.scalars(select(Cohort).join(Membership).where(Membership.learner_id == u.id)))
+    )
     return {
         "id": u.id,
         "nickname": u.nickname,
@@ -218,20 +223,9 @@ def me(request: Request, response: Response, db: DB):
         "admin": u.admin,
         "current_step": u.current_step,
         "google_available": bool(os.environ.get("GOOGLE_CLIENT_ID")),
-        "memberships": [m.cohort_id for m in rows(db, Membership, u)],
-        "groups": [
-            {"id": c.id, "name": c.name}
-            for c in db.scalars(
-                select(Cohort).join(Membership).where(Membership.learner_id == u.id)
-            )
-        ],
-        "group_name": ", ".join(
-            c.name
-            for c in db.scalars(
-                select(Cohort).join(Membership).where(Membership.learner_id == u.id)
-            )
-        )
-        or "로비",
+        "memberships": [c.id for c in groups],
+        "groups": [{"id": c.id, "name": c.name} for c in groups],
+        "group_name": None if u.admin else (", ".join(c.name for c in groups) or "로비"),
     }
 
 
@@ -541,7 +535,7 @@ def rotate(cid: str, request: Request, db: DB):
 
 
 def learner_stats(db, cohort=None):
-    q = select(Learner).where(Learner.google_sub.is_not(None))
+    q = select(Learner).where(Learner.google_sub.is_not(None), Learner.admin.is_(False))
     if cohort in {"free", "lobby"}:
         q = q.where(~Learner.id.in_(select(Membership.learner_id)))
     elif cohort:
@@ -594,6 +588,8 @@ def move_group(lid: str, p: GroupAssignment, request: Request, db: DB):
     user = db.get(Learner, lid, with_for_update=True)
     if not user or not user.google_sub:
         fail(404, "가입한 회원을 찾지 못했습니다.")
+    if user.admin:
+        fail(422, "관리자는 그룹에 배정할 수 없습니다.")
     group = db.get(Cohort, p.group_id) if p.group_id else None
     if p.group_id and (not group or group.archived):
         fail(422, "배정할 수 있는 그룹을 선택해 주세요.")
@@ -760,7 +756,7 @@ def merge_guest(db, guest, target):
         else:
             d.learner_id = target.id
     for m in rows(db, Membership, guest):
-        if db.get(Membership, (target.id, m.cohort_id)):
+        if target.admin or db.get(Membership, (target.id, m.cohort_id)):
             db.delete(m)
         else:
             m.learner_id = target.id
@@ -790,6 +786,7 @@ def bind_configured_admin(db, user, info):
     claim = db.get(AdminClaim, key)
     if claim and claim.google_sub == user.google_sub:
         user.admin = True
+        db.execute(delete(Membership).where(Membership.learner_id == user.id))
 
 
 @app.get("/auth/google/start")

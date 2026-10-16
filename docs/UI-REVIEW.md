@@ -78,3 +78,22 @@ Verification: `npm run build --prefix web` passed. `CT_WEB_PORT=5183 CT_RUNNER_P
 Verdict: Approve for the inspected controls and states; no HIGH findings remain. This is not a full-site accessibility certification.
 
 Production follow-up: commit `8a36acc`, Actions run `38870335151` completed successfully: 285 Korean native grading cases, 16 backend tests, 19 browser tests and execution-limit checks. App/runner deployed image `sha256:3e91edc2cd18c49c421f28a5e89c6207eedd9fb8869103be9873aa9cc5c85250`. Authenticated public Chrome verified Run on `1+2` produces `3`. All four admin filter controls measured height 44px and identical y=478.09375 in the observed viewport. At 390px document scroll width was 390 and CodeMirror count was zero. Saved desktop, admin-only filtered section and mobile screenshots; restored viewport. Evidence: https://course-studio.futurereadycampus.com/course-network/wiki/futurecoder/verification-ui-20261016.html .
+
+## Curriculum and concept-first flow — 2026-10-16
+
+Scope: signed-in entry, syllabus, sidebar, concept lesson and practice transitions; administrator membership semantics. React/TypeScript and existing semantic CSS tokens retained. Applied the installed Jakub better-* guidance to the complete entry-to-practice flow.
+
+| Domain | Evidence inspected | Result |
+| --- | --- | --- |
+| Accessibility | Named sidebar navigation, native prediction radios, heading/route focus, no disclosures, axe at four widths | Scoped checks pass |
+| Layout | 69-unit syllabus, desktop sidebar, 320/390/768/1440px concept-to-practice flow and rendered captures | No horizontal overflow; sidebar alone can be collapsed |
+| Writing | Administrator role vs group, concepts with analogies/examples/feedback/transfer, explicit optional prediction | Administrator is never described as lobby; read and pass remain distinct |
+| Typography | Existing Korean font stack, responsive heading, reading measure, line spacing | Clear within inspected screens |
+| Colors | Reused teal/neutral tokens, native radio/focus and axe contrast | Clear within inspected screens |
+| UI | Syllabus cards, persistent desktop path, openly displayed practice sections | No content accordion; action priority follows concept then practice |
+
+Resolved findings: MEDIUM layout — the practice-only entry gave no curriculum context; replaced with a syllabus linking all 61 Python units and eight applied projects. MEDIUM writing — a role was presented as a lobby group; backend excludes administrators from student/group statistics and rejects group assignment, and the account screen states that administrators have no group. MEDIUM comprehension — concepts and predictions were mixed with immediate execution; 20 authored concept foundations support 69 unit pages with unit-specific thinking goals, SVGs, worked examples and feedback before the explicit practice action. MEDIUM discoverability — requirements, hints, solutions, reflection, private questions, prompt preview and code-flow tools were hidden in disclosures; all are now sections. No HIGH findings remain in inspected states.
+
+Validation: backend tests include rejecting admin assignment to a group or lobby, excluding admins from rosters, and migrating old admin memberships while keeping student membership and group-move history. Curriculum browser tests cover all 69 catalog mappings, no execution connection or code draft before practice, wrong/right prediction feedback, sidebar navigation, browser Back and draft preservation, four widths and axe. Existing direct step hashes still open practice; normal chapter progression enters the next concept. Concept reading uses the existing read marker and never sets code pass. Local Python broker is absent, so native execution remains a CI/public deployment verification step. Full screen-reader narration and fresh physical browser 200% zoom are not verified here.
+
+Verdict: Approve for the inspected flow; not a claim of full-site WCAG conformance.

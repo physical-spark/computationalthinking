@@ -56,8 +56,8 @@ export default function Admin() {
       <section className="admin-section">
         <h2>그룹 관리</h2>
         <p>
-          가입한 회원은 로비에 들어옵니다. 회원 목록에서 그룹을 선택하고
-          이동시키세요.
+          일반 회원은 로비에 들어옵니다. 관리자는 어떤 그룹에도 속하지 않습니다.
+          회원 목록에서 그룹을 선택하고 이동시키세요.
         </p>
         <form
           className="inline-form"
@@ -251,13 +251,13 @@ export default function Admin() {
             .reverse()
             .slice(0, 20)
             .map((a: any) => (
-              <details key={a.id}>
-                <summary>
+              <section key={a.id}>
+                <h3>
                   {a.step_id} · {a.passed ? "통과" : "재시도"} · 힌트 {a.hints}
                   개
-                </summary>
+                </h3>
                 <pre>{a.code}</pre>
-              </details>
+              </section>
             ))}
           <h3>생각·복습 기록</h3>
           {detail.reflections.map((r: any) => (

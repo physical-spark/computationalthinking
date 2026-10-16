@@ -3,7 +3,7 @@ import AxeBuilder from "@axe-core/playwright";
 for (const width of [320, 390, 768, 1440]) {
   test(`controls remain usable at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
-    await page.goto("/");
+    await page.goto("/#IntroducingTheShell.first_expression");
     await expect(
       page.getByRole("button", { name: "학습 목차", exact: true }),
     ).toBeVisible();

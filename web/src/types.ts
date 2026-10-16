@@ -51,7 +51,7 @@ export type User = {
   google_available: boolean;
   memberships: string[];
   groups: { id: string; name: string }[];
-  group_name: string;
+  group_name: string | null;
 };
 export type Draft = {
   step_id: string;
