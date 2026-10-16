@@ -5,13 +5,19 @@
 import json
 import os
 import sys
+import threading
 
 protocol_in, protocol_out = sys.stdin, sys.stdout
+protocol_lock = threading.Lock()
 
 
 def send(kind, **data):
-    protocol_out.write(json.dumps({"type": kind, **data}, ensure_ascii=False) + "\n")
-    protocol_out.flush()
+    # Unbuffered pipe writes may be partial under backpressure. Preserve the
+    # whole JSON frame, including output from learner-created threads.
+    payload = memoryview((json.dumps({"type": kind, **data}, ensure_ascii=False) + "\n").encode())
+    with protocol_lock:
+        while payload:
+            payload = payload[os.write(protocol_out.fileno(), payload) :]
 
 
 def receive():

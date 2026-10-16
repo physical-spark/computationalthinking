@@ -49,6 +49,8 @@ jobs:
           cd web
           npx playwright install --with-deps chromium
           npx playwright test
+          cd ..
+          uv run python scripts/verify_execution_limits.py
       - name: Build ARM64 deployment image
         run: |
           docker build -t ct-app:${{ github.sha }} .

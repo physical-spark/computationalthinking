@@ -94,7 +94,10 @@ class Sandbox:
             raise RuntimeError("실행 환경이 종료됐습니다. 다시 준비해 주세요.")
         if len(line) > 2_000_000:
             raise RuntimeError("실행 결과가 너무 큽니다. 출력할 내용을 줄여 주세요.")
-        return json.loads(line)
+        try:
+            return json.loads(line)
+        except json.JSONDecodeError as error:
+            raise RuntimeError("실행 응답이 올바르지 않습니다. 다시 준비해 주세요.") from error
 
     async def write(self, data):
         self.process.stdin.write((json.dumps(data) + "\n").encode())

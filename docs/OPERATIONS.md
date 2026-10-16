@@ -59,7 +59,7 @@ python3 scripts/configure_google.py /home/ubuntu/.config/ct-google-client.json
 - `ct-execution.service`는 전용 Docker 브로커를 관리합니다. `10.42.0.1:8766`에만 바인드하고 Cloudflare 호스트를 추가하지 않습니다. 앱 Pod가 전용 Bearer 토큰으로 연결합니다.
 - 학생 Python은 gVisor `runsc` 컨테이너에서 실행합니다. 네트워크·호스트 마운트·Docker 소켓·DB·OAuth 비밀값이 없습니다. 읽기 전용 루트, 비특권 사용자, 32MiB 임시 파일, 512MiB 메모리, 0.5 CPU와 PID 64 제한을 적용합니다.
 - 동시 실행은 4개, 세션은 최대 32개(회원당 2개), 실행 시간은 30초입니다. 입력 대기는 최대 120초이며 실행 시간을 소모하지 않습니다. 실행 대기 60초, 연결 유휴 10분, 출력 2MB 제한이 있습니다. 중지·재연결 시 셸 변수는 초기화되고 작성 코드는 유지됩니다.
-- 모든 학생 컨테이너의 합계 한도는 `/ct-execution` cgroup의 CPU 2개·메모리 6GiB입니다. 브로커 자체는 0.5 CPU·256MiB입니다. 사용 전 환경 4개를 미리 준비하며 사용한 환경을 다른 회원에게 재사용하지 않습니다.
+- 모든 학생 컨테이너의 합계 한도는 `/ct-execution` cgroup의 CPU 2개·메모리 6GiB입니다. 브로커 자체는 0.5 CPU·512MiB·PID 512입니다. 브로커의 Docker 연결 프로세스도 이 한도에 포함되며 학생 컨테이너의 PID 64 제한과는 별개입니다. 사용 전 환경 4개를 미리 준비하며 사용한 환경을 다른 회원에게 재사용하지 않습니다.
 - 배포 이미지는 앱과 Python 코어 두 개입니다. 배포 전에 DB를 백업하고 브로커와 앱을 교체하며 실패하면 이전 두 이미지로 복구합니다. Docker 전체 재시작은 하지 않습니다.
 - 브로커 비밀값은 `/home/ubuntu/.config/ct-execution.env`와 k3s `ct-secrets`의 `CT_BROKER_TOKEN`입니다. API 쪽 `CT_BROKER_URL=ws://10.42.0.1:8766`이며 학생 컨테이너에는 전달하지 않습니다.
 - `CT_ADMIN_EMAILS`의 승인된 소유자는 Google 콜백의 `email_verified=true`와 이메일을 확인한 뒤 `sub`에 고정합니다. 동일 이메일의 다른 Google `sub`에는 다시 부여하지 않습니다. 기존 명시적 관리자 지정은 유지합니다. 새 회원에게 자동 관리자 역할을 주지 않습니다.
