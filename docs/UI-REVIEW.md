@@ -48,3 +48,31 @@ Applied better-writing, better-layout and better-accessibility to the changed le
 Each task shows its page’s authored thinking goal and an activity-adjusted question. The journal uses explicit labels, a bounded answer field, inline blank-answer feedback and a stable status region. The clipboard button generates a coaching prefix, task context and the learner’s own answer; code/output are opt-in. Clipboard denial opens and selects the read-only prompt with a keyboard-copy instruction. It sends no AI API request.
 
 Local verification: 11 changed/relevant browser checks passed (learning, thinking and populated axe), including actual clipboard readback, manual-copy focus/selection at 390px, server restoration after removing the synthetic local note, per-step drafts and automatic Snoop/Python Tutor-style/Birdseye execution. Backend reflection privacy/idempotency/merge checks passed with the existing suite. These are scoped interaction and automated accessibility checks, not full screen-reader narration or measured educational outcomes. Full deployment results are recorded separately in RELEASE-VERIFICATION.md.
+
+## Jakub interface alignment follow-up — 2026-10-16
+
+Scope: React/TypeScript learning header, editor toolbar, thinking journal and administrator controls. Existing CSS tokens and native controls retained. Applied installed Jakub Krehel better-interface plus accessibility, layout, writing, typography, colors and UI domain guidance. Parent AGENTS.md contains content/Discussion conventions; no app-specific AGENTS.md. No new Discussion.
+
+| Domain | Evidence inspected | Result |
+| --- | --- | --- |
+| Accessibility | Named navigation; keyboard order; axe at 320/390/768/1440px; journal save and admin group interaction | Passed scoped checks |
+| Layout | Rendered narrow/desktop learning screens, toolbar bounding boxes, administrator filter bounding boxes | Fixed separated toolbar and inconsistent baselines |
+| Writing | Group move confirmation and copy-option ordering | Fixed Korean particle ambiguity and decision order |
+| Typography | Existing Korean fallback stack, small labels, long synthetic nickname | Removed disabled font synthesis; metadata minimum 12px |
+| Colors | Existing semantic palette; populated axe checks; dark toolbar hover | Retained palette; explicit readable dark hover states |
+| UI | Native buttons/fields, disabled execution, touch targets, reduced-motion rules | Unified 44px primary controls; removed frequent-action scaling |
+
+Resolved findings:
+
+| Severity | Domain | Location | Before | After | Why |
+| --- | --- | --- | --- | --- | --- |
+| MEDIUM | Layout | App.tsx coding-top | Python/save and Run/Stop split across two bars | One bar with identity leading and actions trailing | Related controls share a baseline and remain near code |
+| MEDIUM | Layout | Admin.tsx learner-filters/group-assignment | Labels and variable-height fields inline with buttons | Labels above fields, 44px controls and aligned action rows | Scan filters and execute group moves without visual ambiguity |
+| MEDIUM | UI | style.css header-actions | Plain admin link, stacked account, mismatched sizes | Consistent navigation controls with inline lobby badge | Stable rhythm across menu actions |
+| MEDIUM | Layout | Thinking.tsx journal | Copy option followed copy action | Option and explanation precede save/copy row | Configure payload before acting; neutral secondary actions |
+| LOW | Typography | style.css root/metadata | Synthetic weight disabled; some 10–11px captions | System fallback synthesis and at least 12px metadata | Korean fallback weight and supporting text remain readable |
+| LOW | Colors | style.css hover | Generic light hover on dark Stop button | Explicit dark hover; hover only on supporting pointers | Preserve text contrast and avoid sticky touch hover |
+
+Verification: `npm run build --prefix web` passed. `CT_WEB_PORT=5183 CT_RUNNER_PORT=5184 CT_API_PORT=8011 npx playwright test layout.spec.ts admin.spec.ts` (web cwd) passed all five checks. Four-size layout/axe checks and screenshots passed again after adding capture artifacts. Local execution broker is intentionally absent: local desktop capture shows the real connection-error recovery state, not successful Python execution. Production execution and full regression results are recorded after deployment. Full screen-reader narration and a fresh physical 200% browser zoom check are not verified in this follow-up.
+
+Verdict: Approve for the inspected controls and states; no HIGH findings remain. This is not a full-site accessibility certification.

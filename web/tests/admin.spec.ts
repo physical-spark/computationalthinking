@@ -39,6 +39,19 @@ test("administrator reviews a class and privately answers a student", async ({
   await expect(
     page.getByRole("heading", { name: "수업의 흐름 살펴보기" }),
   ).toBeVisible();
+  const controls = page.locator(
+    ".learner-filters input, .learner-filters select, .learner-filters button, .learner-filters .button",
+  );
+  const boxes = await controls.evaluateAll((els) =>
+    els.map((el) => {
+      const r = el.getBoundingClientRect();
+      return { y: r.y, height: r.height };
+    }),
+  );
+  expect(
+    Math.max(...boxes.map((b) => b.y)) - Math.min(...boxes.map((b) => b.y)),
+  ).toBeLessThan(2);
+  expect(boxes.every((b) => b.height >= 44)).toBeTruthy();
   const name = "브라우저 검증 " + Date.now();
   const nickname = "질문하는 학생 " + Date.now();
   const question = "연산 순서를 어떻게 확인하나요? " + Date.now();
@@ -68,7 +81,7 @@ test("administrator reviews a class and privately answers a student", async ({
     .getByRole("button", { name: "그룹 이동", exact: true })
     .click();
   await expect(page.getByRole("status")).toContainText(
-    nickname + " 회원을 " + name,
+    nickname + " 회원의 그룹: " + name,
   );
 
   const course = await (await student.get("/api/v1/course")).json();

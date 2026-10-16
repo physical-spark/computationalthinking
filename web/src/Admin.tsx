@@ -121,7 +121,7 @@ export default function Admin() {
       </section>
       <section className="admin-section">
         <h2>학습자 진도</h2>
-        <div className="actions">
+        <div className="actions learner-filters">
           <label>
             그룹 선택
             <select value={cohort} onChange={(e) => setCohort(e.target.value)}>
@@ -178,45 +178,48 @@ export default function Admin() {
                     </td>
                     <td>
                       <p>{l.group_name}</p>
-                      <label>
-                        이동할 그룹
-                        <select
-                          aria-label={l.nickname + " 이동할 그룹"}
-                          value={moves[l.id] ?? l.group_ids[0] ?? ""}
-                          onChange={(e) =>
-                            setMoves({ ...moves, [l.id]: e.target.value })
+                      <div className="group-assignment">
+                        <label>
+                          이동할 그룹
+                          <select
+                            aria-label={l.nickname + " 이동할 그룹"}
+                            value={moves[l.id] ?? l.group_ids[0] ?? ""}
+                            onChange={(e) =>
+                              setMoves({ ...moves, [l.id]: e.target.value })
+                            }
+                          >
+                            <option value="">로비</option>
+                            {cohorts
+                              .filter((c) => !c.archived)
+                              .map((c) => (
+                                <option key={c.id} value={c.id}>
+                                  {c.name}
+                                </option>
+                              ))}
+                          </select>
+                        </label>
+                        <button
+                          onClick={() =>
+                            action(async () => {
+                              const target =
+                                moves[l.id] ?? l.group_ids[0] ?? "";
+                              const result = await api(
+                                "/api/v1/admin/learners/" + l.id + "/group",
+                                "PUT",
+                                { group_id: target || null },
+                              );
+                              setNotice(
+                                l.nickname +
+                                  " 회원의 그룹: " +
+                                  result.group_name +
+                                  " · 이동 완료",
+                              );
+                            })
                           }
                         >
-                          <option value="">로비</option>
-                          {cohorts
-                            .filter((c) => !c.archived)
-                            .map((c) => (
-                              <option key={c.id} value={c.id}>
-                                {c.name}
-                              </option>
-                            ))}
-                        </select>
-                      </label>
-                      <button
-                        onClick={() =>
-                          action(async () => {
-                            const target = moves[l.id] ?? l.group_ids[0] ?? "";
-                            const result = await api(
-                              "/api/v1/admin/learners/" + l.id + "/group",
-                              "PUT",
-                              { group_id: target || null },
-                            );
-                            setNotice(
-                              l.nickname +
-                                " 회원을 " +
-                                result.group_name +
-                                "로 이동했습니다.",
-                            );
-                          })
-                        }
-                      >
-                        그룹 이동
-                      </button>
+                          그룹 이동
+                        </button>
+                      </div>
                     </td>
                     <td>{new Date(l.active * 1000).toLocaleString("ko-KR")}</td>
                     <td>

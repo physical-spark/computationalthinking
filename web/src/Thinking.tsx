@@ -166,12 +166,6 @@ export function ThinkingJournal({
         작성 중인 글은 이 브라우저에 자동 보관됩니다. ‘내 생각 저장’을 누르면
         학습 기록에도 저장됩니다. 건너뛰어도 다음 문제로 이동할 수 있습니다.
       </p>
-      <div className="journal-actions">
-        <button onClick={onSave}>내 생각 저장</button>
-        <button className="primary" onClick={copy}>
-          AI 피드백 요청문 복사
-        </button>
-      </div>
       <label className="copy-code-choice">
         <input
           type="checkbox"
@@ -184,6 +178,10 @@ export function ThinkingJournal({
         문제·사고 목표·내 답변을 질문과 함께 복사합니다. 사용하는 AI 대화창에
         직접 붙여넣어 물어보세요.
       </p>
+      <div className="journal-actions">
+        <button onClick={onSave}>내 생각 저장</button>
+        <button onClick={copy}>AI 피드백 요청문 복사</button>
+      </div>
       <details className="prompt-preview" ref={preview}>
         <summary>복사될 요청문 미리보기</summary>
         <textarea

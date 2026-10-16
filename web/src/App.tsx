@@ -706,7 +706,7 @@ export default function App() {
             컴퓨팅 사고력<small>생각을 코드로 확인하는 시간</small>
           </span>
         </a>
-        <nav className="header-actions">
+        <nav className="header-actions" aria-label="학습 메뉴">
           <button onClick={() => setNavOpen(!navOpen)} aria-expanded={navOpen}>
             학습 목차
           </button>
@@ -732,7 +732,11 @@ export default function App() {
             {user.nickname}
             <small>{user.group_name || "로비"}</small>
           </button>
-          {user.admin && <a href="/admin">관리자</a>}
+          {user.admin && (
+            <a className="button" href="/admin">
+              관리자
+            </a>
+          )}
         </nav>
       </header>
       <div className="status-strip">
@@ -1066,28 +1070,31 @@ export default function App() {
             </div>
             <section className="coding-pane" aria-label="코드 작성과 실행">
               <div className="coding-top">
-                <div>
-                  <span className="file-dot" /> Python
+                <div className="editor-heading">
+                  <strong>
+                    <span className="file-dot" />
+                    Python
+                  </strong>
+                  <span className="save-state" role="status">
+                    {saved}
+                  </span>
                 </div>
-                <span className="save-state" role="status">
-                  {saved}
-                </span>
-              </div>
-              <div className="mode-bar run-toolbar">
-                <button
-                  className="run-button"
-                  disabled={runnerState !== "ready"}
-                  onClick={() => run()}
-                >
-                  ▶ 실행
-                </button>
-                <button
-                  className="stop-button"
-                  disabled={!["running", "input"].includes(runnerState)}
-                  onClick={() => runner.current?.stop()}
-                >
-                  중지
-                </button>
+                <div className="run-toolbar" aria-label="실행 도구">
+                  <button
+                    className="run-button"
+                    disabled={runnerState !== "ready"}
+                    onClick={() => run()}
+                  >
+                    ▶ 실행
+                  </button>
+                  <button
+                    className="stop-button"
+                    disabled={!["running", "input"].includes(runnerState)}
+                    onClick={() => runner.current?.stop()}
+                  >
+                    중지
+                  </button>
+                </div>
               </div>
               {["loading", "error"].includes(runnerState) && (
                 <div className="runner-status">
