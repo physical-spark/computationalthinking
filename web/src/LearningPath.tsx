@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Course, Page, Progress } from "./types";
 import { concepts } from "./concepts";
 import Diagram from "./Diagram";
@@ -222,98 +222,185 @@ export function ConceptLesson({
   onSyllabus: () => void;
 }) {
   const concept = concepts[page.diagram];
+  const titles = [
+    "생활 속 문제",
+    "핵심 규칙",
+    "그림으로 보기",
+    "코드 읽기",
+    "결과 예상",
+    "실습 준비",
+  ];
+  const readCard = () =>
+    Math.max(
+      0,
+      Math.min(5, Math.trunc(Number(location.hash.split("/")[2]) || 1) - 1),
+    );
+  const [card, setCard] = useState(readCard);
   const [choice, setChoice] = useState<number | null>(null);
+  const stage = useRef<HTMLElement>(null);
+  const title = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    const sync = () => setCard(readCard());
+    window.addEventListener("hashchange", sync);
+    return () => window.removeEventListener("hashchange", sync);
+  }, []);
+  useEffect(() => {
+    stage.current?.scrollTo({ top: 0 });
+    title.current?.focus({ preventScroll: true });
+  }, [card]);
+  function move(next: number) {
+    setCard(next);
+    location.hash = "concept/" + page.id + "/" + (next + 1);
+  }
   return (
-    <main id="lesson" className="concept-page" tabIndex={-1}>
-      <div className="concept-breadcrumb">
-        <button className="text-button" onClick={onSyllabus}>
-          전체 학습과정
-        </button>
-        <span aria-hidden="true">/</span>
-        <span>{page.chapterTitle}</span>
-      </div>
-      <span className="eyebrow">01 개념 먼저 배우기</span>
-      <h1>{page.title}</h1>
-      <p className="path-intro">{page.steps[0].thinking.why}</p>
-      <div className="concept-layout">
-        <article className="concept-reading">
-          <section>
-            <h2>{concept.title}</h2>
-            <p>{concept.idea}</p>
-            <p>{concept.analogy}</p>
-          </section>
-          <Diagram index={page.diagram} concept={page.concept} />
-          <section>
-            <h2>코드를 실행하기 전에</h2>
-            <p>한 줄씩 읽고, 입력과 처리 규칙을 찾아보세요.</p>
-            <pre>{concept.code}</pre>
-          </section>
-          <section className="concept-check">
-            <fieldset>
-              <legend>{concept.question}</legend>
-              {concept.choices.map((c, i) => (
-                <label key={c} className="quiz-choice">
-                  <input
-                    type="radio"
-                    name="concept-prediction"
-                    checked={choice === i}
-                    onChange={() => setChoice(i)}
-                  />
-                  {c}
-                </label>
-              ))}
-            </fieldset>
-            {choice !== null && (
-              <p className="concept-feedback" role="status">
-                <strong>
-                  {choice === concept.answer
-                    ? "맞습니다. "
-                    : "다시 비교해 보세요. "}
-                </strong>
-                {concept.explanation}
-              </p>
-            )}
-          </section>
-          <section>
-            <h2>이 생각은 어디에 쓸까요?</h2>
-            <p>{concept.transfer}</p>
-          </section>
-        </article>
-        <aside className="concept-outcomes" aria-label="이번 단원의 학습 목표">
-          <span className="eyebrow">이번 단원의 도착점</span>
-          <h2>{page.steps[0].thinking.focus}</h2>
-          <p>{page.steps[0].thinking.question}</p>
-          <h3>실습에서 할 일</h3>
-          <ul>
-            {Array.from(
-              new Set(
-                page.steps
-                  .filter((s) => !s.reading)
-                  .map((s) => s.thinking.activity),
-              ),
-            ).map((a) => (
-              <li key={a}>{a}</li>
-            ))}
-          </ul>
-          <p>
-            {page.steps.filter((s) => !s.reading).length}개 실습 단계에서 직접
-            확인합니다.
-          </p>
-          <p className="field-help">
-            예상 질문은 연습용입니다. 틀리거나 건너뛰어도 실습으로 갈 수
-            있습니다.
-          </p>
-          <button className="primary" onClick={onPractice}>
-            02 코드 실습 시작 →
+    <main id="lesson" className="concept-page paged-concept" tabIndex={-1}>
+      <header className="concept-page-header">
+        <div className="concept-breadcrumb">
+          <button className="text-button" onClick={onSyllabus}>
+            전체 학습과정
           </button>
-        </aside>
-      </div>
-      <div className="concept-next">
-        <p>원리를 읽었다면, 이제 한 가지씩 바꾸며 확인해 보세요.</p>
-        <button className="primary" onClick={onPractice}>
-          코드 실습으로 이동 →
+          <span aria-hidden="true">/</span>
+          <span>{page.chapterTitle}</span>
+        </div>
+        <h1>{page.title}</h1>
+        <div className="concept-progress">
+          <span>개념 학습</span>
+          <span aria-live="polite">
+            {card + 1} / {titles.length} · {titles[card]}
+          </span>
+        </div>
+        <progress
+          value={card + 1}
+          max={titles.length}
+          aria-label="개념 페이지 위치"
+        />
+      </header>
+      <section
+        ref={stage}
+        className="concept-stage"
+        aria-labelledby="concept-card-title"
+        tabIndex={0}
+      >
+        <div className="concept-card-content">
+          <span className="eyebrow">
+            {String(card + 1).padStart(2, "0")} · {titles[card]}
+          </span>
+          <h2 id="concept-card-title" ref={title} tabIndex={-1}>
+            {
+              [
+                concept.title,
+                "어떤 규칙으로 움직일까요?",
+                "입력에서 결과까지 따라가 보기",
+                "한 줄씩 읽어 보세요",
+                concept.question,
+                "이제 코드로 확인해 볼까요?",
+              ][card]
+            }
+          </h2>
+          {card === 0 && (
+            <>
+              <p className="concept-lead">{concept.analogy}</p>
+              <div className="concept-takeaway">
+                <strong>이번에 연습할 생각</strong>
+                <p>{page.steps[0].thinking.why}</p>
+              </div>
+            </>
+          )}
+          {card === 1 && (
+            <>
+              <p className="concept-lead">{concept.idea}</p>
+              <div className="concept-takeaway">
+                <strong>{page.steps[0].thinking.focus}</strong>
+                <p>{page.steps[0].thinking.question}</p>
+              </div>
+            </>
+          )}
+          {card === 2 && (
+            <Diagram index={page.diagram} concept={page.concept} />
+          )}
+          {card === 3 && (
+            <>
+              <p>아직 실행하지 말고, 값과 처리 순서를 살펴보세요.</p>
+              <pre className="concept-code">{concept.code}</pre>
+              <p className="field-help">다음 화면에서 결과를 예상해 봅니다.</p>
+            </>
+          )}
+          {card === 4 && (
+            <>
+              <pre className="concept-code">{concept.code}</pre>
+              <fieldset className="concept-options">
+                <legend className="sr-only">{concept.question}</legend>
+                {concept.choices.map((c, i) => (
+                  <label key={c} className="quiz-choice">
+                    <input
+                      type="radio"
+                      name="concept-prediction"
+                      checked={choice === i}
+                      onChange={() => setChoice(i)}
+                    />
+                    {c}
+                  </label>
+                ))}
+              </fieldset>
+              {choice !== null && (
+                <p className="concept-feedback" role="status">
+                  <strong>
+                    {choice === concept.answer
+                      ? "맞습니다. "
+                      : "다시 비교해 보세요. "}
+                  </strong>
+                  {concept.explanation}
+                </p>
+              )}
+              <p className="field-help">
+                연습 질문입니다. 건너뛰어도 다음으로 갈 수 있습니다.
+              </p>
+            </>
+          )}
+          {card === 5 && (
+            <>
+              <p className="concept-lead">{concept.transfer}</p>
+              <div className="concept-takeaway">
+                <strong>실습에서 해 볼 일</strong>
+                <ul>
+                  {Array.from(
+                    new Set(
+                      page.steps
+                        .filter((s) => !s.reading)
+                        .map((s) => s.thinking.activity),
+                    ),
+                  ).map((a) => (
+                    <li key={a}>{a}</li>
+                  ))}
+                </ul>
+                <p>
+                  한 가지씩 바꾸고 예상한 결과와 비교해 보세요. 내용 읽기와 코드
+                  통과는 따로 기록합니다.
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+      <nav className="concept-pagination" aria-label="개념 페이지 이동">
+        <button disabled={card === 0} onClick={() => move(card - 1)}>
+          ← 이전
         </button>
-      </div>
+        <span>
+          {card + 1} / {titles.length}
+        </span>
+        {card < titles.length - 1 ? (
+          <button className="primary" onClick={() => move(card + 1)}>
+            다음 →
+          </button>
+        ) : (
+          <button className="primary" onClick={onPractice}>
+            {page.steps.some((s) => !s.reading)
+              ? "코드 실습 시작 →"
+              : "단원 읽기 →"}
+          </button>
+        )}
+      </nav>
     </main>
   );
 }

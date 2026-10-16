@@ -197,7 +197,9 @@ export default function App() {
   function syncRoute(c: Course, fallback = "") {
     const hash = decodeURIComponent(location.hash.slice(1));
     const conceptPage = c.pages.find(
-      (p) => "concept/" + p.id === hash || p.id === hash,
+      (p) =>
+        "concept/" + p.id === hash.split("/").slice(0, 2).join("/") ||
+        p.id === hash,
     );
     const target = c.pages.flatMap((p) => p.steps).find((s) => s.id === hash);
     setView(conceptPage ? "concept" : target ? "practice" : "syllabus");

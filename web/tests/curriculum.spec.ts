@@ -3,7 +3,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { concepts } from "../src/concepts";
 for (const width of [320, 390, 768, 1440]) {
   test(`curriculum to concept to practice at ${width}px`, async ({ page }) => {
-    await page.setViewportSize({ width, height: 1000 });
+    await page.setViewportSize({ width, height: width <= 390 ? 740 : 1000 });
     let executionConnections = 0;
     page.on("websocket", (ws) => {
       if (ws.url().includes("/api/v1/runner")) executionConnections++;
@@ -38,6 +38,26 @@ for (const width of [320, 390, 768, 1440]) {
     await page.screenshot({
       path: test.info().outputPath("concept-entry.png"),
     });
+    for (let card = 1; card <= 4; card++) {
+      const next = page.getByRole("button", { name: "다음 →", exact: true });
+      const bounds = await next.boundingBox();
+      expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(
+        page.viewportSize()!.height,
+      );
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollHeight <= innerHeight + 1,
+        ),
+      ).toBeTruthy();
+      await next.click();
+      await expect(page).toHaveURL(
+        new RegExp("#concept/IntroducingTheShell/" + (card + 1) + "$"),
+      );
+    }
+    await page.reload();
+    await expect(
+      page.getByRole("radio", { name: "20", exact: true }),
+    ).toBeVisible();
     await page.getByRole("radio", { name: "20", exact: true }).check();
     await expect(
       page.getByRole("status").filter({ hasText: "다시 비교해 보세요" }),
@@ -59,8 +79,9 @@ for (const width of [320, 390, 768, 1440]) {
       path: test.info().outputPath("concept.png"),
       fullPage: true,
     });
+    await page.getByRole("button", { name: "다음 →", exact: true }).click();
     await page
-      .getByRole("button", { name: "02 코드 실습 시작 →", exact: true })
+      .getByRole("button", { name: "코드 실습 시작 →", exact: true })
       .click();
     await expect(page).toHaveURL(/#IntroducingTheShell.first_expression$/);
     await expect(page.locator("details,summary")).toHaveCount(0);
