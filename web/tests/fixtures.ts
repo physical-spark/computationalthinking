@@ -1,0 +1,42 @@
+import { test as base, expect, request } from "@playwright/test";
+import { execFileSync } from "node:child_process";
+import { resolve } from "node:path";
+export function testIdentity(nickname = "브라우저 검증 회원") {
+  return JSON.parse(
+    execFileSync(
+      "uv",
+      [
+        "run",
+        "python",
+        "-c",
+        `import json,secrets,time,hashlib,os
+from backend.db import SessionLocal
+from backend.models import Learner,Session
+with SessionLocal.begin() as db:
+ u=Learner(nickname=os.environ["CT_TEST_NICKNAME"],google_sub="browser-fixture-"+secrets.token_hex(16));db.add(u);db.flush()
+ token=secrets.token_urlsafe(32);db.add(Session(token_hash=hashlib.sha256(token.encode()).hexdigest(),learner_id=u.id,expires=time.time()+3600))
+ print(json.dumps({"id":u.id,"token":token}))`,
+      ],
+      {
+        cwd: resolve(process.cwd(), ".."),
+        env: {
+          ...process.env,
+          DATABASE_URL:
+            process.env.CT_BROWSER_DATABASE || "sqlite:///.cache/e2e.db",
+          CT_TEST_NICKNAME: nickname,
+        },
+        encoding: "utf8",
+      },
+    ),
+  );
+}
+export const test = base.extend({
+  context: async ({ context, baseURL }, use) => {
+    const account = testIdentity();
+    await context.addCookies([
+      { name: "ct-session", value: account.token, url: baseURL! },
+    ]);
+    await use(context);
+  },
+});
+export { expect, request };

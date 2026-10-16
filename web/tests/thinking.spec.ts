@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 
 test("simple execution, reflection restoration and real feedback clipboard", async ({
   page,
@@ -142,7 +142,7 @@ test("required debugging tools run automatically with one execute button", async
     if (mode === "pythontutor")
       await expect(
         page.getByRole("heading", {
-          name: "Python Tutor 방식 · 로컬 단계 보기",
+          name: "Python Tutor 방식 · 단계 보기",
         }),
       ).toBeVisible();
     if (mode === "birdseye")

@@ -11,6 +11,8 @@ export default function Admin() {
     [name, setName] = useState(""),
     [search, setSearch] = useState(""),
     [error, setError] = useState(""),
+    [moves, setMoves] = useState<Record<string, string>>({}),
+    [notice, setNotice] = useState(""),
     [answer, setAnswer] = useState<Record<string, string>>({});
   const suffix = cohort ? "?cohort=" + encodeURIComponent(cohort) : "";
   async function load() {
@@ -47,11 +49,16 @@ export default function Admin() {
       <h1>수업의 흐름 살펴보기</h1>
       <p>
         학생의 실행·실패·힌트·질문을 보고 다음 도움을 준비하세요. 통과 기록은
-        브라우저 채점 결과입니다.
+        자율학습을 돕는 기록입니다.
       </p>
       <p role="alert">{error}</p>
+      <p role="status">{notice}</p>
       <section className="admin-section">
-        <h2>반 관리</h2>
+        <h2>그룹 관리</h2>
+        <p>
+          가입한 회원은 로비에 들어옵니다. 회원 목록에서 그룹을 선택하고
+          이동시키세요.
+        </p>
         <form
           className="inline-form"
           onSubmit={(e) => {
@@ -63,7 +70,7 @@ export default function Admin() {
           }}
         >
           <label>
-            새 반 이름
+            새 그룹 이름
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -71,18 +78,15 @@ export default function Admin() {
               required
             />
           </label>
-          <button className="primary">반 만들기</button>
+          <button className="primary">그룹 만들기</button>
         </form>
         <div className="cohort-grid">
           {cohorts.map((c) => (
             <article key={c.id}>
               <h3>{c.name}</h3>
-              <p>
-                참여 코드 <code>{c.code}</code> ·{" "}
-                {c.archived ? "보관됨" : "참여 가능"}
-              </p>
+              <p>{c.archived ? "보관됨" : "배정 가능"}</p>
               <label>
-                반 이름
+                그룹 이름
                 <input
                   aria-label={c.name + " 이름"}
                   defaultValue={c.name}
@@ -101,19 +105,6 @@ export default function Admin() {
                 <button
                   onClick={() =>
                     action(() =>
-                      api(
-                        "/api/v1/admin/cohorts/" + c.id + "/rotate",
-                        "POST",
-                        {},
-                      ),
-                    )
-                  }
-                >
-                  코드 교체
-                </button>
-                <button
-                  onClick={() =>
-                    action(() =>
                       api("/api/v1/admin/cohorts/" + c.id, "PATCH", {
                         name: c.name,
                         archived: !c.archived,
@@ -121,7 +112,7 @@ export default function Admin() {
                     )
                   }
                 >
-                  {c.archived ? "보관 해제" : "반 보관"}
+                  {c.archived ? "보관 해제" : "그룹 보관"}
                 </button>
               </div>
             </article>
@@ -132,10 +123,10 @@ export default function Admin() {
         <h2>학습자 진도</h2>
         <div className="actions">
           <label>
-            반 선택
+            그룹 선택
             <select value={cohort} onChange={(e) => setCohort(e.target.value)}>
               <option value="">전체</option>
-              <option value="free">자유 학습자</option>
+              <option value="lobby">로비</option>
               {cohorts.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -157,6 +148,7 @@ export default function Admin() {
             <thead>
               <tr>
                 <th>학습자</th>
+                <th>그룹 배정</th>
                 <th>최근 활동</th>
                 <th>현재 위치</th>
                 <th>열람 / 통과</th>
@@ -184,6 +176,48 @@ export default function Admin() {
                       </button>
                       <small>{l.connected ? "Google 연결" : "익명"}</small>
                     </td>
+                    <td>
+                      <p>{l.group_name}</p>
+                      <label>
+                        이동할 그룹
+                        <select
+                          aria-label={l.nickname + " 이동할 그룹"}
+                          value={moves[l.id] ?? l.group_ids[0] ?? ""}
+                          onChange={(e) =>
+                            setMoves({ ...moves, [l.id]: e.target.value })
+                          }
+                        >
+                          <option value="">로비</option>
+                          {cohorts
+                            .filter((c) => !c.archived)
+                            .map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.name}
+                              </option>
+                            ))}
+                        </select>
+                      </label>
+                      <button
+                        onClick={() =>
+                          action(async () => {
+                            const target = moves[l.id] ?? l.group_ids[0] ?? "";
+                            const result = await api(
+                              "/api/v1/admin/learners/" + l.id + "/group",
+                              "PUT",
+                              { group_id: target || null },
+                            );
+                            setNotice(
+                              l.nickname +
+                                " 회원을 " +
+                                result.group_name +
+                                "로 이동했습니다.",
+                            );
+                          })
+                        }
+                      >
+                        그룹 이동
+                      </button>
+                    </td>
                     <td>{new Date(l.active * 1000).toLocaleString("ko-KR")}</td>
                     <td>
                       <code>{l.current_step || "시작 전"}</code>
@@ -200,7 +234,8 @@ export default function Admin() {
         </div>
         {!learners.length && (
           <p>
-            아직 참여한 학습자가 없습니다. 위 반 코드를 학생에게 알려 주세요.
+            이 그룹에 가입한 회원이 없습니다. 로비에서 회원을 찾아 그룹을
+            배정하세요.
           </p>
         )}
       </section>

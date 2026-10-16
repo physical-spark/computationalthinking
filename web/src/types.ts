@@ -50,6 +50,8 @@ export type User = {
   current_step: string;
   google_available: boolean;
   memberships: string[];
+  groups: { id: string; name: string }[];
+  group_name: string;
 };
 export type Draft = {
   step_id: string;

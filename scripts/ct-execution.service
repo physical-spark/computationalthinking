@@ -1,0 +1,15 @@
+[Unit]
+Description=Computational Thinking isolated Python broker
+After=docker.service network-online.target
+Requires=docker.service
+
+[Service]
+ExecStartPre=/usr/local/lib/ct-execution-cgroups
+ExecStart=/usr/bin/docker start -a ct-execution-broker
+ExecStop=/usr/bin/docker stop -t 15 ct-execution-broker
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

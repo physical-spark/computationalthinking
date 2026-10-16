@@ -41,7 +41,7 @@ export function feedbackPrompt({
 과정: ${page.track === "module1" ? "Module 1 모의실습" : "Python 기초"}
 페이지: ${page.title}
 단계: ${step.id}
-학습 상태: ${step.reading ? "개념 읽기" : passed ? "브라우저 코드 검사 통과" : "아직 코드 검사를 통과하지 않음"}
+학습 상태: ${step.reading ? "개념 읽기" : passed ? "코드 검사 통과" : "아직 코드 검사를 통과하지 않음"}
 
 === 이번에 연습하는 사고 ===
 ${step.thinking.focus} · ${step.thinking.activity}

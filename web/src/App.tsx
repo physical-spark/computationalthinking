@@ -203,6 +203,8 @@ export default function App() {
     (async () => {
       try {
         const me = await api<User>("/api/v1/me");
+        setUser(me);
+        if (!me.connected || location.pathname === "/privacy") return;
         const connecting = localGet<string | null>("ct-connecting-user", null);
         if (me.connected && connecting) {
           if (connecting !== me.id) {
@@ -280,7 +282,7 @@ export default function App() {
         );
         if (new URLSearchParams(location.search).has("login"))
           setNotice(
-            "Google 연결을 마치지 못했습니다. 익명 학습을 계속하거나 다시 연결해 주세요.",
+            "Google 로그인을 마치지 못했습니다. 다시 로그인해 주세요.",
           );
       } catch (e) {
         setError((e as Error).message);
@@ -604,33 +606,71 @@ export default function App() {
         <button onClick={() => location.reload()}>다시 연결하기</button>
       </main>
     );
+  if (location.pathname === "/privacy")
+    return (
+      <main className="welcome">
+        <h1>학습 기록과 개인정보</h1>
+        <p>
+          닉네임, Google 계정 연결 식별자, 코드·진도·질문·그룹 배정 기록을 학습
+          지원 목적으로 저장합니다. 관리자만 수업 기록을 조회할 수 있습니다.
+          실명·전화번호·프로필 사진을 요구하지 않습니다.
+        </p>
+        <p>
+          Google 로그인으로 본인의 학습 기록을 이어서 볼 수 있습니다. 기존 익명
+          기록은 해당 브라우저에서 로그인할 때 연결합니다. 새 회원은 로비에서
+          시작하며 그룹은 관리자가 배정합니다.
+        </p>
+        <p>
+          학습 코드는 서버의 격리된 Python 환경에서 처리합니다. 관리자에게 남긴
+          질문과 답변은 본인과 관리자만 볼 수 있습니다.
+        </p>
+        <a href="/">학습으로 돌아가기</a>
+      </main>
+    );
+  if (user && !user.connected)
+    return (
+      <main className="welcome login-page">
+        <div className="brand-mark">ct</div>
+        <p className="eyebrow">PYTHON으로 기르는 컴퓨팅 사고력</p>
+        <h1>생각을 코드로 확인해 보세요</h1>
+        <p>
+          설명을 읽고, 결과를 예상하고, 직접 실행하며 내 풀이를 만들어 갑니다.
+        </p>
+        <p>
+          Google로 로그인하면 학습을 시작할 수 있습니다. 가입한 회원은 로비에서
+          시작하고, 그룹은 관리자가 배정합니다.
+        </p>
+        {new URLSearchParams(location.search).has("login") && (
+          <p role="alert">
+            Google 로그인을 마치지 못했습니다. 다시 시도해 주세요.
+          </p>
+        )}
+        {user.google_available ? (
+          <a
+            className="button primary"
+            href="/auth/google/start"
+            onClick={() => {
+              if (user.id) localSet("ct-connecting-user", user.id);
+            }}
+          >
+            Google로 로그인
+          </a>
+        ) : (
+          <p role="status">
+            Google 로그인을 준비 중입니다. 잠시 뒤 다시 시도해 주세요.
+          </p>
+        )}
+        <p>
+          <a href="/privacy">학습 기록과 개인정보 안내</a>
+        </p>
+      </main>
+    );
   if (!user || !course || !page || !step)
     return (
       <main className="welcome">
         <div className="brand-mark">ct</div>
         <h1>컴퓨팅 사고력</h1>
         <p role="status">학습 자료를 준비하고 있습니다.</p>
-      </main>
-    );
-  if (location.pathname === "/privacy")
-    return (
-      <main className="welcome">
-        <h1>학습 기록과 개인정보</h1>
-        <p>
-          닉네임, 익명 또는 Google 계정 연결 식별자, 코드·진도·질문·반 참여
-          기록을 학습 지원 목적으로 저장합니다. 관리자만 수업 기록을 조회할 수
-          있습니다. 실명·전화번호·프로필 사진을 요구하지 않습니다.
-        </p>
-        <p>
-          익명 기록은 이 브라우저의 세션으로 연결됩니다. 브라우저 데이터를
-          지우면 접근을 복구하지 못할 수 있습니다. 다른 기기에서도 이어서
-          학습하려면 Google 계정을 연결하세요.
-        </p>
-        <p>
-          학습 코드는 별도의 브라우저 실행 환경에서 처리합니다. 관리자에게 남긴
-          질문과 답변은 본인과 관리자만 볼 수 있습니다.
-        </p>
-        <a href="/">학습으로 돌아가기</a>
       </main>
     );
   if (location.pathname === "/admin")
@@ -692,7 +732,7 @@ export default function App() {
             onClick={() => account.current?.showModal()}
           >
             {user.nickname}
-            <small>{user.connected ? "Google 연결" : "익명 학습 중"}</small>
+            <small>{user.group_name || "로비"}</small>
           </button>
           {user.admin && <a href="/admin">관리자</a>}
         </nav>
@@ -1150,7 +1190,7 @@ export default function App() {
               )}
               {trace.length > 0 && (
                 <section className="trace">
-                  <h2>Python Tutor 방식 · 로컬 단계 보기</h2>
+                  <h2>Python Tutor 방식 · 단계 보기</h2>
                   <label>
                     실행 단계 {traceIndex + 1} / {trace.length}
                     <input
@@ -1325,33 +1365,12 @@ export default function App() {
             로그아웃
           </button>
         )}
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const code = new FormData(e.currentTarget).get("code");
-            try {
-              const c = await api("/api/v1/cohorts/join", "POST", { code });
-              setNotice(c.name + "에 참여했습니다.");
-              setUser(await api("/api/v1/me"));
-            } catch (e) {
-              setNotice((e as Error).message);
-            }
-          }}
-        >
-          <label>
-            수업 참여 코드
-            <input
-              name="code"
-              placeholder="예: A12B34CD"
-              minLength={4}
-              maxLength={20}
-              autoCapitalize="characters"
-              required
-            />
-          </label>
-          <button>반 참여하기</button>
-        </form>
-        <p>참여한 반 {user.memberships.length}개</p>
+        <p>
+          현재 그룹: <strong>{user.group_name || "로비"}</strong>
+        </p>
+        <p>
+          그룹은 관리자가 배정합니다. 로비에서도 모든 과제를 학습할 수 있습니다.
+        </p>
         <small>학습자 ID: {user.id}</small>
         {conflicts.map((c) => (
           <section className="conflict" key={c.id}>

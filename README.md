@@ -3,8 +3,8 @@
 그림으로 이해하고, Python 코드로 확인하는 한국어 학습 서비스입니다.
 
 - Futurecoder 기반 Python 기초 12개 장과 Module 1 자동화 모의실습 8개
-- 가입 없이 학습·진도 저장·비공개 질문, 선택적인 Google 계정 연결
-- 반 코드와 관리자 진도·질문 관리
+- Google 로그인 후 학습·진도 저장·비공개 질문
+- 가입 직후 로비 배치, 관리자의 그룹 이동·진도·질문 관리
 - PC의 설명/코드 분할 화면과 모바일 읽기·복습 화면
 
 공개 주소: https://computationalthinking.futurereadycampus.com
@@ -35,7 +35,9 @@ uv run alembic upgrade head
 uv run uvicorn backend.main:app --host 127.0.0.1 --port 8001
 ```
 
-다른 터미널에서 화면과 실행기를 각각 시작합니다.
+Linux 개발 호스트에는 Docker와 gVisor가 필요합니다. `./scripts/install_execution_host.sh`로 런타임을 설치하고 `docker build -f execution/Dockerfile -t ct-python:local .`로 실행 이미지를 만듭니다. 위 `.env`를 읽은 터미널에서 `uv run uvicorn execution.broker:app --host 127.0.0.1 --port 8766`으로 비공개 브로커를 시작합니다. macOS에서는 Linux 브로커에 SSH 터널로 연결할 수 있습니다.
+
+다른 터미널에서 화면과 디버거 정적 파일 서버를 각각 시작합니다.
 
 ```sh
 npm run dev --prefix web
@@ -46,7 +48,7 @@ cd runner
 npx vite preview --host 127.0.0.1 --port 5174
 ```
 
-http://localhost:5173 에서 학습합니다. 두 출처를 분리하며, 실행기에는 학습자 계정 쿠키와 관리 API가 없습니다. 모바일에서는 편집기와 실행기를 불러오지 않습니다.
+http://localhost:5173 에서 학습합니다. Python은 로그인한 앱의 WebSocket → 비공개 브로커 → 학습자별 gVisor 컨테이너에서 실행합니다. 별도 출처에는 Birdseye 표시 파일만 두며 계정 쿠키와 관리 API가 없습니다. 모바일에서는 편집기와 실행 연결을 불러오지 않습니다.
 
 ## 검증
 
@@ -60,7 +62,7 @@ npx playwright install chromium
 VITE_CONTENT_LANGUAGE=ko VITE_TEST_DRIVER=1 npx playwright test
 ```
 
-브라우저 검증은 테스트용 API·화면·실행기를 직접 시작하며, 이미 사용 중인 포트의 서버를 재사용하지 않습니다. 다른 프로젝트를 중지하지 않고 검사하려면 아래처럼 포트와 DB를 분리합니다.
+브라우저 검증 전에 위의 비공개 브로커를 실행해야 합니다. 검증은 테스트용 API·화면·디버거 파일 서버를 직접 시작하며, 이미 사용 중인 포트의 서버를 재사용하지 않습니다. 다른 프로젝트를 중지하지 않고 검사하려면 아래처럼 포트와 DB를 분리합니다.
 
 ```sh
 CT_WEB_PORT=5183 CT_RUNNER_PORT=5184 CT_API_PORT=8011 VITE_APP_ORIGIN=http://localhost:5183 VITE_TEST_DRIVER=1 npm run build --prefix runner
@@ -72,11 +74,11 @@ CT_WEB_PORT=5183 CT_RUNNER_PORT=5184 CT_API_PORT=8011 CT_BROWSER_DATABASE=sqlite
 
 ## 계정과 기록
 
-Google 연결은 서버 OIDC 흐름입니다. 이메일·실명·프로필 사진을 학습자 프로필로 보관하지 않고 Google `sub`와 닉네임으로 식별합니다. 익명 세션은 해당 브라우저에서만 복구할 수 있습니다. 기존 Google 계정으로 연결할 때 통과 기록과 질문을 합치고, 서로 다른 코드 초안은 두 버전을 보존합니다.
+Google 연결은 서버 OIDC 흐름입니다. 이메일·실명·프로필 사진을 학습자 프로필로 보관하지 않고 Google `sub`와 닉네임으로 식별합니다. 새 학습은 Google 로그인이 필요합니다. 이전 익명 세션이 남아 있다면 로그인할 때 기록을 연결합니다. 기존 Google 계정으로 연결할 때 통과 기록과 질문을 합치고, 서로 다른 코드 초안은 두 버전을 보존합니다.
 
-질문과 답변은 본인과 관리자만 볼 수 있습니다. 코드 채점은 브라우저에서 이루어지므로 통과 기록은 자율학습 지원용이며 공식 평가나 부정행위 방지의 근거가 아닙니다.
+질문과 답변은 본인과 관리자만 볼 수 있습니다. 코드는 서버의 격리 환경에서 검사합니다. 통과 기록은 자율학습 지원용이며 공식 평가나 부정행위 방지의 근거가 아닙니다.
 
-Google에 연결한 소유자 계정에만 서버에서 관리자 역할을 부여합니다.
+모든 새 회원은 로비에서 시작합니다. 관리자는 `/admin`에서 그룹을 만들고 회원을 이동시킵니다. 회원의 그룹 코드 입력은 사용하지 않습니다. `CT_ADMIN_EMAILS`에 명시한 소유자만 검증된 Google 이메일로 처음 로그인하면 Google `sub`에 관리자 역할을 고정합니다. 이메일은 프로필에 저장하지 않으며 역할 연결용 해시만 보관합니다. 별도 관리자 지정도 서버 명령으로 가능합니다.
 
 ```sh
 python -m backend.cli grant-admin <learner-id>
@@ -92,7 +94,7 @@ Futurecoder의 고정 원본 판본은 `alexmojaki/futurecoder`의 `def491c2a348
 
 Python 준비 단계가 표시되는 동안 코드를 작성할 수 있습니다. 준비가 지연되면 `Python 다시 준비하기`로 코드 내용을 유지하면서 실행기만 다시 연결합니다. 준비 완료 후 Enter 또는 실행 버튼을 사용합니다.
 
-`node scripts/verify_public.cjs`는 새 익명 브라우저로 운영 HTTPS의 첫 과제, 재시도, 새로고침 후 재실행을 확인하고 `.cache/public-verification/`에 화면과 결과를 남깁니다. 운영자 로그인 세션을 사용하지 않으며 별도의 익명 학습 기록이 생성됩니다.
+`node scripts/verify_public.cjs`는 새 브라우저에서 Google 로그인 화면, 학습 API의 401 응답, 모바일 로그인 화면을 확인하고 `.cache/public-verification/`에 화면과 결과를 남깁니다. 실제 Google 계정으로 로그인한 뒤의 실행은 별도로 확인합니다. `uv run python scripts/verify_execution.py`는 비공개 브로커에서 합성 학습자 30명의 동시 Python 실행과 격리를 검사합니다. 운영자 쿠키나 학생 기록을 사용하지 않습니다.
 
 ## 사고 목표·생각 기록·AI 요청문
 

@@ -1,5 +1,7 @@
 # Implementation and verification ledger — 2026-10-16
 
+**The entries below document the browser-runtime release. The server-runtime update is described at the end; historical measurements are not server-Python measurements.**
+
 Public app: https://computationalthinking.futurereadycampus.com
 Administrator: https://computationalthinking.futurereadycampus.com/admin
 Public source: https://github.com/physical-spark/computationalthinking
@@ -27,3 +29,11 @@ The owner reported that 1+2 appeared unresponsive. The real browser showed prolo
 ## Simple execution and thinking journal — 2026-10-16
 
 Removed the mode selector; task-required execution/debugging is automatic and optional tools are collapsed. Added authored goals for 69 pages, with activity-adjusted guidance across 265 graded and 61 reading steps. An optional, per-step thinking journal saves local drafts and server reflections, and copies a coaching prompt with task context and the learner’s explanation. Code/output are opt-in. Clipboard denial exposes a selected manual-copy preview. No external AI call is made. Existing reflection ownership and account-merge behavior is covered by a new backend test. Full CI passed 13 backend and 15 browser tests, plus 285 Korean browser grading fixtures. The public HTTPS smoke separately verified 1+2, restoration, real clipboard contents and mobile reading without a Python download. [Screenshots and detailed evidence](https://course-studio.futurereadycampus.com/course-network/wiki/futurecoder/verification-20261016.html).
+
+## Server Python, Google-required access and administrator groups — 2026-10-16
+
+Implementation: native Python 3.12 in per-session gVisor sandboxes, authenticated same-origin WebSocket proxy, four concurrent executions, bounded queue/output/time/resources, isolated debugger display. Google login gates learning, progress and execution. New members start in the lobby. Administrators assign groups, with an audit record. Verified configured owner email is pinned to the Google subject on first login; existing authorized administrators remain.
+
+Predeployment verification: 16 backend tests; 15 browser tests across the full suite and the separate login-gate check; all 285 original Korean fixtures inside a production-host gVisor sandbox; eight Module 1 solutions, input/stop/reconnect/debuggers, private questions, group movement, mobile and accessibility checks. Synthetic browser fixtures do not prove a real Google consent flow.
+
+Private staging broker on prod: 30 simultaneous Python tasks all passed. Execution p95 0.972s, max 1.139s; cold session preparation p95 21.326s. This measures synthetic identities against the private broker, excluding public OAuth and Cloudflare. State isolation, network denial and absence of host secrets/socket were checked. Deployment and public verification are recorded in the release evidence after rollout.

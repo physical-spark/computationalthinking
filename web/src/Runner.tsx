@@ -17,7 +17,8 @@ export type RunnerHandle = {
   restart: () => void;
   input: (text: string) => void;
 };
-const origin = import.meta.env.VITE_RUNNER_ORIGIN || "http://localhost:5174";
+const debugOrigin =
+  import.meta.env.VITE_RUNNER_ORIGIN || "http://localhost:5174";
 const Runner = forwardRef<
   RunnerHandle,
   {
@@ -28,142 +29,178 @@ const Runner = forwardRef<
     onProgress: (s: string) => void;
   }
 >((props, ref) => {
-  const iframe = useRef<HTMLIFrameElement>(null);
   const latest = useRef(props);
   latest.current = props;
-  const [generation, setGeneration] = useState(0);
-  const ready = useRef(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const socket = useRef<WebSocket | null>(null);
   const active = useRef<string | null>(null);
-  function clear() {
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = null;
-  }
-  function reset(message: string) {
-    clear();
-    active.current = null;
-    ready.current = false;
-    setGeneration((v) => v + 1);
-    latest.current.onOutput(message + "\n");
-    latest.current.onState("loading");
-  }
-  function send(type: string, data: unknown = {}) {
-    iframe.current?.contentWindow?.postMessage(
-      { channel: "ct-app", type, ...(data as object) },
-      origin,
-    );
-  }
-  function timeout() {
-    clear();
-    timer.current = setTimeout(() => {
-      reset(
-        "30초 동안 실행이 끝나지 않아 실행 환경을 다시 준비합니다. 코드는 그대로 보관됩니다.",
-      );
-    }, 30000);
-  }
+  const ready = useRef(false);
+  const [generation, setGeneration] = useState(0);
+  const [debug, setDebug] = useState<any>(null);
+  const debugFrame = useRef<HTMLIFrameElement>(null);
+  const send = (value: unknown) => {
+    if (socket.current?.readyState === WebSocket.OPEN)
+      socket.current.send(JSON.stringify(value));
+  };
   useImperativeHandle(ref, () => ({
     run(entry) {
       if (!ready.current || active.current) return;
       active.current = crypto.randomUUID();
-      timeout();
-      props.onState("running");
-      send("run", { id: active.current, entry });
-    },
-    restart() {
-      reset(
-        "Python 실행 환경을 다시 준비합니다. 작성한 코드는 그대로 보관됩니다.",
-      );
+      latest.current.onState("running");
+      send({ type: "run", id: active.current, entry });
     },
     stop() {
       if (active.current) {
-        send("stop");
-        clear();
-        timer.current = setTimeout(
-          () => reset("실행을 중지하고 실행 환경을 다시 준비합니다."),
-          1500,
-        );
+        latest.current.onState("loading");
+        send({ type: "stop" });
       }
     },
+    restart() {
+      socket.current?.close();
+      setGeneration((v) => v + 1);
+    },
     input(text) {
-      send("input", { text });
-      props.onState("running");
-      timeout();
+      send({ type: "input", text });
+      latest.current.onState("running");
     },
   }));
   useEffect(() => {
     ready.current = false;
     active.current = null;
+    setDebug(null);
     latest.current.onState("loading");
-    latest.current.onProgress("실행 환경에 연결합니다.");
-    clear();
-    timer.current = setTimeout(() => {
-      latest.current.onProgress(
-        "실행 파일 준비가 지연되고 있습니다. 연결 상태를 확인하고 다시 준비해 주세요. 작성한 코드는 유지됩니다.",
-      );
+    latest.current.onProgress("서버의 Python 실행 환경에 연결합니다.");
+    const ws = new WebSocket(
+      (location.protocol === "https:" ? "wss://" : "ws://") +
+        location.host +
+        "/api/v1/runner",
+    );
+    socket.current = ws;
+    let disposed = false;
+    const timer = setTimeout(() => {
       latest.current.onState("error");
-    }, 120000);
-    function message(e: MessageEvent) {
-      if (
-        e.source !== iframe.current?.contentWindow ||
-        e.origin !== origin ||
-        e.data?.channel !== "ct-runner"
-      )
-        return;
-      const d = e.data;
-      if (d.type === "progress" && typeof d.message === "string") {
-        latest.current.onProgress(d.message.slice(0, 500));
+      latest.current.onProgress(
+        "서버 연결이 지연되고 있습니다. 다시 준비해 주세요. 작성한 코드는 유지됩니다.",
+      );
+      ws.close();
+    }, 60000);
+    ws.onmessage = (event) => {
+      const d = JSON.parse(event.data);
+      if (d.type === "progress") {
+        latest.current.onProgress(d.message);
         return;
       }
       if (d.type === "ready") {
-        clear();
+        clearTimeout(timer);
+        active.current = null;
         ready.current = true;
-        latest.current.onProgress("실행 준비 완료");
         latest.current.onState("ready");
+        latest.current.onProgress("서버 실행 준비 완료");
+        return;
+      }
+      if (d.type === "reset") {
+        active.current = null;
+        ready.current = false;
+        latest.current.onOutput(d.message + "\n");
+        latest.current.onState("loading");
         return;
       }
       if (d.id && d.id !== active.current) return;
-      if (d.type === "output") {
+      if (d.type === "output")
         latest.current.onOutput(
           (d.parts || []).map((x: any) => x.text || "").join(""),
         );
-      }
       if (d.type === "input") {
-        clear();
         latest.current.onState("input");
         latest.current.onInput();
       }
       if (d.type === "result") {
-        clear();
         active.current = null;
-        latest.current.onResult(d.result);
         latest.current.onState("ready");
+        if (d.result.birdseye_objects)
+          setDebug({ id: crypto.randomUUID(), result: d.result });
+        else latest.current.onResult(d.result);
       }
       if (d.type === "error") {
-        clear();
+        clearTimeout(timer);
         active.current = null;
-        latest.current.onProgress(
-          d.message || "실행 환경을 준비하지 못했습니다. 다시 준비해 주세요.",
-        );
-        latest.current.onOutput((d.message || "실행 환경 오류") + "\n");
+        if (d.reset) ready.current = false;
+        latest.current.onProgress(d.message);
+        latest.current.onOutput(d.message + "\n");
         latest.current.onState(ready.current ? "ready" : "error");
       }
-    }
-    window.addEventListener("message", message);
+    };
+    ws.onclose = () => {
+      clearTimeout(timer);
+      ready.current = false;
+      if (!disposed) {
+        active.current = null;
+        latest.current.onState("error");
+        latest.current.onProgress(
+          "실행 연결이 종료됐습니다. 다시 준비해 주세요. 코드 입력은 유지되고 셸 변수는 초기화됩니다.",
+        );
+      }
+    };
     return () => {
-      clear();
-      window.removeEventListener("message", message);
+      disposed = true;
+      clearTimeout(timer);
+      ws.close();
     };
   }, [generation]);
-  return (
+  useEffect(() => {
+    if (!debug) return;
+    let finished = false;
+    const finish = (url?: string, error?: string) => {
+      if (finished) return;
+      finished = true;
+      const result = { ...debug.result };
+      delete result.birdseye_objects;
+      if (url) result.debugUrl = url;
+      if (error) latest.current.onOutput(error + "\n");
+      latest.current.onResult(result);
+      setDebug(null);
+    };
+    const listener = (e: MessageEvent) => {
+      if (
+        e.origin !== debugOrigin ||
+        e.source !== debugFrame.current?.contentWindow ||
+        e.data?.channel !== "ct-debug" ||
+        e.data.id !== debug.id
+      )
+        return;
+      finish(e.data.url, e.data.error);
+    };
+    window.addEventListener("message", listener);
+    const timer = setTimeout(
+      () =>
+        finish(
+          undefined,
+          "표현식 결과를 표시하지 못했습니다. 다시 실행해 주세요.",
+        ),
+      10000,
+    );
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("message", listener);
+    };
+  }, [debug]);
+  return debug ? (
     <iframe
-      key={generation}
-      ref={iframe}
+      ref={debugFrame}
       className="runner-frame"
-      title="격리된 Python 실행 환경"
-      src={origin + "/?parent=" + encodeURIComponent(location.origin)}
-      onLoad={() => send("connect")}
+      title="표현식 결과 보관"
+      src={debugOrigin + "/debug.html"}
       sandbox="allow-scripts allow-same-origin"
+      onLoad={() =>
+        debugFrame.current?.contentWindow?.postMessage(
+          {
+            channel: "ct-debug",
+            id: debug.id,
+            objects: debug.result.birdseye_objects,
+          },
+          debugOrigin,
+        )
+      }
     />
-  );
+  ) : null;
 });
 export default Runner;

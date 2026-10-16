@@ -24,11 +24,14 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
 
 from .db import database
+from .execution import router as execution_router
 from .models import (
+    AdminClaim,
     Attempt,
     Cohort,
     Draft,
     DraftConflict,
+    GroupMove,
     Learner,
     Membership,
     Progress,
@@ -105,7 +108,7 @@ def client_ip(request):
     return peer
 
 
-def identity(request, db):
+def identity(request, db, require_google=True):
     token = request.cookies.get(COOKIE)
     session = db.get(Session, digest(token)) if token else None
     if not session or session.expires < time.time():
@@ -113,6 +116,8 @@ def identity(request, db):
     user = db.get(Learner, session.learner_id)
     if not user:
         fail(401, "학습 세션을 다시 연결해 주세요.")
+    if require_google and not user.google_sub:
+        fail(401, "Google로 로그인한 뒤 이용해 주세요.")
     return user
 
 
@@ -192,14 +197,19 @@ def health(db: DB):
 @app.get("/api/v1/me")
 def me(request: Request, response: Response, db: DB):
     try:
-        u = identity(request, db)
+        u = identity(request, db, require_google=False)
     except HTTPException:
-        ip = client_ip(request)
-        throttle(db, "new:" + digest(SECRET + ip), 120, 60)
-        u = Learner(nickname="학습자 " + secrets.token_hex(3))
-        db.add(u)
-        db.flush()
-        session_cookie(response, db, u)
+        return {
+            "id": "",
+            "nickname": "",
+            "connected": False,
+            "admin": False,
+            "google_available": bool(os.environ.get("GOOGLE_CLIENT_ID")),
+            "current_step": "",
+            "memberships": [],
+            "groups": [],
+            "group_name": "로비",
+        }
     u.active = time.time()
     return {
         "id": u.id,
@@ -209,6 +219,19 @@ def me(request: Request, response: Response, db: DB):
         "current_step": u.current_step,
         "google_available": bool(os.environ.get("GOOGLE_CLIENT_ID")),
         "memberships": [m.cohort_id for m in rows(db, Membership, u)],
+        "groups": [
+            {"id": c.id, "name": c.name}
+            for c in db.scalars(
+                select(Cohort).join(Membership).where(Membership.learner_id == u.id)
+            )
+        ],
+        "group_name": ", ".join(
+            c.name
+            for c in db.scalars(
+                select(Cohort).join(Membership).where(Membership.learner_id == u.id)
+            )
+        )
+        or "로비",
     }
 
 
@@ -236,7 +259,8 @@ def logout(request: Request, response: Response, db: DB):
 
 
 @app.get("/api/v1/course")
-def course():
+def course(request: Request, db: DB):
+    identity(request, db)
     return published_course()
 
 
@@ -468,22 +492,8 @@ class JoinPayload(BaseModel):
 
 @app.post("/api/v1/cohorts/join")
 def join(p: JoinPayload, request: Request, db: DB):
-    u = identity(request, db)
-    throttle(db, "join:" + u.id, 10, 60)
-    throttle(
-        db,
-        "join-ip:" + digest(SECRET + client_ip(request)),
-        60,
-        60,
-    )
-    c = db.scalar(
-        select(Cohort).where(Cohort.code == p.code.strip().upper(), Cohort.archived.is_(False))
-    )
-    if not c:
-        fail(404, "사용 가능한 반 코드를 찾지 못했습니다.")
-    if not db.get(Membership, (u.id, c.id)):
-        db.add(Membership(learner_id=u.id, cohort_id=c.id))
-    return {"id": c.id, "name": c.name}
+    identity(request, db)
+    fail(403, "그룹은 관리자가 배정합니다. 현재 그룹은 학습자 메뉴에서 확인하세요.")
 
 
 class CohortPayload(BaseModel):
@@ -531,8 +541,8 @@ def rotate(cid: str, request: Request, db: DB):
 
 
 def learner_stats(db, cohort=None):
-    q = select(Learner)
-    if cohort == "free":
+    q = select(Learner).where(Learner.google_sub.is_not(None))
+    if cohort in {"free", "lobby"}:
         q = q.where(~Learner.id.in_(select(Membership.learner_id)))
     elif cohort:
         q = q.where(
@@ -546,6 +556,14 @@ def learner_stats(db, cohort=None):
             {
                 "id": u.id,
                 "nickname": u.nickname,
+                "group_ids": [m.cohort_id for m in rows(db, Membership, u)],
+                "group_name": ", ".join(
+                    c.name
+                    for c in db.scalars(
+                        select(Cohort).join(Membership).where(Membership.learner_id == u.id)
+                    )
+                )
+                or "로비",
                 "connected": bool(u.google_sub),
                 "active": u.active,
                 "current_step": u.current_step,
@@ -564,6 +582,36 @@ def learner_stats(db, cohort=None):
 def learners(request: Request, db: DB, cohort: str | None = None):
     admin(request, db)
     return learner_stats(db, cohort)
+
+
+class GroupAssignment(BaseModel):
+    group_id: str | None = None
+
+
+@app.put("/api/v1/admin/learners/{lid}/group")
+def move_group(lid: str, p: GroupAssignment, request: Request, db: DB):
+    owner = admin(request, db)
+    user = db.get(Learner, lid, with_for_update=True)
+    if not user or not user.google_sub:
+        fail(404, "가입한 회원을 찾지 못했습니다.")
+    group = db.get(Cohort, p.group_id) if p.group_id else None
+    if p.group_id and (not group or group.archived):
+        fail(422, "배정할 수 있는 그룹을 선택해 주세요.")
+    old = [m.cohort_id for m in rows(db, Membership, user)]
+    new = [group.id] if group else []
+    if old != new:
+        db.add(
+            GroupMove(
+                learner_id=lid,
+                admin_id=owner.id,
+                previous_groups=json.dumps(old),
+                group_id=p.group_id,
+            )
+        )
+        db.execute(delete(Membership).where(Membership.learner_id == lid))
+        if group:
+            db.add(Membership(learner_id=lid, cohort_id=group.id))
+    return {"group_id": p.group_id, "group_name": group.name if group else "로비"}
 
 
 @app.get("/api/v1/admin/learners/{lid}")
@@ -647,6 +695,7 @@ def export(request: Request, db: DB, cohort: str | None = None):
                     else v
                 )
                 for k, v in item.items()
+                if k in keys
             }
         )
     return Response(
@@ -722,13 +771,44 @@ def merge_guest(db, guest, target):
     db.delete(guest)
 
 
+def bind_configured_admin(db, user, info):
+    email = str(info.get("email", "")).strip().lower()
+    configured = {
+        x.strip().lower() for x in os.environ.get("CT_ADMIN_EMAILS", "").split(",") if x.strip()
+    }
+    if info.get("email_verified") is not True or email not in configured:
+        return
+    key = digest(email)
+    # The configured address can claim exactly one Google identity. Later logins
+    # use sub; a recycled external email cannot grant a second account access.
+    ins = pg_insert if db.bind.dialect.name == "postgresql" else sq_insert
+    db.execute(
+        ins(AdminClaim)
+        .values(email_hash=key, google_sub=user.google_sub, learner_id=user.id, created=time.time())
+        .on_conflict_do_nothing()
+    )
+    claim = db.get(AdminClaim, key)
+    if claim and claim.google_sub == user.google_sub:
+        user.admin = True
+
+
 @app.get("/auth/google/start")
 async def google_start(request: Request, db: DB):
     if not os.environ.get("GOOGLE_CLIENT_ID"):
-        fail(503, "Google 연결을 준비 중입니다. 익명 학습은 계속 사용할 수 있습니다.")
-    u = identity(request, db)
+        fail(503, "Google 로그인을 준비 중입니다. 잠시 뒤 다시 시도해 주세요.")
+    try:
+        u = identity(request, db, require_google=False)
+    except HTTPException:
+        throttle(db, "new:" + digest(SECRET + client_ip(request)), 60, 60)
+        u = Learner(nickname="학습자 " + secrets.token_hex(3))
+        db.add(u)
+        db.flush()
     request.session["guest_id"] = u.id
-    return await oauth.google.authorize_redirect(request, APP_ORIGIN + "/auth/google/callback")
+    response = await oauth.google.authorize_redirect(
+        request, APP_ORIGIN + "/auth/google/callback", prompt="select_account"
+    )
+    session_cookie(response, db, u)
+    return response
 
 
 @app.get("/auth/google/callback")
@@ -743,7 +823,7 @@ async def google_callback(request: Request, db: DB):
     sub = info.get("sub")
     if not sub:
         fail(401, "Google 계정을 확인하지 못했습니다.")
-    u = identity(request, db)
+    u = identity(request, db, require_google=False)
     if request.session.pop("guest_id", None) != u.id:
         fail(401, "로그인을 시작한 브라우저에서 다시 시도해 주세요.")
     target = db.scalar(select(Learner).where(Learner.google_sub == sub))
@@ -754,6 +834,7 @@ async def google_callback(request: Request, db: DB):
             fail(409, "로그아웃한 뒤 다른 계정을 연결해 주세요.")
         u.google_sub = sub
         target = u
+    bind_configured_admin(db, target, info)
     db.execute(delete(Session).where(Session.token_hash == digest(request.cookies.get(COOKIE, ""))))
     response = RedirectResponse(APP_ORIGIN + "/?connected=1", status_code=303)
     session_cookie(response, db, target)
@@ -789,6 +870,9 @@ class SPAFiles(StaticFiles):
             if exc.status_code == 404 and path in ("admin", "privacy"):
                 return await super().get_response("index.html", scope)
             raise
+
+
+app.include_router(execution_router)
 
 
 if (ROOT / "web/dist").exists():

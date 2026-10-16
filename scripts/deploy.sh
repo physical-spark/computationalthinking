@@ -18,6 +18,7 @@ image_archive=$(mktemp /tmp/ct-image.XXXXXX.tar.gz)
 trap 'test -z "$image_archive" || rm -f "$image_archive"' EXIT
 cat > "$image_archive"
 sudo k3s ctr images import "$image_archive"
+sudo docker load < "$image_archive"
 reference="docker.io/library/ct-app:$commit"
 sudo k3s ctr images ls -q | grep -Fx "$reference"
 image_digest=$(sudo k3s ctr images ls | awk -v reference="$reference" '$1 == reference {print $3}')
@@ -32,17 +33,31 @@ if sudo k3s kubectl -n computationalthinking get deployment app >/dev/null 2>&1;
   "$repo/scripts/backup.sh" predeploy
 fi
 git checkout --detach "$commit"
+previous_broker=$(sudo docker inspect ct-execution-broker --format '{{.Image}}' 2>/dev/null || true)
+previous_python=$(sudo docker inspect ct-execution-broker --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null | sed -n 's/^CT_EXECUTION_IMAGE=//p' || true)
+app_docker=$(sudo docker image inspect "ct-app:$commit" --format '{{.Id}}')
+python_docker=$(sudo docker image inspect "ct-python:$commit" --format '{{.Id}}')
+if ! ./scripts/start_execution.sh "$app_docker" "$python_docker"; then
+  if [[ "$previous_broker" =~ ^sha256: && "$previous_python" =~ ^sha256: ]]; then
+    ./scripts/start_execution.sh "$previous_broker" "$previous_python" || true
+  fi
+  exit 1
+fi
 sed "s|ct-app:__TAG__|$immutable|g" k8s/resources.yaml | sudo k3s kubectl apply -f -
 if ! sudo k3s kubectl -n computationalthinking rollout status deployment/postgres --timeout=120s || ! sudo k3s kubectl -n computationalthinking rollout status deployment/app --timeout=180s || ! sudo k3s kubectl -n computationalthinking rollout status deployment/runner --timeout=120s || ! curl --fail --retry 8 --retry-connrefused --retry-delay 1 --max-time 5 http://10.43.200.54/healthz || ! curl --fail --retry 8 --retry-connrefused --retry-delay 1 --max-time 5 http://10.43.200.55/healthz; then
   previous_archive="$archive_dir/$previous_digest.tar.gz"
   if [[ "$previous_digest" =~ ^[0-9a-f]{64}$ && -s "$previous_archive" ]]; then
     sudo k3s ctr images import "$previous_archive"
+    sudo docker load < "$previous_archive"
     sudo k3s ctr images tag --force "$(sudo k3s ctr images ls | awk -v digest="sha256:$previous_digest" '$3 == digest {print $1; exit}')" "$previous_ref"
   fi
   sudo k3s kubectl -n computationalthinking rollout undo deployment/app || true
   sudo k3s kubectl -n computationalthinking rollout undo deployment/runner || true
   sudo k3s kubectl -n computationalthinking rollout status deployment/app --timeout=180s || true
   sudo k3s kubectl -n computationalthinking rollout status deployment/runner --timeout=120s || true
+  if [[ "$previous_broker" =~ ^sha256: && "$previous_python" =~ ^sha256: ]]; then
+    ./scripts/start_execution.sh "$previous_broker" "$previous_python" || true
+  fi
   exit 1
 fi
 # Keep the newly healthy image and its predecessor outside containerd image GC.

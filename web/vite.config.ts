@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     port: Number(process.env.CT_WEB_PORT || 5173),
     strictPort: true,
-    proxy: { "/api": api, "/auth": api, "/healthz": api },
+    proxy: { "/api": { target: api, ws: true }, "/auth": api, "/healthz": api },
   },
   build: { target: "es2022" },
 });

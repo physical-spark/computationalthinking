@@ -16,6 +16,8 @@ COPY --from=ghcr.io/astral-sh/uv:0.11.24 /uv /uvx /bin/
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 ENV PATH=/app/.venv/bin:$PATH
+COPY --from=docker:28-cli /usr/local/bin/docker /usr/local/bin/docker
+COPY execution execution
 COPY backend backend
 COPY scripts/load_test.py scripts/load_test.py
 COPY alembic.ini ./

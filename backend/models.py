@@ -143,3 +143,23 @@ class RateBucket(Base):
     __tablename__ = "rate_buckets"
     key: Mapped[str] = mapped_column(String(160), primary_key=True)
     count: Mapped[int] = mapped_column(Integer, default=1)
+
+
+class AdminClaim(Base):
+    """One-time binding of an explicitly configured administrator to Google sub."""
+
+    __tablename__ = "admin_claims"
+    email_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    google_sub: Mapped[str] = mapped_column(String(255), unique=True)
+    learner_id: Mapped[str] = mapped_column(ForeignKey("learners.id"))
+    created: Mapped[float] = mapped_column(Float, default=time.time)
+
+
+class GroupMove(Base):
+    __tablename__ = "group_moves"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    learner_id: Mapped[str] = mapped_column(ForeignKey("learners.id"), index=True)
+    admin_id: Mapped[str] = mapped_column(ForeignKey("learners.id"))
+    previous_groups: Mapped[str] = mapped_column(Text)
+    group_id: Mapped[str | None] = mapped_column(ForeignKey("cohorts.id"), nullable=True)
+    created: Mapped[float] = mapped_column(Float, default=time.time)

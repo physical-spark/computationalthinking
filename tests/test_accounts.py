@@ -5,9 +5,9 @@ from backend.models import Learner, Draft, Progress, DraftConflict, Question
 from sqlalchemy import select
 
 
-def test_anonymous_identity_and_admin_denial(client):
+def test_google_identity_and_admin_denial(client):
     u = client.get("/api/v1/me").json()
-    assert not u["connected"] and not u["admin"]
+    assert u["connected"] and not u["admin"]
     assert client.get("/api/v1/me").json()["id"] == u["id"]
     for path in [
         "/api/v1/admin/learners",
@@ -76,18 +76,23 @@ def test_question_and_reply_privacy(client, other, administrator, task):
     assert not other.get("/api/v1/questions").json()[0]["unread"]
 
 
-def test_cohort_codes_and_archive(administrator, other):
-    c = administrator.post("/api/v1/admin/cohorts", json={"name": "D반"}).json()
-    assert other.post("/api/v1/cohorts/join", json={"code": c["code"]}).status_code == 200
+def test_admin_moves_lobby_members_and_students_cannot_assign(administrator, other):
+    uid = other.get("/api/v1/me").json()["id"]
+    assert other.get("/api/v1/me").json()["group_name"] == "로비"
+    c = administrator.post("/api/v1/admin/cohorts", json={"name": "D그룹"}).json()
+    endpoint = "/api/v1/admin/learners/" + uid + "/group"
+    assert other.put(endpoint, json={"group_id": c["id"]}).status_code == 403
+    assert other.post("/api/v1/cohorts/join", json={"code": c["code"]}).status_code == 403
+    assert administrator.put(endpoint, json={"group_id": c["id"]}).status_code == 200
+    assert other.get("/api/v1/me").json()["group_name"] == "D그룹"
     assert len(administrator.get("/api/v1/admin/learners?cohort=" + c["id"]).json()) == 1
-    rotated = administrator.post("/api/v1/admin/cohorts/" + c["id"] + "/rotate", json={}).json()
-    assert rotated["code"] != c["code"]
-    assert other.post("/api/v1/cohorts/join", json={"code": c["code"]}).status_code == 404
-    administrator.patch(
-        "/api/v1/admin/cohorts/" + c["id"], json={"name": "D반 보관", "archived": True}
-    )
-    assert other.post("/api/v1/cohorts/join", json={"code": rotated["code"]}).status_code == 404
-    assert administrator.get("/api/v1/admin/learners?cohort=" + c["id"]).json()
+    administrator.patch("/api/v1/admin/cohorts/"+c["id"], json={"name":"D그룹", "archived":True})
+    assert administrator.put(endpoint, json={"group_id": c["id"]}).status_code == 422
+    assert administrator.put(endpoint, json={"group_id": None}).status_code == 200
+    assert other.get("/api/v1/me").json()["group_name"] == "로비"
+    from backend.models import GroupMove
+    with SessionLocal() as db:
+        assert len(db.scalars(select(GroupMove).where(GroupMove.learner_id == uid)).all()) == 2
 
 
 def test_merge_preserves_progress_questions_and_both_drafts(client, other, task):
@@ -105,6 +110,7 @@ def test_merge_preserves_progress_questions_and_both_drafts(client, other, task)
     )
     with SessionLocal.begin() as db:
         guest = db.get(Learner, guest_id)
+        guest.google_sub = None  # Historical anonymous records before login became required.
         target = db.get(Learner, target_id)
         target.google_sub = "test-sub"
         merge_guest(db, guest, target)
@@ -182,8 +188,65 @@ def test_reflections_are_private_idempotent_and_survive_account_merge(client, ot
     assert other.get("/api/v1/progress").json()["reflections"] == []
     assert other.post("/api/v1/reflections", json=note).status_code == 409
     with SessionLocal.begin() as db:
+        db.get(Learner, guest_id).google_sub = None
         merge_guest(db, db.get(Learner, guest_id), db.get(Learner, target_id))
     restored = other.get("/api/v1/progress").json()["reflections"]
     assert len(restored) == 1
     assert restored[0]["explanation"] == note["explanation"]
     assert restored[0]["learner_id"] == target_id
+
+
+def test_logged_out_learning_and_websocket_are_denied():
+    from fastapi.testclient import TestClient
+    from backend.main import app
+    from starlette.websockets import WebSocketDisconnect
+    import pytest
+    with TestClient(app, headers={"Origin":"http://localhost:5173"}) as c:
+        assert c.get("/api/v1/me").json()["connected"] is False
+        assert not c.cookies.get("ct-session")
+        for path in ["/api/v1/course", "/api/v1/progress", "/api/v1/questions", "/api/v1/admin/learners"]:
+            assert c.get(path).status_code == 401
+        with pytest.raises(WebSocketDisconnect) as error:
+            with c.websocket_connect("/api/v1/runner"):
+                pass
+        assert error.value.code == 4401
+
+
+def test_admin_binding_requires_verified_email_and_pins_sub(client, other, monkeypatch):
+    from backend.main import bind_configured_admin
+    monkeypatch.setenv("CT_ADMIN_EMAILS", "gichanlee@icloud.com")
+    uid=client.get("/api/v1/me").json()["id"]
+    oid=other.get("/api/v1/me").json()["id"]
+    with SessionLocal.begin() as db:
+        u=db.get(Learner,uid)
+        bind_configured_admin(db,u,{"email":"gichanlee@icloud.com","email_verified":False})
+        assert not u.admin
+        bind_configured_admin(db,u,{"email":"someone@example.com","email_verified":True})
+        assert not u.admin
+        bind_configured_admin(db,u,{"email":"gichanlee@icloud.com","email_verified":True})
+        assert u.admin
+        attacker=db.get(Learner,oid)
+        bind_configured_admin(db,attacker,{"email":"gichanlee@icloud.com","email_verified":True})
+        assert not attacker.admin
+
+
+def test_oauth_callback_preserves_existing_records_and_assigns_configured_admin(client, task, monkeypatch):
+    from types import SimpleNamespace
+    from fastapi.responses import RedirectResponse
+    import backend.main as main
+    uid=client.get("/api/v1/me").json()["id"]
+    client.post("/api/v1/reflections",json={**task,"id":str(uuid4()),"explanation":"로그인 전 보존한 생각"})
+    with SessionLocal.begin() as db:
+        db.get(Learner,uid).google_sub=None
+    class Google:
+        async def authorize_redirect(self,*args,**kwargs):return RedirectResponse("https://accounts.google.com/test")
+        async def authorize_access_token(self,*args):return {"userinfo":{"sub":"verified-oauth-sub","email":"gichanlee@icloud.com","email_verified":True}}
+    monkeypatch.setattr(main,"oauth",SimpleNamespace(google=Google()))
+    monkeypatch.setenv("GOOGLE_CLIENT_ID","test-client")
+    monkeypatch.setenv("CT_ADMIN_EMAILS","gichanlee@icloud.com")
+    assert client.get("/auth/google/start",follow_redirects=False).status_code==307
+    assert client.get("/auth/google/callback",follow_redirects=False).status_code==303
+    profile=client.get("/api/v1/me").json()
+    assert profile["id"]==uid and profile["admin"] and profile["connected"]
+    assert profile["group_name"]=="로비"
+    assert client.get("/api/v1/progress").json()["reflections"][0]["explanation"]=="로그인 전 보존한 생각"

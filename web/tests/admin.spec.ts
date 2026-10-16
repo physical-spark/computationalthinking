@@ -1,4 +1,5 @@
-import { test, expect, request as requestFactory } from "@playwright/test";
+import { test, expect, request as requestFactory } from "./fixtures";
+import { testIdentity } from "./fixtures";
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 test("administrator reviews a class and privately answers a student", async ({
@@ -41,22 +42,35 @@ test("administrator reviews a class and privately answers a student", async ({
   const name = "브라우저 검증 " + Date.now();
   const nickname = "질문하는 학생 " + Date.now();
   const question = "연산 순서를 어떻게 확인하나요? " + Date.now();
-  await page.getByLabel("새 반 이름").fill(name);
-  await page.getByRole("button", { name: "반 만들기", exact: true }).click();
+  await page.getByLabel("새 그룹 이름").fill(name);
+  await page.getByRole("button", { name: "그룹 만들기", exact: true }).click();
   await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
   const cohort = (
     await (await page.request.get("/api/v1/admin/cohorts")).json()
   ).find((c: any) => c.name === name);
   expect(cohort).toBeTruthy();
+  const studentIdentity = testIdentity(nickname);
   const student = await requestFactory.newContext({
     baseURL: "http://localhost:" + (process.env.CT_WEB_PORT || "5173"),
     extraHTTPHeaders: {
       Origin: "http://localhost:" + (process.env.CT_WEB_PORT || "5173"),
+      Cookie: "ct-session=" + studentIdentity.token,
     },
   });
   await student.get("/api/v1/me");
   await student.patch("/api/v1/me", { data: { nickname } });
-  await student.post("/api/v1/cohorts/join", { data: { code: cohort.code } });
+  await page.reload();
+  const memberRow = page
+    .getByRole("row")
+    .filter({ has: page.getByRole("button", { name: nickname, exact: true }) });
+  await memberRow.getByRole("combobox").selectOption(cohort.id);
+  await memberRow
+    .getByRole("button", { name: "그룹 이동", exact: true })
+    .click();
+  await expect(page.getByRole("status")).toContainText(
+    nickname + " 회원을 " + name,
+  );
+
   const course = await (await student.get("/api/v1/course")).json();
   const qid = crypto.randomUUID();
   await student.post("/api/v1/questions", {
@@ -66,7 +80,9 @@ test("administrator reviews a class and privately answers a student", async ({
       body: question,
     },
   });
-  await page.getByRole("combobox", { name: /반 선택/ }).selectOption(cohort.id);
+  await page
+    .getByRole("combobox", { name: /그룹 선택/ })
+    .selectOption(cohort.id);
   await expect(
     page.getByRole("button", { name: nickname, exact: true }),
   ).toBeVisible();

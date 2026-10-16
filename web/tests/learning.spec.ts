@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 async function start(page: any) {
   await page.goto("/#WritingPrograms.editor_hello_world");
   await expect(page.getByRole("button", { name: "▶ 실행" })).toBeEnabled({
@@ -39,7 +39,7 @@ test("input, stop, snoop, local tracing and birdseye work", async ({
   await expect(page.getByRole("button", { name: "▶ 실행" })).toBeEnabled();
   await page.getByRole("button", { name: "한 줄씩 보기", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "Python Tutor 방식 · 로컬 단계 보기" }),
+    page.getByRole("heading", { name: "Python Tutor 방식 · 단계 보기" }),
   ).toBeVisible();
   await expect(page.getByRole("button", { name: "▶ 실행" })).toBeEnabled();
   await page

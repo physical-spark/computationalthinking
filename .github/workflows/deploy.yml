@@ -26,6 +26,11 @@ jobs:
         run: npm ci --prefix web && npm ci --prefix runner
       - name: Build and validate all content
         run: ./scripts/prepare_runtime.sh
+      - name: Build isolated native Python runtime
+        run: |
+          ./scripts/install_execution_host.sh
+          docker build -f execution/Dockerfile -t ct-python:${{ github.sha }} .
+          docker run --rm --runtime=runsc --network=none --read-only --cap-drop=ALL --security-opt=no-new-privileges --memory=512m --memory-swap=512m --tmpfs /tmp:rw,nosuid,nodev,size=33554432,mode=1777 ct-python:${{ github.sha }} python -c 'from regression import verify; import json; r=verify("ko"); print(json.dumps(r)); assert r["passed"] and r["cases"]==285'
       - name: Backend permissions and data preservation
         env:
           CT_TEST_DATABASE_URL: postgresql+psycopg://ct:ci-only-password@localhost:5432/ct_test
@@ -34,17 +39,22 @@ jobs:
         env:
           VITE_CONTENT_LANGUAGE: ko
           VITE_TEST_DRIVER: '1'
+          CT_EXECUTION_IMAGE: ct-python:${{ github.sha }}
+          CT_BROKER_TOKEN: ci-private-broker-token-01234567890123456789
+          CT_CGROUP_PARENT: ''
         run: |
           npm run build --prefix web
           npm run build --prefix runner
+          uv run uvicorn execution.broker:app --host 127.0.0.1 --port 8766 --ws-max-size 100000 > /tmp/ct-broker-ci.log 2>&1 &
           cd web
           npx playwright install --with-deps chromium
           npx playwright test
       - name: Build ARM64 deployment image
         run: |
           docker build -t ct-app:${{ github.sha }} .
+          docker run --rm --entrypoint docker ct-app:${{ github.sha }} --version
           docker image inspect ct-app:${{ github.sha }} --format '{{.Id}}' > image-digest.txt
-          docker save ct-app:${{ github.sha }} | gzip > image.tar.gz
+          docker save ct-app:${{ github.sha }} ct-python:${{ github.sha }} | gzip > image.tar.gz
       - name: Deploy over restricted SSH
         env:
           CT_DEPLOY_KEY: ${{ secrets.CT_DEPLOY_KEY }}
