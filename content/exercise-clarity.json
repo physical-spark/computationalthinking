@@ -287,5 +287,25 @@
       "<p>앞 페이지에서 문자열과 숫자를 서로 바꾸는 방법을 배웠어요.</p>",
       "<p><code>int()</code>를 쓰면 정수(소수점 없는 수)로 바뀌고, <code>str()</code>를 쓰면 문자열로 바뀌어요.</p>"
     ]
+  },
+  "BuildingUpStringsExercises.diagonal_name_bonus_challenge": {
+    "replacements": [
+      [
+        "<p>원하면 아래에 있는 보너스 도전 문제를 하나 더 풀어 봐도 돼요. 꼭 풀지 않아도 괜찮아요.\n풀고 싶지 않으면 지금 바로 <a href=\"#BasicTerminology\">다음 페이지</a>로 가도 돼요.\n나중에 다시 돌아와서 풀어도 돼요.</p>",
+        "<p>이번에는 확장 Exercise예요. 앞에서 만든 반복문에 공백을 한 칸씩 늘리는 규칙을 더해요. 이 과정에서는 이 문제까지 통과한 뒤 다음 Lesson으로 이동해요. 막히면 힌트를 한 개씩 열어 보세요.</p>"
+      ]
+    ]
+  },
+  "IntroducingLists.strings_sum_bonus": {
+    "replacements": [
+      [
+        "<p>원하면 지금 바로 <a href=\"#BuildingNewLists\">다음 페이지</a>로 넘어가도 돼요.</p>",
+        "<p>이번 확장 Exercise까지 통과하면 다음 Lesson이 열려요. 앞에서 단어를 이었던 코드에 구분자를 넣는 규칙을 더해 봐요.</p>"
+      ],
+      [
+        "하고 싶으면 해 볼 수 있는 보너스 과제예요: 프로그램을 더 고쳐서",
+        "프로그램을 더 고쳐서"
+      ]
+    ]
   }
 }
