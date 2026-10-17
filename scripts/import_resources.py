@@ -77,7 +77,7 @@ def main():
                 video_id=video,start=int(params.get('start',[0])[0]),end=int(params['end'][0]) if 'end' in params else None,
                 before=f"{heading}. 이 영상에서 작은 규칙이 실제 예에 어떻게 적용되는지 살펴보세요.",reading=reading,after=after,
                 source_url=source,source_file=str(file.relative_to(SOURCE)),source_anchor=anchor,source_revision=revision,
-                creator=creator,creator_url=creator_url,reference_only=topic in {'schedule','github'} or topic.startswith('network')))
+                creator=creator,creator_url=creator_url,reference_only=topic in {'api','http','llm','schedule','github'} or topic.startswith('network')))
     assert len(resources)==50 and len({r['video_id'] for r in resources})==46
     (ROOT/"content/resources.json").write_text(json.dumps({"source_revision":revision,"resources":resources},ensure_ascii=False,indent=2)+'\n')
 

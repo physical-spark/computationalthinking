@@ -459,7 +459,7 @@
       "source_revision": "429646be4566879814afd5d8927734fb4db5ce00",
       "creator": "코딩애플",
       "creator_url": "https://www.youtube.com/@codingapple",
-      "reference_only": false
+      "reference_only": true
     },
     {
       "id": "ros-0929-pm-rules-api-s17b2-QcKEJFvPryI",
@@ -479,7 +479,7 @@
       "source_revision": "429646be4566879814afd5d8927734fb4db5ce00",
       "creator": "우아한테크",
       "creator_url": "https://www.youtube.com/@woowatech",
-      "reference_only": false
+      "reference_only": true
     },
     {
       "id": "ros-1002-am-webhook-cli-s18v-uqiHrVAp2ow",
@@ -539,7 +539,7 @@
       "source_revision": "429646be4566879814afd5d8927734fb4db5ce00",
       "creator": "3Blue1Brown 한국어",
       "creator_url": "https://www.youtube.com/@3Blue1BrownKR",
-      "reference_only": false
+      "reference_only": true
     },
     {
       "id": "ros-1006-am-llm-prompt-s05a-ckSdPNKM2pY",
@@ -559,7 +559,7 @@
       "source_revision": "429646be4566879814afd5d8927734fb4db5ce00",
       "creator": "코딩애플",
       "creator_url": "https://www.youtube.com/@codingapple",
-      "reference_only": false
+      "reference_only": true
     },
     {
       "id": "ros-1006-am-llm-prompt-s21v-r7kU1OoUEQg",
@@ -579,7 +579,7 @@
       "source_revision": "429646be4566879814afd5d8927734fb4db5ce00",
       "creator": "코딩애플",
       "creator_url": "https://www.youtube.com/@codingapple",
-      "reference_only": false
+      "reference_only": true
     },
     {
       "id": "ros-1006-am-llm-prompt-s23v-esDYb0gYOxQ",
@@ -639,7 +639,7 @@
       "source_revision": "429646be4566879814afd5d8927734fb4db5ce00",
       "creator": "코딩애플",
       "creator_url": "https://www.youtube.com/@codingapple",
-      "reference_only": false
+      "reference_only": true
     },
     {
       "id": "ros-1006-pm-agent-tools-s14v-e0hEA69d4Dw",

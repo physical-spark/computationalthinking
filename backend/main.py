@@ -662,7 +662,7 @@ def export(request: Request, db: DB, cohort: str | None = None):
     stream.write("\ufeff")
     keys = [
         "id",
-        "nickname",
+        "full_name",
         "connected",
         "active",
         "current_step",
