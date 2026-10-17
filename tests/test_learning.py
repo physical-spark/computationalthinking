@@ -302,3 +302,14 @@ def test_editorial_git_conflict_keeps_publication(administrator, other, monkeypa
     assert not administrator.get("/api/v1/admin/content/block", params={"id": block}).json()[
         "conflict"
     ]
+
+
+def test_prose_rejects_unquoted_layout_and_missing_attribute_value():
+    import pytest
+    from fastapi import HTTPException
+    from backend.editorial import validate_prose
+
+    for body in ["<p class=hidden>text</p>", "<a href>text</a>", '<p onclick="alert(1)">text</p>']:
+        with pytest.raises(HTTPException) as exc:
+            validate_prose(body, "<p>text</p>")
+        assert exc.value.status_code == 422

@@ -422,6 +422,12 @@ export default function App() {
           : sessionStorage.getItem("ct-preview-code") || step.starter,
       );
       if (!readOnly) sessionStorage.removeItem("ct-preview-code");
+      const reflection = reflections
+        .filter((r) => r.step_id === step.id)
+        .sort((a, b) => b.created - a.created)[0];
+      setExplanation(readOnly ? reflection?.explanation || "" : "");
+      setChoice(readOnly ? (reflection?.choice ?? null) : null);
+      setQuestion("");
       setOutput("");
       setResultPending(null);
       setPrediction(null);
@@ -1017,6 +1023,17 @@ export default function App() {
               <p>
                 이 실습은 아직 잠겨 있습니다. 설명과 영상은 자유롭게 볼 수
                 있습니다.
+              </p>
+              <p>
+                먼저 풀 과제:{" "}
+                <strong>
+                  {
+                    all.find(
+                      (item) => item.step.id === access[step.id].requires,
+                    )?.page.title
+                  }
+                </strong>{" "}
+                · {access[step.id].requires}
               </p>
               <button onClick={() => navigate(access[step.id].requires!)}>
                 현재 과제 풀기

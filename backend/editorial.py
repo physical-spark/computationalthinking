@@ -82,6 +82,10 @@ def blocks(c):
 
 
 class SafeProse(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.classes = []
+
     def handle_starttag(self, tag, attrs):
         if tag not in {
             "p",
@@ -100,6 +104,10 @@ class SafeProse(HTMLParser):
         }:
             raise ValueError("허용되지 않는 HTML 요소입니다.")
         for name, value in attrs:
+            if value is None:
+                raise ValueError("HTML 속성에는 값을 입력해 주세요.")
+            if name == "class":
+                self.classes.append(value)
             if name == "href" and tag == "a" and value.startswith(("https://", "http://", "#")):
                 continue
             if name in {"class", "title"}:
@@ -121,14 +129,14 @@ def rich_block(block_id):
 def validate_prose(body, original, block_id=None):
     if block_id and not rich_block(block_id) and re.search(r"<[^>]*>", body):
         raise HTTPException(422, "이 문구는 서식 없이 글자로 입력해 주세요.")
-    if re.findall(r'\bclass\s*=\s*["\']([^"\']*)', body) != re.findall(
-        r'\bclass\s*=\s*["\']([^"\']*)', original
-    ):
-        raise HTTPException(422, "레이아웃 클래스는 웹에서 변경할 수 없습니다.")
     if CODE.findall(body) != CODE.findall(original):
         raise HTTPException(422, "코드 블록은 웹에서 변경할 수 없습니다.")
     try:
-        SafeProse().feed(body)
+        before, after = SafeProse(), SafeProse()
+        before.feed(original)
+        after.feed(body)
+        if before.classes != after.classes:
+            raise ValueError("레이아웃 클래스는 웹에서 변경할 수 없습니다.")
     except ValueError as e:
         raise HTTPException(422, str(e)) from e
 
