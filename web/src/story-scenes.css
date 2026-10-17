@@ -1,6 +1,6 @@
 .story-scene {
   margin: 0 0 1.5rem;
-  color: #254942;
+  color: var(--text);
   min-width: 0;
 }
 .story-scene figcaption {
@@ -32,16 +32,16 @@
 .story-scene__controls button {
   min-height: 44px;
   padding: 0.625rem 1rem;
-  border: 1px solid #087567;
+  border: 1px solid var(--accent-solid);
   border-radius: 10px;
-  background: #fffdf8;
-  color: #075e54;
+  background: var(--surface);
+  color: var(--accent);
   font: inherit;
   font-weight: 650;
   cursor: pointer;
 }
 .story-scene__controls button:focus-visible {
-  outline: 3px solid #075e54;
+  outline: 3px solid var(--accent);
   outline-offset: 3px;
 }
 .story-scene__count {
@@ -53,15 +53,15 @@
   place-items: center;
   width: 1.5rem;
   height: 1.5rem;
-  border: 1px solid #aac4b7;
+  border: 1px solid var(--control-border);
   border-radius: 50%;
   font-size: 0.75rem;
   line-height: 1;
 }
 .story-scene__count > .is-current {
-  color: white;
-  background: #087567;
-  border-color: #087567;
+  color: var(--on-accent);
+  background: var(--accent-solid);
+  border-color: var(--accent-solid);
   font-weight: 700;
 }
 .story-scene--compact {

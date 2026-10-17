@@ -185,12 +185,12 @@ export const storyScenes: Story[] = [
     action: "다음 일 하기",
   },
 ];
-const ink = "#254942",
-  green = "#087567",
-  pale = "#e4f1e9",
-  peach = "#fae0c7",
-  paper = "#fffdf8",
-  coral = "#a74435";
+const ink = "var(--text)",
+  accent = "var(--accent)",
+  pale = "var(--accent-soft)",
+  peach = "var(--illustration-highlight)",
+  paper = "var(--surface)",
+  coral = "var(--danger)";
 function Label({
   x,
   y,
@@ -257,7 +257,7 @@ function Card({
         height={h}
         rx={16}
         fill={active ? pale : paper}
-        stroke={active ? green : "#aac4b7"}
+        stroke={active ? accent : "var(--control-border)"}
         strokeWidth={active ? 3 : 2}
       />
       {children}
@@ -267,11 +267,11 @@ function Card({
 function Tick({ x, y }: { x: number; y: number }) {
   return (
     <g>
-      <circle cx={x} cy={y} r={15} fill={green} />
+      <circle cx={x} cy={y} r={15} fill="var(--success)" />
       <path
         d={`M${x - 7},${y}l5,5 9,-10`}
         fill="none"
-        stroke="#fff"
+        stroke="var(--on-accent)"
         strokeWidth={3}
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -284,7 +284,7 @@ function Arrow({ x, y, w = 45 }: { x: number; y: number; w?: number }) {
     <path
       d={`M${x},${y}h${w}m-9,-7 9,7 -9,7`}
       fill="none"
-      stroke={green}
+      stroke={accent}
       strokeWidth={3}
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -358,7 +358,7 @@ function Scene({ index, step }: { index: number; step: number }) {
                 ? "M240 77 Q240 103 330 113l-11,-1m11,1 -6,-9"
                 : "M240 77 Q240 103 150 113l11,-1m-11,1 6,-9"
             }
-            stroke={green}
+            stroke={accent}
             strokeWidth={4}
             fill="none"
             strokeLinecap="round"
@@ -389,7 +389,7 @@ function Scene({ index, step }: { index: number; step: number }) {
             height={30}
             rx={8}
             fill={peach}
-            stroke="#9e7854"
+            stroke="var(--muted)"
             strokeWidth={2}
           />
           {[0, 1, 2].map((i) => {
@@ -409,8 +409,22 @@ function Scene({ index, step }: { index: number; step: number }) {
           <g
             transform={`translate(${step ? (done ? 345 : 112) : 100} ${step ? 40 : 12}) rotate(${step ? 20 : -20})`}
           >
-            <rect x={-7} y={10} width={14} height={60} rx={4} fill="#aa7046" />
-            <rect x={-28} y={0} width={58} height={22} rx={5} fill="#55746e" />
+            <rect
+              x={-7}
+              y={10}
+              width={14}
+              height={60}
+              rx={4}
+              fill="var(--code-operator)"
+            />
+            <rect
+              x={-28}
+              y={0}
+              width={58}
+              height={22}
+              rx={5}
+              fill="var(--muted)"
+            />
           </g>
           <Label x={240} y={213}>
             {done
@@ -489,7 +503,7 @@ function Scene({ index, step }: { index: number; step: number }) {
           <path
             d="M240 91v34m-8,-9 8,9 8,-9"
             fill="none"
-            stroke={green}
+            stroke={accent}
             strokeWidth={3}
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -618,7 +632,7 @@ function Scene({ index, step }: { index: number; step: number }) {
           {done && (
             <path
               d="M148 44H321"
-              stroke={green}
+              stroke={accent}
               strokeWidth={5}
               strokeLinecap="round"
             />
@@ -646,7 +660,7 @@ function Scene({ index, step }: { index: number; step: number }) {
               </Card>
               <path
                 d={`M205 ${78 + i * 92}h90`}
-                stroke={step > 0 && i === 1 ? green : "#aac4b7"}
+                stroke={step > 0 && i === 1 ? accent : "var(--control-border)"}
                 strokeWidth={3}
               />
               <Card
@@ -787,7 +801,7 @@ function Scene({ index, step }: { index: number; step: number }) {
           />
           <path
             d="M113 68v45l-32,-18"
-            stroke={green}
+            stroke={accent}
             strokeWidth={5}
             strokeLinecap="round"
             fill="none"
@@ -868,7 +882,7 @@ function Scene({ index, step }: { index: number; step: number }) {
             <>
               <path
                 d="M100 137v65h132V137"
-                stroke={green}
+                stroke={accent}
                 strokeWidth={2}
                 fill="none"
               />
@@ -942,7 +956,14 @@ function StorySceneSteps({
       >
         <title id={`${id}-title`}>{story.title}</title>
         <desc id={`${id}-description`}>{story.steps[shownStep]}</desc>
-        <rect x={1} y={1} width={478} height={238} rx={24} fill="#f7f5ed" />
+        <rect
+          x={1}
+          y={1}
+          width={478}
+          height={238}
+          rx={24}
+          fill="var(--surface-muted)"
+        />
         <Scene index={index} step={shownStep} />
       </svg>
       {!compact && (

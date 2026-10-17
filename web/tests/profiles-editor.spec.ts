@@ -55,7 +55,7 @@ test("only administrators can reveal an answer beside the code without changing 
   await expect(shown.locator("code")).toContainText("def filter_failed(logs):");
   await expect(shown.locator("code")).toContainText('log["status"] == "FAIL"');
   expect(
-    (await new AxeBuilder({ page }).include(".run-toolbar").analyze())
+    (await new AxeBuilder({ page }).include(".coding-pane").analyze())
       .violations,
   ).toEqual([]);
   await page.screenshot({

@@ -156,18 +156,18 @@ function SequencePicture({ kind }: { kind: "see" | "guess" | "write" }) {
         <>
           <path
             d="M16 32 Q40 8 64 32 Q40 56 16 32"
-            fill="white"
+            fill="var(--surface)"
             stroke="currentColor"
             strokeWidth="2.5"
           />
           <circle cx="40" cy="32" r="9" fill="currentColor" />
-          <circle cx="43" cy="29" r="3" fill="white" />
+          <circle cx="43" cy="29" r="3" fill="var(--surface)" />
         </>
       ) : kind === "guess" ? (
         <>
           <path
             d="M18 17 H62 V43 H35 L24 51 V43 H18 Z"
-            fill="white"
+            fill="var(--surface)"
             stroke="currentColor"
             strokeWidth="2.5"
           />
@@ -186,7 +186,7 @@ function SequencePicture({ kind }: { kind: "see" | "guess" | "write" }) {
         <>
           <path
             d="M23 17 H55 V49 H23 Z"
-            fill="white"
+            fill="var(--surface)"
             stroke="currentColor"
             strokeWidth="2.5"
           />
