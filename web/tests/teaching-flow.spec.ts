@@ -43,11 +43,11 @@ for (const width of [320, 390, 720, 768, 1440]) {
       ),
     ).toBe(true);
     if (width === 1440) {
-      expect(
-        await page
-          .locator(".concept-stage")
-          .evaluate((el) => el.scrollHeight <= el.clientHeight + 1),
-      ).toBe(true);
+      const stage = await page.locator(".concept-stage").evaluate((el) => ({
+        content: el.scrollHeight,
+        available: el.clientHeight,
+      }));
+      expect(stage.content).toBeLessThanOrEqual(stage.available + 1);
     }
     await page.screenshot({
       path: test.info().outputPath(`teaching-flow-${width}.png`),

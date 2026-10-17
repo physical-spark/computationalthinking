@@ -13,7 +13,7 @@
   display: block;
   width: 100%;
   height: auto;
-  max-height: 200px;
+  max-height: 180px;
   overflow: visible;
 }
 .code-walkthrough__picture text {
@@ -40,7 +40,7 @@
   stroke-linejoin: round;
 }
 .code-walkthrough__narration {
-  margin: 0.625rem 0 0.875rem;
+  margin: 0.5rem 0 0.625rem;
 }
 .code-walkthrough__narration p {
   margin: 0.25rem 0;
