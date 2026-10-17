@@ -1324,11 +1324,12 @@ export default function App() {
                         step.solution && (
                           <section
                             id="admin-answer-code"
+                            tabIndex={0}
                             className="admin-answer"
                             aria-label="정답 코드"
                           >
                             <h3>정답 코드</h3>
-                            <pre>
+                            <pre tabIndex={0}>
                               <code>{step.solution.tokens.join("")}</code>
                             </pre>
                           </section>
@@ -1511,11 +1512,12 @@ export default function App() {
                         step.solution && (
                           <section
                             id="admin-answer-code"
+                            tabIndex={0}
                             className="admin-answer"
                             aria-label="정답 코드"
                           >
                             <h3>정답 코드</h3>
-                            <pre>
+                            <pre tabIndex={0}>
                               <code>{step.solution.tokens.join("")}</code>
                             </pre>
                           </section>
