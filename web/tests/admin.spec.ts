@@ -71,7 +71,9 @@ test("administrator reviews a class and privately answers a student", async ({
     },
   });
   await student.get("/api/v1/me");
-  await student.patch("/api/v1/me", { data: { full_name:nickname, birth_date:"2000-01-01", avatar_id:"cat" } });
+  await student.patch("/api/v1/me", {
+    data: { full_name: nickname, birth_date: "2000-01-01", avatar_id: "cat" },
+  });
   await page.reload();
   const memberRow = page
     .getByRole("row")
@@ -105,9 +107,9 @@ test("administrator reviews a class and privately answers a student", async ({
     .fill("괄호를 먼저 계산한 뒤 결과를 비교해 보세요.");
   await thread.getByRole("button", { name: "답변 저장", exact: true }).click();
   await expect(
-    page.getByText("괄호를 먼저 계산한 뒤 결과를 비교해 보세요.", {
-      exact: true,
-    }),
+    thread
+      .getByRole("blockquote")
+      .filter({ hasText: "괄호를 먼저 계산한 뒤 결과를 비교해 보세요." }),
   ).toBeVisible();
   const own = await (await student.get("/api/v1/questions")).json();
   expect(own[0].replies[0].body).toContain("괄호");

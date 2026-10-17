@@ -62,7 +62,10 @@ with SessionLocal.begin() as db:
   if p['track']!=track:continue
   for s in p['steps']:
    if s['id']==target:db.commit();raise SystemExit(0)
-   if not s['reading'] and not db.get(Progress,(uid,s['id'])):db.add(Progress(learner_id=uid,step_id=s['id'],version=c['version'],passed=True))
+   if not s['reading']:
+    existing=db.get(Progress,(uid,s['id']))
+    if existing:existing.passed=True
+    else:db.add(Progress(learner_id=uid,step_id=s['id'],version=c['version'],passed=True))
 `,
     ],
     {
@@ -76,6 +79,10 @@ with SessionLocal.begin() as db:
       },
     },
   );
+  expect(
+    (await (await page.request.get("/api/v1/progress")).json()).access[stepId]
+      .unlocked,
+  ).toBe(true);
   // These prerequisites are seeded outside the API; refresh the mounted app access map.
   if (page.url().startsWith("http")) await page.reload();
 }
