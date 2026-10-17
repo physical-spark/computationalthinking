@@ -756,10 +756,13 @@ export default function App() {
       <main className="welcome">
         <h1>학습 기록과 개인정보</h1>
         <p>
-          성명·생년월일·선택한 이모지, Google 계정 연결 식별자,
-          코드·진도·질문·그룹 배정 기록을 학습 지원과 동명이인 구분 목적으로
-          저장합니다. 생년월일은 본인과 관리자만 볼 수 있습니다. 전화번호와
-          프로필 사진은 수집하지 않습니다.
+          성명·생년월일·선택한 이모지 또는 직접 올린 프로필 사진, Google 계정
+          연결 식별자, 코드·진도·질문·그룹 배정 기록을 학습 지원과 동명이인 구분
+          목적으로 저장합니다. 생년월일과 사진은 본인과 관리자만 볼 수 있습니다.
+          전화번호와 Google 프로필 사진은 수집하지 않습니다. 업로드한 사진은
+          256×256 크기로 변환하며 촬영 위치 등 메타데이터와 원본 파일은 저장하지
+          않습니다. 프로필에서 이모지를 선택해 저장하면 현재 사진이 삭제됩니다.
+          암호화된 백업의 사진은 백업 보존 기간(7일)이 지나면 제거됩니다.
         </p>
         <p>
           Google 로그인으로 본인의 학습 기록을 이어서 볼 수 있습니다. 기존 익명
@@ -842,7 +845,7 @@ export default function App() {
             ct <span>컴퓨팅 사고력</span>
           </a>
           <span>
-            <Avatar id={user.avatar_id} /> {user.nickname}
+            <Avatar id={user.avatar_id} url={user.avatar_url} /> {user.nickname}
           </span>
         </header>
         {user.admin ? (
@@ -901,7 +904,7 @@ export default function App() {
             className="account-button"
             onClick={() => account.current?.showModal()}
           >
-            <Avatar id={user.avatar_id} /> {user.nickname}
+            <Avatar id={user.avatar_id} url={user.avatar_url} /> {user.nickname}
             <small>{user.admin ? "관리자" : user.group_name || "로비"}</small>
           </button>
           {user.admin && (
@@ -1627,7 +1630,7 @@ export default function App() {
         </form>
         <h2 id="account-title">이어서 학습하기</h2>
         <p>Google 계정에 학습 기록을 연결했습니다.</p>
-        {!user.admin && (
+        {
           <Profile
             user={user}
             onSaved={(u) => {
@@ -1635,7 +1638,7 @@ export default function App() {
               setNotice("프로필을 저장했습니다.");
             }}
           />
-        )}
+        }
         {user.connected && (
           <button
             onClick={async () => {

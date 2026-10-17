@@ -23,6 +23,8 @@ from sqlalchemy.orm import Session as DBSession
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
 
+from .avatars import MAX_UPLOAD_BYTES
+from .avatars import router as avatar_router
 from .db import database
 from .editorial import router as editorial_router
 from .execution import router as execution_router
@@ -129,7 +131,7 @@ def identity(request, db, require_google=True, require_profile=True):
     if require_google and not user.google_sub:
         fail(401, "Google로 로그인한 뒤 이용해 주세요.")
     if require_google and require_profile and not profile_complete(user):
-        fail(428, "성명·생년월일·이모지를 등록한 뒤 학습해 주세요.")
+        fail(428, "성명·생년월일·프로필 이미지를 등록한 뒤 학습해 주세요.")
     return user
 
 
@@ -189,7 +191,13 @@ async def safeguards(request, call_next):
         and request.headers.get("origin") != APP_ORIGIN
     ):
         return JSONResponse({"detail": "허용되지 않은 요청 출처입니다."}, status_code=403)
-    if int(request.headers.get("content-length", "0") or 0) > 100_000:
+    limit = MAX_UPLOAD_BYTES if (request.method == "PUT" and
+                                 request.url.path == "/api/v1/me/avatar") else 100_000
+    try:
+        size = int(request.headers.get("content-length", "0") or 0)
+    except ValueError:
+        return JSONResponse({"detail": "요청 크기를 확인해 주세요."}, status_code=400)
+    if size > limit:
         return JSONResponse({"detail": "요청 크기가 너무 큽니다."}, status_code=413)
     r = await call_next(request)
     r.headers["X-Content-Type-Options"] = "nosniff"
@@ -864,6 +872,7 @@ class SPAFiles(StaticFiles):
 
 app.include_router(execution_router)
 app.include_router(learning_router)
+app.include_router(avatar_router)
 
 app.include_router(editorial_router)
 

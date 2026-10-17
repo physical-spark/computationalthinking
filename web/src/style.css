@@ -1930,7 +1930,7 @@ input[type="checkbox"] {
 }
 .avatar-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(58px, 1fr));
   gap: 8px;
 }
 .avatar-grid label {
@@ -2076,4 +2076,52 @@ input[type="checkbox"] {
   .concept-pagination {
     flex-shrink: 0;
   }
+}
+
+.profile-avatar {
+  width: 1.8em;
+  height: 1.8em;
+  object-fit: cover;
+  border-radius: 50%;
+  vertical-align: middle;
+  outline: 1px solid #0000001a;
+  outline-offset: -1px;
+}
+.avatar-picker {
+  min-width: 0;
+  margin: 0;
+  padding: 12px;
+}
+.avatar-picker fieldset {
+  min-width: 0;
+  margin: 16px 0 0;
+  padding: 0;
+  border: 0;
+}
+.avatar-preview {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 80px;
+  margin-bottom: 16px;
+}
+.avatar-preview > :first-child {
+  width: 72px;
+  height: 72px;
+  font-size: 48px;
+  text-align: center;
+}
+.avatar-preview img {
+  flex-shrink: 0;
+}
+.avatar-grid label:focus-within {
+  outline: 3px solid #086e63;
+  outline-offset: 2px;
+}
+.profile-form input[type="file"] {
+  max-width: 100%;
+  white-space: normal;
+}
+.profile-form p {
+  overflow-wrap: anywhere;
 }

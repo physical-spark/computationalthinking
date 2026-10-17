@@ -77,6 +77,7 @@ export type User = {
   full_name?: string | null;
   birth_date?: string | null;
   avatar_id?: string | null;
+  avatar_url?: string | null;
   profile_complete?: boolean;
   id: string;
   nickname: string;

@@ -2,7 +2,7 @@ import time
 import uuid
 from datetime import date
 
-from sqlalchemy import Boolean, Date, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Date, Float, ForeignKey, Integer, LargeBinary, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -21,11 +21,20 @@ class Learner(Base):
     full_name: Mapped[str | None] = mapped_column(String(80), nullable=True)
     birth_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     avatar_id: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    avatar_version: Mapped[str | None] = mapped_column(String(64), nullable=True)
     google_sub: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
     admin: Mapped[bool] = mapped_column(Boolean, default=False)
     created: Mapped[float] = mapped_column(Float, default=time.time)
     active: Mapped[float] = mapped_column(Float, default=time.time)
     current_step: Mapped[str] = mapped_column(String(200), default="")
+
+
+class ProfileImage(Base):
+    __tablename__ = "profile_images"
+    learner_id: Mapped[str] = mapped_column(
+        ForeignKey("learners.id", ondelete="CASCADE"), primary_key=True
+    )
+    image: Mapped[bytes] = mapped_column(LargeBinary)
 
 
 class Session(Base):

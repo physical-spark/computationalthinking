@@ -20,8 +20,13 @@ export async function api<T = any>(
   const r = await fetch(path, {
     method,
     credentials: "same-origin",
-    headers: body ? { "Content-Type": "application/json" } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
+    headers:
+      body instanceof Blob
+        ? { "Content-Type": body.type || "application/octet-stream" }
+        : body
+          ? { "Content-Type": "application/json" }
+          : undefined,
+    body: body instanceof Blob ? body : body ? JSON.stringify(body) : undefined,
   });
   const data = await r.json();
   if (!r.ok) throw new ApiError(r.status, data);

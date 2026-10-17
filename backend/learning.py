@@ -7,27 +7,9 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
+from .avatars import AVATARS
 from .db import SessionLocal
 from .models import Attempt, ExecutionRecord, Learner, Progress
-
-AVATARS = [
-    "sprout",
-    "cat",
-    "dog",
-    "fox",
-    "panda",
-    "koala",
-    "tiger",
-    "lion",
-    "rabbit",
-    "bear",
-    "penguin",
-    "owl",
-    "whale",
-    "dolphin",
-    "turtle",
-    "octopus",
-]
 
 
 def profile_complete(user):
@@ -39,6 +21,8 @@ def profile_data(user):
         "full_name": user.full_name,
         "birth_date": user.birth_date.isoformat() if user.birth_date else None,
         "avatar_id": user.avatar_id,
+        "avatar_url": (f"/api/v1/avatars/{user.id}?v={user.avatar_version}"
+                       if user.avatar_version else None),
         "profile_complete": profile_complete(user),
     }
 

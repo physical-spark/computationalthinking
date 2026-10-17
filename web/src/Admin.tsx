@@ -180,7 +180,8 @@ export default function Admin() {
                           )
                         }
                       >
-                        <Avatar id={l.avatar_id} /> {l.nickname}
+                        <Avatar id={l.avatar_id} url={l.avatar_url} />{" "}
+                        {l.nickname}
                         <small className="identity-detail">
                           {l.birth_date || "프로필 미등록"} · {l.id.slice(0, 8)}
                         </small>
