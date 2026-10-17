@@ -1,6 +1,6 @@
 import Profile, { Avatar } from "./Profile";
 import "./lesson-layout.css";
-import ResourceLesson, { Sources, ResourceLinks } from "./Resources";
+import ResourceLesson, { Sources } from "./Resources";
 import type { Access } from "./types";
 import { CourseSidebar, Syllabus, ConceptLesson } from "./LearningPath";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
@@ -25,6 +25,7 @@ import type {
   User,
 } from "./types";
 import Diagram from "./Diagram";
+import ExpressionProblem from "./ExpressionProblem";
 import { ThinkingGoal, ThinkingJournal } from "./Thinking";
 import Runner, { type RunnerHandle } from "./Runner";
 const Editor = lazy(() => import("./Editor"));
@@ -782,8 +783,8 @@ export default function App() {
           시작하며 그룹은 관리자가 배정합니다.
         </p>
         <p>
-          학습 코드는 서버의 격리된 Python 환경에서 처리합니다. 관리자에게 남긴
-          질문과 답변은 본인과 관리자만 볼 수 있습니다.
+          학습 코드는 서버의 격리된 Python 환경에서 처리합니다. 멘토에게 남긴
+          질문과 답변은 본인과 멘토만 볼 수 있습니다.
         </p>
         <a href="/">학습으로 돌아가기</a>
       </main>
@@ -875,7 +876,14 @@ export default function App() {
         )}
       </>
     );
-  const currentQuiz = quiz[Math.min(page.diagram, 12)];
+  const everydayExpression = step.id === "IntroducingTheShell.more_calculation";
+  const currentQuiz = everydayExpression
+    ? ([
+        "영화표 네 장의 값을 구하는 계산식은 무엇일까요?",
+        ["4 * 8000", "4 + 8000", "8000 / 4"],
+        0,
+      ] as const)
+    : quiz[Math.min(page.diagram, 12)];
   return (
     <>
       <a className="skip" href="#lesson">
@@ -1089,11 +1097,15 @@ export default function App() {
                     {passed && <span className="passed-label">✓ 통과</span>}
                   </div>
                   <ThinkingGoal step={step} />
-                  <Diagram
-                    key={page.id}
-                    index={page.diagram}
-                    concept={page.concept}
-                  />
+                  {everydayExpression ? (
+                    <ExpressionProblem />
+                  ) : (
+                    <Diagram
+                      key={page.id}
+                      index={page.diagram}
+                      concept={page.concept}
+                    />
+                  )}
                   {page.track === "module1" && (
                     <p className="simulation-label">
                       모의실습 · 실제 API와 LLM을 호출하지 않습니다.
@@ -1145,67 +1157,72 @@ export default function App() {
                       ))}
                     </section>
                   )}
-                  {step.solution && !step.reading && (
-                    <section className="solution">
-                      <h2>정답과 비교하기</h2>
-                      <p>
-                        먼저 내 코드를 실행한 뒤 아래 정답과 차이를 비교해
-                        보세요.
-                      </p>
-                      <pre>{step.solution.tokens.join("")}</pre>
-                      {step.solution.lines && (
-                        <>
-                          <h3>코드 줄 순서 맞추기</h3>
-                          {
-                            <div>
-                              {parsons.map((line, i) => (
-                                <div className="parsons-line" key={i}>
-                                  <code>{line}</code>
-                                  <button
-                                    aria-label={`${i + 1}번째 줄 위로`}
-                                    disabled={!i}
-                                    onClick={() =>
-                                      setParsons((ls) => {
-                                        const next = [...ls];
-                                        [next[i - 1], next[i]] = [
-                                          next[i],
-                                          next[i - 1],
-                                        ];
-                                        return next;
-                                      })
-                                    }
-                                  >
-                                    위
-                                  </button>
-                                  <button
-                                    aria-label={`${i + 1}번째 줄 아래로`}
-                                    disabled={i === parsons.length - 1}
-                                    onClick={() =>
-                                      setParsons((ls) => {
-                                        const next = [...ls];
-                                        [next[i], next[i + 1]] = [
-                                          next[i + 1],
-                                          next[i],
-                                        ];
-                                        return next;
-                                      })
-                                    }
-                                  >
-                                    아래
-                                  </button>
-                                </div>
-                              ))}
-                              <button
-                                onClick={() => changeCode(parsons.join("\n"))}
-                              >
-                                편집기에 넣기
-                              </button>
-                            </div>
-                          }
-                        </>
-                      )}
-                    </section>
-                  )}
+                  {step.solution &&
+                    !step.reading &&
+                    (!everydayExpression || passed) && (
+                      <section className="solution">
+                        <h2>
+                          {everydayExpression ? "풀이 예시" : "정답과 비교하기"}
+                        </h2>
+                        <p>
+                          {everydayExpression
+                            ? "아래는 가능한 풀이 중 한 가지예요. 조건을 만족하고 같은 금액을 구하는 다른 계산식도 통과해요."
+                            : "먼저 내 코드를 실행한 뒤 아래 정답과 차이를 비교해 보세요."}
+                        </p>
+                        <pre>{step.solution.tokens.join("")}</pre>
+                        {step.solution.lines && (
+                          <>
+                            <h3>코드 줄 순서 맞추기</h3>
+                            {
+                              <div>
+                                {parsons.map((line, i) => (
+                                  <div className="parsons-line" key={i}>
+                                    <code>{line}</code>
+                                    <button
+                                      aria-label={`${i + 1}번째 줄 위로`}
+                                      disabled={!i}
+                                      onClick={() =>
+                                        setParsons((ls) => {
+                                          const next = [...ls];
+                                          [next[i - 1], next[i]] = [
+                                            next[i],
+                                            next[i - 1],
+                                          ];
+                                          return next;
+                                        })
+                                      }
+                                    >
+                                      위
+                                    </button>
+                                    <button
+                                      aria-label={`${i + 1}번째 줄 아래로`}
+                                      disabled={i === parsons.length - 1}
+                                      onClick={() =>
+                                        setParsons((ls) => {
+                                          const next = [...ls];
+                                          [next[i], next[i + 1]] = [
+                                            next[i + 1],
+                                            next[i],
+                                          ];
+                                          return next;
+                                        })
+                                      }
+                                    >
+                                      아래
+                                    </button>
+                                  </div>
+                                ))}
+                                <button
+                                  onClick={() => changeCode(parsons.join("\n"))}
+                                >
+                                  편집기에 넣기
+                                </button>
+                              </div>
+                            }
+                          </>
+                        )}
+                      </section>
+                    )}
                   {mobile && (
                     <section className="mobile-code">
                       <h2>코드 읽기</h2>
@@ -1259,9 +1276,7 @@ export default function App() {
                   </fieldset>
                   {
                     <fieldset disabled={readOnly} className="review">
-                      <h2>개념 확인하기 · 선택</h2>
-                      <span className="eyebrow">선택 복습</span>
-                      <h2>내가 이해한 것을 확인해 볼까요?</h2>
+                      <h2>개념 확인 · 선택</h2>
                       <p>건너뛰어도 다음 과제로 이동할 수 있습니다.</p>
                       <fieldset>
                         <legend>{currentQuiz[0]}</legend>
@@ -1293,8 +1308,8 @@ export default function App() {
                     </fieldset>
                   }
                   <section className="ask-section">
-                    <h2>관리자에게 질문 남기기</h2>
-                    <p>질문과 답변은 본인과 관리자만 볼 수 있습니다.</p>
+                    <h2>멘토에게 질문 남기기</h2>
+                    <p>질문과 답변은 본인과 멘토만 볼 수 있습니다.</p>
                     <form onSubmit={submitQuestion}>
                       <fieldset disabled={readOnly}>
                         <label>
@@ -1347,11 +1362,6 @@ export default function App() {
                       {next ? "다음 →" : "학습과정으로 →"}
                     </button>
                   </nav>
-                  <ResourceLinks
-                    resources={(course.resources || []).filter(
-                      (r) => r.page_id === page.id,
-                    )}
-                  />
                   <Sources sources={step.sources} />
                   <footer className="lesson-footer">
                     <a href="/privacy">학습 기록 안내</a>

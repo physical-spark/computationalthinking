@@ -91,7 +91,7 @@ for (const width of [320, 390, 768, 1440]) {
     await expect(page.locator("details,summary")).toHaveCount(0);
     await expect(
       page.getByRole("heading", {
-        name: "관리자에게 질문 남기기",
+        name: "멘토에게 질문 남기기",
         exact: true,
       }),
     ).toBeVisible();

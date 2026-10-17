@@ -47,6 +47,8 @@ const run = pyodideExpose(async (extras, entry, output, input) => {
       result = entry.page_slug.startsWith("m1-")
         ? py.pyimport("module1").check(entry, callback)
         : core.check_entry(entry, callback);
+      if (key === "IntroducingTheShell.more_calculation")
+        result = py.pyimport("life_expression").apply(entry, result);
     } finally {
       if (entry.source === "pythontutor") py.runPython("sys.settrace(None)");
     }

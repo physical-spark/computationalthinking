@@ -30,6 +30,7 @@ def receive():
 from core.init_pyodide import init
 
 init("ko")
+import life_expression
 import module1
 from core.checker import check_entry, default_runner
 from core.text import pages
@@ -87,6 +88,7 @@ while True:
                 if key.startswith("m1-")
                 else check_entry(entry, callback)
             )
+            result = life_expression.apply(entry, result)
         finally:
             sys.settrace(None)
         if entry["source"] == "pythontutor":

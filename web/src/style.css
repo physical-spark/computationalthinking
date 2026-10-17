@@ -1334,13 +1334,6 @@ td code {
   color: var(--muted);
   line-height: 1.7;
 }
-.copy-code-choice {
-  display: flex;
-  gap: 0.6rem;
-  align-items: center;
-  min-height: 44px;
-  font-size: 0.875rem;
-}
 input[type="checkbox"] {
   width: 20px;
   height: 20px;

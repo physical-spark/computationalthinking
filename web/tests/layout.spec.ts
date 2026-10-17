@@ -31,9 +31,30 @@ for (const width of [320, 390, 768, 1440]) {
     await page.screenshot({ path: test.info().outputPath("learning.png") });
     const journal = page.getByLabel("내가 생각한 풀이", { exact: true });
     await journal.fill("입력과 결과를 비교해 보았다.");
-    await page
-      .getByRole("checkbox", { name: "코드와 실행 결과도 포함" })
-      .check();
+    await expect(
+      page.getByRole("checkbox", { name: "코드와 실행 결과도 포함" }),
+    ).toHaveCount(0);
+    await expect(page.locator("#lesson .resource-links")).toHaveCount(0);
+    await expect(
+      page.getByRole("heading", { name: "멘토에게 질문 남기기", exact: true }),
+    ).toBeVisible();
+    for (const selector of [".review", ".ask-section", ".ask-section fieldset"])
+      expect(
+        await page
+          .locator(selector)
+          .evaluate((el) => getComputedStyle(el).backgroundColor),
+      ).toBe("rgba(0, 0, 0, 0)");
+    expect(
+      await page
+        .locator(".review .quiz-choice")
+        .first()
+        .evaluate((el) => getComputedStyle(el).backgroundColor),
+    ).toBe("rgb(255, 253, 249)");
+    expect(
+      await page
+        .locator(".ask-section textarea")
+        .evaluate((el) => getComputedStyle(el).backgroundColor),
+    ).toBe("rgb(255, 253, 249)");
     await page
       .getByRole("button", { name: "내 생각 저장", exact: true })
       .click();

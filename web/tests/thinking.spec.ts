@@ -1,5 +1,46 @@
 import { test, expect, priorLessons } from "./fixtures";
 
+test("everyday expression needs a correct model and opens the next step after saving", async ({
+  page,
+}) => {
+  await priorLessons(page, "IntroducingTheShell.more_calculation");
+  await page.goto("/#IntroducingTheShell.more_calculation");
+  await expect(
+    page.getByRole("region", { name: "이번 문제의 사고 목표" }),
+  ).toContainText("생활 속 상황을 계산식으로 옮겨요");
+  await expect(page.locator(".expression-problem svg")).toBeVisible();
+  await expect(page.locator(".solution")).toHaveCount(0);
+  await expect(page.locator("#lesson .resource-links")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "▶ 실행", exact: true }),
+  ).toBeEnabled({ timeout: 60000 });
+  const code = page.getByRole("textbox", {
+    name: "Python 코드 편집기",
+    exact: true,
+  });
+  const next = page.getByRole("button", { name: "다음 →", exact: true });
+  for (const wrong of ["2 * 3", "10000"]) {
+    await code.fill(wrong);
+    await page.getByRole("button", { name: "▶ 실행", exact: true }).click();
+    await expect(
+      page.getByRole("button", { name: "▶ 실행", exact: true }),
+    ).toBeEnabled();
+    await expect(next).toBeDisabled();
+    await expect(page.locator(".solution")).toHaveCount(0);
+  }
+  await code.fill("8000 + (12000 - 4000) / 4");
+  await page.getByRole("button", { name: "▶ 실행", exact: true }).click();
+  await expect(page.getByLabel("Python 실행 결과")).toContainText("10000");
+  await expect(next).toBeEnabled();
+  await expect(page.locator(".solution")).toContainText("풀이 예시");
+  await expect(page.locator(".review legend")).toContainText("영화표 네 장");
+  await page.screenshot({
+    path: test.info().outputPath("everyday-expression-passed.png"),
+  });
+  await next.click();
+  await expect(page).toHaveURL(/#IntroducingTheShell.final_text$/);
+});
+
 test("simple execution, reflection restoration and real feedback clipboard", async ({
   page,
   context,
@@ -37,10 +78,7 @@ test("simple execution, reflection restoration and real feedback clipboard", asy
   expect(copied).toContain("정답 코드부터 주지 말고");
   expect(copied).toContain("IntroducingTheShell.first_expression");
   expect(copied).toContain(thought);
-  expect(copied).not.toContain("=== 내가 작성한 현재 코드 ===");
-  await page.getByLabel("코드와 실행 결과도 포함").check();
-  await page.getByRole("button", { name: "AI 피드백 요청문 복사" }).click();
-  copied = await page.evaluate(() => navigator.clipboard.readText());
+  await expect(page.getByLabel("코드와 실행 결과도 포함")).toHaveCount(0);
   expect(copied).toContain("=== 내가 작성한 현재 코드 ===\n1+2");
   expect(copied).toContain("=== 현재 화면의 실행 결과 ===\n3");
   await page.getByRole("button", { name: "내 생각 저장", exact: true }).click();

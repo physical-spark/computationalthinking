@@ -426,3 +426,67 @@
 #root:has(.lesson-navigation) .notice {
   bottom: calc(var(--lesson-footer) + 12px);
 }
+
+/* Keep explanations on the page; white surfaces are the places to answer. */
+.lesson-pane .review,
+.lesson-pane .ask-section {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  margin-block: 32px 0;
+  min-width: 0;
+}
+.lesson-pane .review > h2,
+.lesson-pane .ask-section > h2 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+.lesson-pane .review > p,
+.lesson-pane .ask-section > p {
+  margin: 0 0 16px;
+}
+.lesson-pane .review fieldset,
+.lesson-pane .ask-section fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0 0 16px;
+  background: transparent;
+  min-width: 0;
+}
+.lesson-pane .review .quiz-choice {
+  background: var(--surface);
+  border: 1px solid var(--control-border);
+  border-radius: 8px;
+  min-height: 44px;
+  padding: 12px;
+  margin-block: 8px;
+  align-items: center;
+}
+.lesson-pane .review .quiz-choice:has(input:checked) {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.lesson-pane .ask-section textarea {
+  background: var(--surface);
+}
+.expression-problem {
+  margin: 20px 0;
+}
+.expression-problem figcaption {
+  font-size: 1rem;
+  font-weight: 650;
+  margin-bottom: 12px;
+}
+.expression-problem svg {
+  display: block;
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+}
+.lesson-pane .source-note a {
+  display: inline-block;
+  min-height: 24px;
+  padding-block: 4px;
+  line-height: 1.5;
+}

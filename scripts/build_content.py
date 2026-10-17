@@ -10,6 +10,7 @@ sys.path.insert(0, str(ROOT / "runtime"))
 from core.text import load_chapters, get_pages, pages
 from core import translation as t
 from module1 import PROJECTS
+import life_expression
 
 lang = sys.argv[1] if len(sys.argv) > 1 else "en"
 t.set_language(lang)
@@ -135,9 +136,25 @@ for page in out:
                     step["text"] = re.sub(r"<p>Python Tutor에서.*?</p>", "<p>앞에서 쓴 슬라이더를 움직여 봐요. 함수가 시작하고 끝날 때 이름과 값이 어떻게 바뀌는지 살펴봐요.</p>", step["text"], count=1, flags=re.S)
                 step["text"] = f"<p><strong>실행하면 {tool} 그림도 함께 볼 수 있어요.</strong></p>" + step["text"]
 
+for page in out:
+    for step in page["steps"]:
+        if step["id"] == life_expression.STEP_ID:
+            step.update(
+                text=life_expression.TEXT,
+                thinking=life_expression.THINKING,
+                hints=life_expression.HINTS,
+                solution={"tokens": [life_expression.EXAMPLE], "lines": None, "mask": [True], "maskedIndices": [0]},
+                requirements=[{"type": "custom", "message": "<p>4, 8000, 12000, 4000을 모두 사용해 한 사람당 낼 돈을 계산하는 식 한 개를 써요.</p>"}],
+                sources=[
+                    {"label": "문제·설명 자체 작성: Computational Thinking", "url": "https://github.com/physical-spark/computationalthinking/blob/main/runtime/life_expression.py"},
+                    {**step["sources"][0], "label": "학습 흐름 참고: futurecoder · Alex Hall · MIT"},
+                ],
+            )
+
 content = {"language": lang, "upstream": "def491c2a348371f56249d05c64e0cf70f33ac2b", "pages": out}
 content["runtime_version"] = hashlib.sha256(
     (ROOT / "runtime/module1.py").read_bytes()
+    + (ROOT / "runtime/life_expression.py").read_bytes()
     + b"".join(p.read_bytes() for p in sorted((ROOT / "vendor/futurecoder/core").rglob("*.py")))
 ).hexdigest()[:16]
 content["version"] = hashlib.sha256(
@@ -155,6 +172,7 @@ with (
     for path, name in [
         (ROOT / "runtime/module1.py", "module1.py"),
         (ROOT / "runtime/regression.py", "regression.py"),
+        (ROOT / "runtime/life_expression.py", "life_expression.py"),
     ]:
         data = path.read_bytes()
         info = tarfile.TarInfo(name)

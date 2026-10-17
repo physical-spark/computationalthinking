@@ -19,7 +19,6 @@ export function feedbackPrompt({
   code,
   output,
   passed,
-  includeCode,
 }: {
   page: Page;
   step: Step;
@@ -27,7 +26,6 @@ export function feedbackPrompt({
   code: string;
   output: string;
   passed: boolean;
-  includeCode: boolean;
 }) {
   return `당신은 Python을 통해 컴퓨팅 사고력을 기르도록 돕는 학습 코치입니다.
 아래 문제와 내가 쓴 생각을 읽고, 정답 코드부터 주지 말고 사고 과정을 점검해 주세요.
@@ -56,17 +54,13 @@ ${step.thinking.question}
 ${new DOMParser().parseFromString(step.text.replace(/<\/(p|li|pre|h[1-6])>/gi, "$&\n"), "text/html").body.textContent || ""}
 
 === 내가 쓴 생각 ===
-${answer.trim()}${
-    includeCode
-      ? `
+${answer.trim()}
 
 === 내가 작성한 현재 코드 ===
 ${code || "(작성한 코드 없음)"}
 
 === 현재 화면의 실행 결과 ===
-${output || "(아직 실행 결과 없음)"}`
-      : ""
-  }`;
+${output || "(아직 실행 결과 없음)"}`;
 }
 
 export function ThinkingJournal({
@@ -88,7 +82,6 @@ export function ThinkingJournal({
   output: string;
   passed: boolean;
 }) {
-  const [includeCode, setIncludeCode] = useState(false);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
   const [manualCopy, setManualCopy] = useState(false);
@@ -101,7 +94,6 @@ export function ThinkingJournal({
     code,
     output,
     passed,
-    includeCode,
   });
   useEffect(() => {
     if (manualCopy && previewField.current) {
@@ -166,17 +158,9 @@ export function ThinkingJournal({
         작성 중인 글은 이 브라우저에 자동 보관됩니다. ‘내 생각 저장’을 누르면
         학습 기록에도 저장됩니다. 건너뛰어도 다음 문제로 이동할 수 있습니다.
       </p>
-      <label className="copy-code-choice">
-        <input
-          type="checkbox"
-          checked={includeCode}
-          onChange={(e) => setIncludeCode(e.target.checked)}
-        />{" "}
-        코드와 실행 결과도 포함
-      </label>
       <p className="field-help">
-        문제·사고 목표·내 답변을 질문과 함께 복사합니다. 사용하는 AI 대화창에
-        직접 붙여넣어 물어보세요.
+        문제·내 생각·코드·현재 실행 결과를 함께 복사합니다. 사용하는 AI 대화창에
+        붙여넣어 물어보세요.
       </p>
       <div className="journal-actions">
         <button onClick={onSave}>내 생각 저장</button>

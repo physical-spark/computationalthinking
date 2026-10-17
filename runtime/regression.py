@@ -33,7 +33,23 @@ def verify(language="ko", golden_programs=None):
         if golden_programs is not None and substep.program.splitlines() != golden_programs[count]:
             failures.append(page.slug + "." + step.__name__ + ": code changed")
         count += 1
-    return {"cases": count, "failures": failures, "passed": not failures, "language": language}
+    import life_expression
+    from core.text import pages
+
+    authored = [
+        (life_expression.EXAMPLE, True),
+        ("8000 + (12000 - 4000) / 4", True),
+        ("2 * 3", False),
+        ("10000", False),
+        ("(8000 + 12000 - 4000) / 4", False),
+    ]
+    for source, expected in authored:
+        entry = {"page_slug": "IntroducingTheShell", "step_name": "more_calculation", "source": "shell", "input": source}
+        pages[entry["page_slug"]].get_step(entry["step_name"]).pre_run(runner)
+        result = life_expression.apply(entry, check_entry(entry, lambda *_: None, runner))
+        if result["passed"] != expected:
+            failures.append("authored-life-expression: " + source)
+    return {"cases": count, "authored_cases": len(authored), "failures": failures, "passed": not failures, "language": language}
 
 
 if __name__ == "__main__":
