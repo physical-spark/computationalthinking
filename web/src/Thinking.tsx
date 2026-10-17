@@ -5,7 +5,7 @@ import type { Page, Step } from "./types";
 export function ThinkingGoal({ step }: { step: Step }) {
   return (
     <section className="thinking-goal" aria-label="이번 문제의 사고 목표">
-      <span className="eyebrow">컴퓨팅 사고력 · {step.thinking.activity}</span>
+      <span className="eyebrow">이번에는 · {step.thinking.activity}</span>
       <h2>{step.thinking.focus}</h2>
       <p>{step.thinking.why}</p>
     </section>
@@ -43,7 +43,7 @@ export function feedbackPrompt({
 페이지: ${page.title}
 단계: ${step.id}
 문제 주소: ${lessonUrl("#" + step.id)}
-학습 상태: ${step.reading ? "개념 읽기" : passed ? "코드 검사 통과" : "아직 코드 검사를 통과하지 않음"}
+학습 상태: ${step.reading ? "개념 읽기" : passed ? "코드 검사 통과" : "아직 풀고 있어요"}
 
 === 이번에 연습하는 사고 ===
 ${step.thinking.focus} · ${step.thinking.activity}

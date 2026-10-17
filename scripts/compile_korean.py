@@ -50,7 +50,7 @@ report = {
     "missing": missing,
     "problems": problems,
     "reviewed_overrides": len(overrides),
-    "translation_method": "Local Qwen translation drafts plus reviewed corrections; code, identifiers and expected outputs retained.",
+    "translation_method": "Local Qwen translation drafts with Claude-assisted plain Korean revision and agent review; code, identifiers and expected outputs retained.",
 }
 (ROOT / "content/translation-report.json").write_text(
     json.dumps(report, ensure_ascii=False, indent=2) + "\n"

@@ -30,7 +30,7 @@ const Editor = lazy(() => import("./Editor"));
 const Admin = lazy(() => import("./Admin"));
 const quiz = [
   [
-    "셸에서 1 + 2를 실행하면 어떤 값이 나오나요?",
+    "1 + 2를 실행하면 어떤 값이 나오나요?",
     ["3", "1 + 2라는 문자열", "아무 값도 나오지 않음"],
     0,
   ],
@@ -875,7 +875,7 @@ export default function App() {
         <a className="brand" href="/">
           <span className="brand-mark">ct</span>
           <span>
-            컴퓨팅 사고력<small>생각을 코드로 확인하는 시간</small>
+            컴퓨팅 사고력<small>그림으로 보고, 코드로 해봐요</small>
           </span>
         </a>
         <nav className="header-actions" aria-label="학습 메뉴">
@@ -1411,7 +1411,7 @@ export default function App() {
                       <Suspense fallback={<p>편집기 준비 중</p>}>
                         <Editor
                           readOnly={readOnly}
-                          shell={mode === "shell"}
+                          shell={page.id === "NavigatingShellHistory"}
                           value={code}
                           onChange={changeCode}
                           onRun={run}
@@ -1598,8 +1598,8 @@ export default function App() {
                         />
                       )}
                       <p className="keyboard-tip">
-                        {mode === "shell"
-                          ? "Enter로 실행"
+                        {page.id === "NavigatingShellHistory"
+                          ? "Enter로 실행 · ↑·↓로 이전 코드 보기"
                           : "Ctrl / ⌘ + Enter로 실행"}{" "}
                         · 입력 기다림에는 입력 칸을 사용하세요.
                       </p>

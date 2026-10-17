@@ -1,0 +1,91 @@
+.story-scene {
+  margin: 0 0 1.5rem;
+  color: #254942;
+  min-width: 0;
+}
+.story-scene figcaption {
+  margin-block-end: 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.story-scene .story-scene__picture {
+  display: block;
+  width: 100%;
+  max-height: 280px;
+  height: auto;
+  overflow: visible;
+}
+.story-scene__caption {
+  margin: 0.875rem 0;
+  font-size: 1rem;
+  line-height: 1.7;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.story-scene__controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+}
+.story-scene__controls button {
+  min-height: 44px;
+  padding: 0.625rem 1rem;
+  border: 1px solid #087567;
+  border-radius: 10px;
+  background: #fffdf8;
+  color: #075e54;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+.story-scene__controls button:focus-visible {
+  outline: 3px solid #075e54;
+  outline-offset: 3px;
+}
+.story-scene__count {
+  display: inline-flex;
+  gap: 0.375rem;
+}
+.story-scene__count > span {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid #aac4b7;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+.story-scene__count > .is-current {
+  color: white;
+  background: #087567;
+  border-color: #087567;
+  font-weight: 700;
+}
+.story-scene--compact {
+  margin: 0;
+}
+.story-scene--compact .story-scene__picture {
+  max-height: 150px;
+}
+@media (forced-colors: active) {
+  .story-scene__picture rect,
+  .story-scene__picture ellipse,
+  .story-scene__picture circle {
+    fill: Canvas;
+    stroke: CanvasText;
+  }
+  .story-scene__picture path {
+    stroke: CanvasText;
+  }
+  .story-scene__picture text {
+    fill: CanvasText !important;
+  }
+  .story-scene__count > .is-current {
+    color: HighlightText;
+    background: Highlight;
+    border: 2px solid Highlight;
+  }
+}

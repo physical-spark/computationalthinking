@@ -64,6 +64,8 @@ def blocks(c):
 
     for p in c["pages"]:
         add(p["id"], p, ["title"])
+        if isinstance(p.get("story"), dict):
+            add(p["id"] + "/story", p["story"], ["scene", "bridge", "term"])
         for step in p["steps"]:
             add(step["id"], step, ["text"])
             add(
@@ -222,13 +224,16 @@ def block(request: Request, id: str, db=Depends(database)):
         page = next(p for p in base_course()["pages"] if p["diagram"] == int(id.split("/")[1]))
         card = {
             "title": 1,
-            "analogy": 1,
+            "analogy": 3,
             "idea": 2,
             "question": 5,
             "explanation": 5,
             "transfer": 6,
         }.get(id.split("/")[-1], 1)
         target = "concept/" + page["id"] + "/" + str(card)
+    elif "/story/" in id:
+        card = 1 if id.endswith("/scene") else 2
+        target = "concept/" + target + "/" + str(card)
     elif "." not in target:
         target = "concept/" + target + "/1"
     return {

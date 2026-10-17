@@ -1,0 +1,118 @@
+/* Everyday actions precede terminology; diagrams carry the first explanation. */
+.story-opening {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: 32px;
+}
+.syllabus-page .story-opening h1 {
+  font-size: clamp(1.65rem, 2.5vw, 2.1rem);
+  line-height: 1.45;
+  max-width: 17ch;
+  margin: 12px 0 16px;
+  word-break: keep-all;
+}
+.syllabus-page .story-opening .path-intro {
+  font-size: 1rem;
+  margin: 0 0 24px;
+  max-width: 33ch;
+  line-height: 1.9;
+}
+.learning-sequence.story-sequence {
+  gap: 20px;
+  margin: 36px 0 24px;
+}
+.learning-sequence.story-sequence li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.learning-sequence.story-sequence b {
+  margin: 0 0 4px;
+  font-size: 0.9375rem;
+}
+.learning-sequence.story-sequence span {
+  display: block;
+  font-size: 0.8125rem;
+}
+.sequence-picture {
+  width: 64px;
+  height: 56px;
+  flex: 0 0 64px;
+  color: var(--accent);
+}
+.story-chapter-title {
+  align-items: center;
+  gap: 18px;
+}
+.story-chapter-title > .story-scene {
+  width: 150px;
+  flex: 0 0 150px;
+  margin: 0;
+}
+.story-chapter-title h2 {
+  font-size: 1.2rem;
+  line-height: 1.5;
+}
+.story-chapter-title .chapter-scene {
+  font-size: 0.9375rem;
+  color: inherit;
+  margin: 4px 0 8px;
+}
+.story-chapter-title .chapter-term {
+  font-size: 0.8125rem;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.concept-card-content > .story-scene {
+  max-width: 600px;
+  margin: 16px auto;
+}
+.concept-card-content .story-term {
+  font-size: 0.9375rem;
+  font-weight: 650;
+  color: var(--accent);
+}
+.concept-card-content .concept-lead {
+  font-size: 1rem;
+  line-height: 1.9;
+  max-width: 52ch;
+  margin: 16px auto;
+}
+@media (max-width: 900px) {
+  .story-opening {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  .syllabus-page .story-opening h1 {
+    max-width: 18ch;
+  }
+  .story-opening .story-scene {
+    max-width: 560px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  .learning-sequence.story-sequence {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .story-chapter-title {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .story-chapter-title > .story-scene {
+    width: 96px;
+    flex-basis: 96px;
+  }
+  .story-chapter-title > div {
+    flex: 1 1 160px;
+    min-width: 0;
+  }
+  .story-chapter-title > .chapter-number {
+    display: none;
+  }
+}

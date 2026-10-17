@@ -62,7 +62,7 @@ for i, p in enumerate(PROJECTS):
                 {
                     "id": p["id"] + ".solve",
                     "name": "solve",
-                    "text": f"<p><strong>목표:</strong> {html.escape(p['goal'])}</p><p>{html.escape(p['description'])}</p><p>함수를 이렇게 호출하면</p><pre><code>{html.escape(call)}</code></pre><p>다음 값을 반환해야 합니다.</p><pre><code>{html.escape(pformat(expected, width=60))}</code></pre>",
+                    "text": f"<p><strong>해볼 일:</strong> {html.escape(p['goal'])}</p><p>{html.escape(p['description'])}</p><p>이렇게 함수에 값을 넣으면</p><pre><code>{html.escape(call)}</code></pre><p>다음 값을 돌려줘야 해요.</p><pre><code>{html.escape(pformat(expected, width=60))}</code></pre>",
                     "hints": [html.escape(x) for x in p["hints"]],
                     "solution": {
                         "tokens": list(p["solution"]),
@@ -79,6 +79,21 @@ for i, p in enumerate(PROJECTS):
             ],
         }
     )
+# Child-readable titles and everyday scenes do not change stable exercise IDs or grading.
+if lang == "ko":
+    stories = json.loads((ROOT / "content/story-course.json").read_text())
+    assert set(stories["pages"]) == {p["id"] for p in out}, "Story catalog must cover every page"
+    assert set(stories["chapters"]) == {str(p["chapter"]) for p in out}
+    for page in out:
+        story = stories["pages"][page["id"]]
+        chapter_story = stories["chapters"][str(page["chapter"])]
+        assert all(story.get(k) for k in ("title", "term", "scene", "bridge"))
+        page["title"] = story["title"]
+        page["story"] = story
+        page["chapterTitle"] = chapter_story["title"]
+        page["chapterScene"] = chapter_story["scene"]
+        page["chapterTerm"] = chapter_story["term"]
+
 # Thinking prompts are authored per concept/page and adapted to the current activity.
 profiles = json.loads((ROOT / "content/thinking.json").read_text())
 assert set(profiles) == {p["id"] for p in out}, "Thinking profiles must cover every page exactly"
@@ -88,22 +103,22 @@ for page in out:
     for step in page["steps"]:
         thinking = dict(profiles[page["id"]])
         if step["reading"]:
-            thinking["activity"] = "내 말로 정리"
-            thinking["question"] = "이 페이지에서 배운 규칙을 어떤 다른 문제에 적용할 수 있을까요? " + thinking["question"]
+            thinking["activity"] = "내 말로 이야기해요"
+            thinking["question"] = "어디에 또 써볼 수 있을까요? " + thinking["question"]
         elif step["prediction"].get("choices"):
-            thinking["activity"] = "결과 예상과 비교"
-            thinking["question"] = "실행 전 예상과 실제 결과를 비교해 보세요. " + thinking["question"]
+            thinking["activity"] = "답을 먼저 생각해요"
+            thinking["question"] = "생각한 답과 실행한 답이 같았나요? " + thinking["question"]
         elif step["mode"] in {"snoop", "pythontutor", "birdseye"}:
-            thinking["activity"] = "실행 상태 추적"
-            thinking["question"] = "실행 도구에서 관찰한 값 하나를 근거로 설명해 보세요. " + thinking["question"]
+            thinking["activity"] = "값을 따라가요"
+            thinking["question"] = "화면에서 바뀐 값 하나를 찾아봐요. " + thinking["question"]
         elif any(term in step["name"].lower() for term in ("broken", "error", "undefined", "invalid", "missing", "mismatched", "fix_")):
-            thinking["activity"] = "오류의 원인 찾기"
-            thinking["question"] = "예상과 달라진 첫 지점은 어디였나요? " + thinking["question"]
+            thinking["activity"] = "어디서 달라졌는지 찾아요"
+            thinking["question"] = "어느 줄부터 생각한 답과 달라졌나요? " + thinking["question"]
         elif "exercise" in step["name"].lower() or step["name"] == "solve":
-            thinking["activity"] = "절차 설계와 검증"
-            thinking["question"] += " 내 풀이를 확인할 작은 입력 사례도 하나 적어 보세요."
+            thinking["activity"] = "직접 만들고 확인해요"
+            thinking["question"] += " 다른 값으로도 한번 시험해 봐요."
         else:
-            thinking["activity"] = "실험하고 설명하기"
+            thinking["activity"] = "바꿔 보고 이야기해요"
         step["thinking"] = thinking
         if lang == "ko":
             step["text"] = re.sub(r'<button\b[^>]*\bcopy-button\b[^>]*>.*?</button>', "", step["text"], flags=re.S)
@@ -113,12 +128,12 @@ for page in out:
                 # Adapt only UI instructions; preserve all original example code and grading.
                 step["text"] = re.sub(r'(<code>)?(snoop|birdseye)(</code>)? 버튼', "실행 버튼", step["text"], flags=re.I)
                 if step["id"] == "UnderstandingProgramsWithPythonTutor.run_with_python_tutor":
-                    step["text"] = re.sub(r"^<p>.*?</p>", "<p>아래 코드를 입력하고 실행하세요. 실행 결과 아래에 나타나는 단계 슬라이더를 움직이며 줄 번호와 변수 값을 살펴보세요. 이 서비스는 화면 안에서 한 줄씩 실행을 보여줍니다.</p>", step["text"], count=1, flags=re.S)
+                    step["text"] = re.sub(r"^<p>.*?</p>", "<p>아래 코드를 쓰고 실행해요. 결과 아래의 슬라이더를 움직여 봐요. 지금 읽는 줄과 바뀐 값을 한 줄씩 볼 수 있어요.</p>", step["text"], count=1, flags=re.S)
                 if step["id"] == "IntroducingBirdseye.first_birdseye_example":
                     step["text"] = step["text"].replace("시각화를 보여주는 새로운 브라우저 탭이 열립니다.", "실행 결과 아래의 ‘Birdseye 표현식 결과 열기’ 링크로 시각화를 볼 수 있습니다.")
                 if step["id"] == "CallingFunctionsWithinFunctions.see_stack_in_birdseye":
-                    step["text"] = re.sub(r"<p>Python Tutor에서.*?</p>", "<p>앞 단계의 실행 슬라이더에서 함수 이름과 지역 변수 값을 확인할 수 있습니다. 함수가 호출되거나 끝날 때 값이 어떻게 달라지는지 살펴보세요.</p>", step["text"], count=1, flags=re.S)
-                step["text"] = f"<p><strong>이번 단계는 실행하면 {tool} 도구가 자동으로 적용됩니다.</strong></p>" + step["text"]
+                    step["text"] = re.sub(r"<p>Python Tutor에서.*?</p>", "<p>앞에서 쓴 슬라이더를 움직여 봐요. 함수가 시작하고 끝날 때 이름과 값이 어떻게 바뀌는지 살펴봐요.</p>", step["text"], count=1, flags=re.S)
+                step["text"] = f"<p><strong>실행하면 {tool} 그림도 함께 볼 수 있어요.</strong></p>" + step["text"]
 
 content = {"language": lang, "upstream": "def491c2a348371f56249d05c64e0cf70f33ac2b", "pages": out}
 content["runtime_version"] = hashlib.sha256(

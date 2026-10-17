@@ -21,11 +21,11 @@ export function Sources({
         <>
           <div>설명·그림 자체 작성: Computational Thinking</div>
           <a
-            href="https://education-static.apple.com/geo/sg/teaching-code/quick-start-to-code.pdf"
+            href="https://images.apple.com/uk/education/docs/everyone-can-code-curriculum-guide.pdf"
             target="_blank"
             rel="noopener noreferrer"
           >
-            학습 구성 참고: Apple Swift Playgrounds
+            학습 구성 참고: Apple Swift Playgrounds · Everyone Can Code
           </a>
         </>
       )}
@@ -88,18 +88,18 @@ export default function ResourceLesson({
         <div className="concept-card-content">
           {card === 0 && (
             <>
-              <h2>왜 지금 보는가</h2>
+              <h2>보기 전에 읽어요</h2>
               <p>{resource.before}</p>
               <p className="concept-lead">{resource.reading}</p>
             </>
           )}
           {card === 1 && (
             <>
-              <h2>영상으로 살펴보기</h2>
+              <h2>영상으로 살펴봐요</h2>
               {resource.reference_only && (
                 <p>
-                  참고 사례입니다. 영상의 설치·외부 도구 설정은 이 과정의 필수가
-                  아닙니다.
+                  다른 곳에서는 이렇게 쓰기도 해요. 영상에 나온 도구를 직접
+                  설치할 필요는 없어요.
                 </p>
               )}
               <p>
@@ -147,7 +147,7 @@ export default function ResourceLesson({
           )}
           {card === 2 && (
             <>
-              <h2>무엇을 확인했나요?</h2>
+              <h2>보고 나서 생각해 봐요</h2>
               <p className="concept-lead">{resource.after}</p>
               <p>
                 앞의 코드나 사례에서 한 가지 값을 바꿨을 때 결과가 어떻게

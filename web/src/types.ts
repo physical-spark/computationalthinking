@@ -32,6 +32,9 @@ export type Step = {
   reading: boolean;
 };
 export type Page = {
+  story?: { title: string; scene: string; bridge: string; term?: string };
+  chapterScene?: string;
+  chapterTerm?: string;
   sources?: Source[];
   id: string;
   title: string;

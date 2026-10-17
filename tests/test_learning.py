@@ -320,3 +320,20 @@ def test_all_existing_prose_blocks_round_trip_without_changing_code():
 
     for block_id, (obj, key) in blocks(base_course()).items():
         validate_prose(obj[key], obj[key], block_id)
+
+
+def test_story_prose_can_be_edited_without_changing_assessment(administrator, other):
+    bid = "IntroducingTheShell/story/scene"
+    info = administrator.get("/api/v1/admin/content/block", params={"id": bid})
+    assert info.status_code == 200, info.text
+    payload = info.json()
+    assert payload["preview_hash"] == "concept/IntroducingTheShell/1"
+    original = other.get("/api/v1/course").json()["pages"][0]
+    edit = administrator.post("/api/v1/admin/content/drafts", json={"block_id": bid, "body": "사과를 하나씩 모아 봐요.", "base_hash": payload["base_hash"]})
+    assert edit.status_code == 200, edit.text
+    rid = edit.json()["id"]
+    assert other.get("/api/v1/course").json()["pages"][0]["story"]["scene"] == original["story"]["scene"]
+    assert administrator.post("/api/v1/admin/content/" + rid + "/publish", json={}).status_code == 200
+    published = other.get("/api/v1/course").json()["pages"][0]
+    assert published["story"]["scene"] == "사과를 하나씩 모아 봐요."
+    assert published["steps"] == original["steps"]

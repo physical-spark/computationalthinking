@@ -47,7 +47,7 @@ for (const width of [320, 390, 768, 1440])
       .getByRole("button", { name: "프로필 저장", exact: true })
       .click();
     await expect(page.getByRole("heading", { level: 1 })).toContainText(
-      "컴퓨터처럼",
+      "컴퓨터에게 할 일을",
     );
     const course = await (await page.request.get("/api/v1/course")).json();
     const locked = course.pages[0].steps.filter((s: any) => !s.reading)[1];
@@ -60,7 +60,7 @@ for (const width of [320, 390, 768, 1440])
     const r = course.resources[0];
     await page.goto("/#resource/" + r.id + "/1");
     await expect(
-      page.getByRole("heading", { name: "왜 지금 보는가" }),
+      page.getByRole("heading", { name: "보기 전에 읽어요" }),
     ).toBeVisible();
     await page.getByRole("button", { name: "다음 →", exact: true }).click();
     await expect(page.locator("iframe")).toHaveCount(0);
@@ -76,7 +76,7 @@ for (const width of [320, 390, 768, 1440])
     await page.screenshot({ path: test.info().outputPath("resource.png") });
     await page.getByRole("button", { name: "다음 →", exact: true }).click();
     await expect(
-      page.getByRole("heading", { name: "무엇을 확인했나요?" }),
+      page.getByRole("heading", { name: "보고 나서 생각해 봐요" }),
     ).toBeVisible();
   });
 
@@ -193,7 +193,7 @@ test("short viewport preserves reading area and reachable pagination", async ({
     await page.setViewportSize(size);
     await page.goto("/#resource/" + c.resources[0].id + "/1");
     await expect(
-      page.getByRole("heading", { name: "왜 지금 보는가" }),
+      page.getByRole("heading", { name: "보기 전에 읽어요" }),
     ).toBeVisible();
     expect(
       await page.locator(".concept-stage").evaluate((e) => e.clientHeight),

@@ -78,6 +78,15 @@ def main():
                 before=f"{heading}. 이 영상에서 작은 규칙이 실제 예에 어떻게 적용되는지 살펴보세요.",reading=reading,after=after,
                 source_url=source,source_file=str(file.relative_to(SOURCE)),source_anchor=anchor,source_revision=revision,
                 creator=creator,creator_url=creator_url,reference_only=topic in {'api','http','llm','schedule','github'} or topic.startswith('network')))
+    # Keep separately reviewed learner prose when source video placements are refreshed.
+    # Only these four display fields may be replaced; source IDs, URLs and times stay frozen.
+    prose = json.loads((ROOT / "content/resource-prose.json").read_text())
+    assert {r["topic"] for r in resources} == set(prose), "Every resource topic needs reviewed learner prose"
+    for resource in resources:
+        display = prose[resource["topic"]]
+        assert set(display) == {"group_title", "before", "reading", "after"}
+        assert all(isinstance(text, str) and text.strip() for text in display.values())
+        resource.update(display)
     assert len(resources)==50 and len({r['video_id'] for r in resources})==46
     (ROOT/"content/resources.json").write_text(json.dumps({"source_revision":revision,"resources":resources},ensure_ascii=False,indent=2)+'\n')
 

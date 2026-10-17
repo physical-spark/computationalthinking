@@ -11,7 +11,7 @@ for (const width of [320, 390, 768, 1440]) {
     await page.goto("/");
     await expect(
       page.getByRole("heading", {
-        name: "컴퓨터처럼 나누고, 나의 언어로 설명하기",
+        name: "컴퓨터에게 할 일을 알려줘요",
       }),
     ).toBeVisible();
     const course = await (await page.request.get("/api/v1/course")).json();
@@ -24,7 +24,7 @@ for (const width of [320, 390, 768, 1440]) {
     await page.locator(".syllabus-lessons button").first().click();
     await expect(page).toHaveURL(/#concept\/IntroducingTheShell\/1$/);
     await expect(
-      page.getByRole("heading", { name: "컴퓨터에게 계산을 부탁하기" }),
+      page.getByRole("heading", { name: concepts[0].title }),
     ).toBeVisible();
     await expect(
       page.getByRole("textbox", { name: "Python 코드 편집기" }),
@@ -60,11 +60,11 @@ for (const width of [320, 390, 768, 1440]) {
     ).toBeVisible();
     await page.getByRole("radio", { name: "20", exact: true }).check();
     await expect(
-      page.getByRole("status").filter({ hasText: "다시 비교해 보세요" }),
+      page.getByRole("status").filter({ hasText: "다시 살펴봐요" }),
     ).toBeVisible();
     await page.getByRole("radio", { name: "14", exact: true }).check();
     await expect(
-      page.getByRole("status").filter({ hasText: "맞습니다" }),
+      page.getByRole("status").filter({ hasText: "맞았어요" }),
     ).toBeVisible();
     expect(
       await page.evaluate(
@@ -110,12 +110,22 @@ for (const width of [320, 390, 768, 1440]) {
         .getByRole("button", { name: "학습 목차", exact: true })
         .click();
     await expect(
-      sidebar.getByRole("button", { name: /문자열 알아보기/ }),
+      sidebar.getByRole("button", {
+        name: new RegExp(
+          course.pages.find((p: any) => p.id === "IntroducingStrings").title,
+        ),
+      }),
     ).toBeVisible();
-    await sidebar.getByRole("button", { name: /문자열 알아보기/ }).click();
+    await sidebar
+      .getByRole("button", {
+        name: new RegExp(
+          course.pages.find((p: any) => p.id === "IntroducingStrings").title,
+        ),
+      })
+      .click();
     await expect(page).toHaveURL(/#concept\/IntroducingStrings\/1$/);
     await expect(
-      page.getByRole("heading", { name: "숫자와 글자 구별하기" }),
+      page.getByRole("heading", { name: concepts[1].title }),
     ).toBeVisible();
     await page.goBack();
     await expect(page).toHaveURL(/#IntroducingTheShell.first_expression$/);

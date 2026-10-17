@@ -13,7 +13,7 @@ test("simple execution, reflection restoration and real feedback clipboard", asy
   );
   await expect(
     page.getByRole("region", { name: "이번 문제의 사고 목표" }),
-  ).toContainText("입력·처리·출력");
+  ).toContainText("답을 먼저 생각해요");
   const answer = page.getByLabel("내가 생각한 풀이", { exact: true });
   await page.getByRole("button", { name: "AI 피드백 요청문 복사" }).click();
   await expect(page.getByRole("alert")).toContainText(
@@ -26,7 +26,7 @@ test("simple execution, reflection restoration and real feedback clipboard", asy
   await page.getByRole("textbox", { name: "Python 코드 편집기" }).fill("1+2");
   await page
     .getByRole("textbox", { name: "Python 코드 편집기" })
-    .press("Enter");
+    .press("ControlOrMeta+Enter");
   await expect(page.getByLabel("Python 실행 결과")).toHaveText("3\n");
   const thought =
     "1과 2를 더하기 전에는 3을 예상했고 실제 출력도 3이었다. 입력과 처리 규칙을 바꿔 비교하고 싶다.";

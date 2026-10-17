@@ -3,6 +3,6 @@
   "available": 1689,
   "missing": [],
   "problems": [],
-  "reviewed_overrides": 112,
-  "translation_method": "Local Qwen translation drafts plus reviewed corrections; code, identifiers and expected outputs retained."
+  "reviewed_overrides": 1214,
+  "translation_method": "Local Qwen translation drafts with Claude-assisted plain Korean revision and agent review; code, identifiers and expected outputs retained."
 }

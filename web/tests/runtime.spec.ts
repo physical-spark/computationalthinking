@@ -40,7 +40,7 @@ test("server reconnect preserves editor code and runs without Pyodide", async ({
   await page.getByRole("button", { name: "Python 다시 준비하기" }).click();
   await expect(editor).toHaveText("1+2");
   await expect(run).toBeEnabled({ timeout: 60000 });
-  await editor.press("Enter");
+  await editor.press("ControlOrMeta+Enter");
   await expect(page.getByLabel("Python 실행 결과")).toHaveText("3\n");
   expect(requested.filter((u) => /pyodide|python-core/.test(u))).toEqual([]);
 });
