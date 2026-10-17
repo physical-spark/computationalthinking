@@ -67,6 +67,14 @@ for (const width of [320, 390, 720, 768, 1440]) {
     await expect(
       sidebar.locator(".sidebar-term").filter({ hasText: "반복문" }).first(),
     ).toBeVisible();
+    const terms = await sidebar.locator(".sidebar-term").allTextContents();
+    expect(terms).toContain("변수와 출력(Variable·print)");
+    expect(terms).toContain("if·else 조건문");
+    expect(terms).toContain("인덱스·range·len");
+    for (const term of terms)
+      expect((term.match(/\(/g) || []).length).toBe(
+        (term.match(/\)/g) || []).length,
+      );
   });
 }
 

@@ -64,7 +64,7 @@ export function CourseSidebar({
             <h2>{ch.title}</h2>
             {ch.pages[0].chapterTerm && (
               <span className="sidebar-term">
-                {ch.pages[0].chapterTerm.split("·")[0].trim()}
+                {ch.pages[0].chapterTerm.split(" · ")[0].trim()}
               </span>
             )}
             <ol>
@@ -91,7 +91,7 @@ export function CourseSidebar({
                       <span>{p.title}</span>
                       {p.story?.term && (
                         <span className="sidebar-term">
-                          {p.story.term.split("·")[0].trim()}
+                          {p.story.term.split(" · ")[0].trim()}
                         </span>
                       )}
                       <small>
