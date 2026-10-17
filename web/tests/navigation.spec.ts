@@ -67,6 +67,13 @@ for (const width of [390, 1068, 1440]) {
     await page.screenshot({
       path: test.info().outputPath(`navigation-${width}.png`),
     });
+    await page
+      .getByRole("button", { name: "내 생각 저장", exact: true })
+      .click();
+    await expect(page.locator(".notice")).not.toBeEmpty();
+    const notice = (await page.locator(".notice").boundingBox())!;
+    const footer = (await page.locator(".lesson-navigation").boundingBox())!;
+    expect(notice.y + notice.height).toBeLessThanOrEqual(footer.y);
     await forward.click();
     await expect(page).toHaveURL(/#IntroducingTheShell.more_calculation$/);
     await page.getByRole("button", { name: "← 이전", exact: true }).click();

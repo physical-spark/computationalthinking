@@ -423,3 +423,6 @@
   outline: 2px solid var(--focus);
   outline-offset: -2px;
 }
+#root:has(.lesson-navigation) .notice {
+  bottom: calc(var(--lesson-footer) + 12px);
+}
