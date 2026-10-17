@@ -43,9 +43,15 @@ export const test = base.extend({
 export { expect, request };
 
 // Legacy feature tests start at a later lesson; seed only their synthetic prerequisites.
-export async function priorLessons(page:any, stepId:string) {
-  const me=await (await page.request.get('/api/v1/me')).json();
-  execFileSync('uv',['run','python','-c',`import os,json
+export async function priorLessons(page: any, stepId: string) {
+  const me = await (await page.request.get("/api/v1/me")).json();
+  execFileSync(
+    "uv",
+    [
+      "run",
+      "python",
+      "-c",
+      `import os,json
 from backend.db import SessionLocal
 from backend.models import Progress
 c=json.load(open('content/course.json'))
@@ -57,5 +63,19 @@ with SessionLocal.begin() as db:
   for s in p['steps']:
    if s['id']==target:db.commit();raise SystemExit(0)
    if not s['reading'] and not db.get(Progress,(uid,s['id'])):db.add(Progress(learner_id=uid,step_id=s['id'],version=c['version'],passed=True))
-`],{cwd:resolve(process.cwd(),'..'),env:{...process.env,DATABASE_URL:process.env.CT_BROWSER_DATABASE||'sqlite:///.cache/e2e.db',CT_UID:me.id,CT_STEP:stepId}});
+`,
+    ],
+    {
+      cwd: resolve(process.cwd(), ".."),
+      env: {
+        ...process.env,
+        DATABASE_URL:
+          process.env.CT_BROWSER_DATABASE || "sqlite:///.cache/e2e.db",
+        CT_UID: me.id,
+        CT_STEP: stepId,
+      },
+    },
+  );
+  // These prerequisites are seeded outside the API; refresh the mounted app access map.
+  if (page.url().startsWith("http")) await page.reload();
 }

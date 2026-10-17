@@ -1,6 +1,6 @@
 import { test, expect, priorLessons } from "./fixtures";
 async function start(page: any) {
-  await priorLessons(page,"WritingPrograms.editor_hello_world");
+  await priorLessons(page, "WritingPrograms.editor_hello_world");
   await page.goto("/#WritingPrograms.editor_hello_world");
   await expect(page.getByRole("button", { name: "▶ 실행" })).toBeEnabled({
     timeout: 60000,
