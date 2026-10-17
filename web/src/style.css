@@ -959,6 +959,12 @@ dialog::backdrop {
   color: #e3ede7;
   border-color: #78928b;
 }
+@media (hover: hover) {
+  .coding-pane .answer-button:hover:not(:disabled) {
+    background: #354f51;
+    color: #e3ede7;
+  }
+}
 .admin-answer {
   padding: 16px 20px;
   border-bottom: 1px solid #78928b;

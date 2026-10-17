@@ -54,6 +54,10 @@ test("only administrators can reveal an answer beside the code without changing 
   await answer.click();
   await expect(shown.locator("code")).toContainText("def filter_failed(logs):");
   await expect(shown.locator("code")).toContainText('log["status"] == "FAIL"');
+  expect(
+    (await new AxeBuilder({ page }).include(".run-toolbar").analyze())
+      .violations,
+  ).toEqual([]);
   await page.screenshot({
     path: test.info().outputPath("admin-answer-desktop.png"),
   });
