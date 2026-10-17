@@ -595,3 +595,10 @@
 .simple-sidebar .sidebar-chapter-number {
   font-size: 0.6875rem;
 }
+
+/* Leave room for translated narration with Linux and macOS font metrics. */
+@media (min-width: 901px) and (min-height: 501px) {
+  .paged-concept .code-walkthrough:not(.code-walkthrough--compact) .code-walkthrough__picture {
+    max-height: 140px;
+  }
+}
