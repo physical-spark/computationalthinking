@@ -125,6 +125,23 @@ test("administrator preview, student read only and prose publishing", async ({
     preview.getByRole("heading", { name: "테스트용 개념 제목", exact: true }),
   ).toBeVisible();
   await preview.close();
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page
+      .getByRole("button", { name: "게시하기", exact: true })
+      .scrollIntoViewIfNeeded();
+    await expect(
+      page.getByRole("button", { name: "게시하기", exact: true }),
+    ).toBeInViewport();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBeTruthy();
+    await page.screenshot({
+      path: test.info().outputPath(`editor-${width}.png`),
+    });
+  }
   await page.screenshot({ path: test.info().outputPath("editor-draft.png") });
   await page.getByRole("button", { name: "게시하기", exact: true }).click();
   await expect(

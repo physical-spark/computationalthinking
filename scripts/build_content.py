@@ -30,7 +30,7 @@ for ci, ch in enumerate(chapters):
                     or ("editor" if "\n" in getattr(cls, "program", "") else "shell"),
                     "starter": "",
                     "reading": s["name"] == "final_text",
-                    "sources": [{"label": "문제 원전: futurecoder · Alex Hall · MIT", "url": "https://github.com/alexmojaki/futurecoder/blob/def491c2a348371f56249d05c64e0cf70f33ac2b/" + cls.__module__.replace(".", "/") + ".py", "revision": "def491c2a348371f56249d05c64e0cf70f33ac2b"}],
+                    "sources": [{"label": "문제 원전: futurecoder · Alex Hall · MIT", "url": "https://github.com/alexmojaki/futurecoder/blob/def491c2a348371f56249d05c64e0cf70f33ac2b/" + pages[p["slug"]].__module__.replace(".", "/") + ".py", "revision": "def491c2a348371f56249d05c64e0cf70f33ac2b"}],
                 }
             )
         out.append(

@@ -1248,18 +1248,20 @@ export default function App() {
                     <h2>관리자에게 질문 남기기</h2>
                     <p>질문과 답변은 본인과 관리자만 볼 수 있습니다.</p>
                     <form onSubmit={submitQuestion}>
-                      <label>
-                        이 단계에 대한 질문
-                        <textarea
-                          value={question}
-                          onChange={(e) => setQuestion(e.target.value)}
-                          minLength={3}
-                          maxLength={4000}
-                          required
-                          placeholder="어떤 결과를 예상했고, 어디에서 달라졌나요?"
-                        />
-                      </label>
-                      <button>질문 남기기</button>
+                      <fieldset disabled={readOnly}>
+                        <label>
+                          이 단계에 대한 질문
+                          <textarea
+                            value={question}
+                            onChange={(e) => setQuestion(e.target.value)}
+                            minLength={3}
+                            maxLength={4000}
+                            required
+                            placeholder="어떤 결과를 예상했고, 어디에서 달라졌나요?"
+                          />
+                        </label>
+                        <button>질문 남기기</button>
+                      </fieldset>
                     </form>
                   </section>
                   <div className="lesson-navigation">
@@ -1273,7 +1275,9 @@ export default function App() {
                     {next ? (
                       <button
                         className="primary"
-                        disabled={!step.reading && !passed && !user.admin}
+                        disabled={
+                          !step.reading && !passed && (!user.admin || readOnly)
+                        }
                         onClick={() => {
                           const related = (course.resources || []).filter(
                             (r) => r.page_id === page.id,

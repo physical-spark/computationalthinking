@@ -110,3 +110,20 @@ Primary sources inspected on 2026-10-16:
 Design inference: adopt short introductions, bounded practice and page navigation in our own Korean Python material. Apple's characters, puzzles and book artwork are not copied into this repository. The existing Python dependency order remains intact. Four responsive tests now traverse all six pages, check the navigation remains in the viewport with no body-level vertical scroll, refresh on page 5, verify feedback and transition to practice, and check axe. All four passed locally. This supersedes the previous long-scrolling concept layout.
 
 Production follow-up: commit `c0e23f3`, Actions `38874716031` succeeded with 285 Korean grading cases, 18 backend tests, 23 browser tests and execution-limit checks. Deployed app image: `sha256:bb8f051035cab3fb753f502e845e59ca2ebf615fd79be449d97c58ef957871f8`. Authenticated public Chrome verified syllabus → six concept pages → practice; refreshing page 5 restored it; choosing 14 showed the explanation; Run on the retained `1+2` produced `3` and a fresh pass announcement. At 390×740, document scroll width/height were 390/740 and CodeMirror count was zero. Account dialog explicitly showed administrator without group. Six production screenshots are published with official-source references at https://course-studio.futurereadycampus.com/course-network/wiki/futurecoder/verification-curriculum-20261016.html . Viewport override was reset after verification. No student accounts were changed during the browser check.
+
+## Profile → sequential lesson → supplementary resource, and editorial preview — 2026-10-17
+
+Scope: complete mandatory-profile entry, exercise lock, three-page supplementary resource, administrator student preview and prose publication. Existing React/CSS tokens and Jakub better-* conventions retained. Existing project review and operations documents were consulted; no repository AGENTS.md is present.
+
+| Domain | Evidence | Result |
+| --- | --- | --- |
+| Accessibility | Native labeled date/name fields, named 16-choice radio group, disabled read-only controls; profile axe tests at 320/390/768/1440px | Scoped automated checks pass; full screen-reader narration not verified |
+| Layout | Profile, lock and resource captures at four widths; fixed Previous/Next outside reading scroll; same renderer for previews | No horizontal overflow in checked viewports |
+| Writing | Explicit reason for collecting birth date, first prerequisite in lock page, no-record preview banner, draft/publication distinctions, plain vs formatted editing instructions | Resolved misleading editor-format guidance and nickname search label |
+| Typography | Existing Korean font stack and sizes reused; rendered profile/resource/editor captures | Inspected content readable; long identifiers wrap |
+| Colors | Existing teal/neutral semantic tokens, lock icon plus wording, selected avatar with radio state | State does not depend on color alone; scoped axe checks pass |
+| UI | Native avatar radios, clear save/preview/publish sequence, no automatic video playback, explicit video-load button | Reuses existing controls without added accordion/toggle patterns |
+
+Resolved MEDIUM findings: preview question controls looked writable despite record suppression (disabled); preview's Next used administrator eligibility instead of student completion (now honors selected student); editor advertised HTML for plain-label fields (format-specific instructions and server validation). Local focused regression: 15 tests passed for profile/resource/editor, syllabus, layout, login and administrator questions. Native execution is verified separately in CI/production. Screenshots use only synthetic identities. Physical browser 200% zoom and external video playback are not claimed by these local checks.
+
+Verdict: Approve for the inspected flow and states; no full-site accessibility certification is implied.
