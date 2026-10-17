@@ -87,7 +87,7 @@ test("every placement opens one embedded video with the original playback range"
   expect(
     c.concepts.filter((x: any) => x.walkthrough?.frames.length),
   ).toHaveLength(20);
-  expect(c.resources).toHaveLength(50);
+  expect(c.resources).toHaveLength(46);
   expect(new Set(c.resources.map((r: any) => r.video_id)).size).toBe(46);
   await page.goto("/#concept/IntroducingTheShell/6");
   await expect(page.locator("#lesson .resource-links")).toHaveCount(0);

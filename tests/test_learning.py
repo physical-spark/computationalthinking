@@ -176,7 +176,9 @@ def test_editorial_draft_publish_restore_security(administrator, other):
 
 def test_resources_and_source_coverage(client):
     c = client.get("/api/v1/course").json()
-    assert len(c["resources"]) == 50
+    assert len(c["resources"]) == 46
+    assert sum(len(r.get("aliases", [])) for r in c["resources"]) == 4
+    assert c["resource_redirects"]["concept/IntroducingTheShell/9"] == "concept/IntroducingTheShell/7"
     assert len({r["video_id"] for r in c["resources"]}) == 46
     for p in c["pages"]:
         assert p["sources"]

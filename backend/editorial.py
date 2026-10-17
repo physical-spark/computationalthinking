@@ -181,6 +181,34 @@ def rendered_course(db, draft=None):
     c["text_version"] = fingerprint(
         json.dumps(c, ensure_ascii=False, sort_keys=True) + json.dumps(used)
     )[:16]
+    # Keep the source placements and editorial blocks, but show each video once.
+    unique, by_video, redirects, positions = [], {}, {}, {}
+    for resource in c["resources"]:
+        page_id = resource["page_id"]
+        old_position = positions.get(page_id, 7)
+        positions[page_id] = old_position + 1
+        existing = by_video.get(resource["video_id"])
+        if existing:
+            existing.setdefault("aliases", []).append(resource["id"])
+            existing.setdefault("additional_sources", []).append(resource["source_url"])
+            existing["start"] = min(existing["start"], resource["start"])
+            existing["end"] = (
+                max(existing["end"], resource["end"])
+                if existing["end"] and resource["end"]
+                else None
+            )
+            if page_id:
+                target = [r for r in unique if r["page_id"] == existing["page_id"]].index(
+                    existing
+                ) + 7
+                redirects[f"concept/{page_id}/{old_position}"] = (
+                    f"concept/{existing['page_id']}/{target}"
+                )
+        else:
+            by_video[resource["video_id"]] = resource
+            unique.append(resource)
+    c["resources"] = unique
+    c["resource_redirects"] = redirects
     return c
 
 

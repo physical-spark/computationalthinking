@@ -111,6 +111,9 @@ export default function Editor({
         EditorView.lineWrapping,
       ],
     });
+    v.scrollDOM.tabIndex = 0;
+    v.scrollDOM.setAttribute("role", "region");
+    v.scrollDOM.setAttribute("aria-label", "Python 코드 스크롤 영역");
     view.current = v;
     return () => v.destroy();
   }, []);

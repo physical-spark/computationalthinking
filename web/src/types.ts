@@ -48,6 +48,8 @@ export type Page = {
 };
 export type Source = { label: string; url: string; revision?: string };
 export type Resource = {
+  aliases?: string[];
+  additional_sources?: string[];
   group_title?: string;
   id: string;
   page_id: string | null;
@@ -69,6 +71,7 @@ export type Access = Record<
   { unlocked: boolean; requires: string | null }
 >;
 export type Course = {
+  resource_redirects?: Record<string, string>;
   version: string;
   text_version?: string;
   concepts?: import("./concepts").Concept[];

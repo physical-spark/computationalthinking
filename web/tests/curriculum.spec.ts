@@ -80,6 +80,10 @@ for (const width of [320, 390, 768, 1440]) {
       fullPage: true,
     });
     await page.getByRole("button", { name: "다음 →", exact: true }).click();
+    while (
+      await page.getByRole("button", { name: "다음 →", exact: true }).count()
+    )
+      await page.getByRole("button", { name: "다음 →", exact: true }).click();
     await page
       .getByRole("button", { name: "코드 실습 시작 →", exact: true })
       .click();

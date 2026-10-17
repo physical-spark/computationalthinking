@@ -210,8 +210,14 @@ export default function App() {
   };
   function syncRoute(c: Course, fallback = "") {
     const hash = decodeURIComponent(location.hash.slice(1));
-    const resource = c.resources?.find(
-      (r) => "resource/" + r.id === hash.split("/").slice(0, 2).join("/"),
+    if (c.resource_redirects?.[hash]) {
+      location.replace("#" + c.resource_redirects[hash]);
+      return;
+    }
+    const resource = c.resources?.find((r) =>
+      [r.id, ...(r.aliases || [])].some(
+        (id) => "resource/" + id === hash.split("/").slice(0, 2).join("/"),
+      ),
     );
     setResourceId(resource?.id || "");
     const conceptPage = c.pages.find(
@@ -1057,15 +1063,7 @@ export default function App() {
                 </button>
                 <span>02 코드로 확인하기</span>
               </div>
-              <div
-                className="learning-shell"
-                style={
-                  {
-                    "--lesson-width":
-                      localGet<number>("ct-pane-width", 50) + "%",
-                  } as React.CSSProperties
-                }
-              >
+              <div className="learning-shell">
                 <main className="lesson-pane" id="lesson" tabIndex={-1}>
                   <div className="lesson-breadcrumb">
                     <span>
@@ -1314,43 +1312,41 @@ export default function App() {
                       </fieldset>
                     </form>
                   </section>
-                  <div className="lesson-navigation">
-                    {previous ? (
-                      <button onClick={() => navigate(previous.step.id)}>
-                        이전 단계
-                      </button>
-                    ) : (
-                      <span />
-                    )}
-                    {next ? (
-                      <button
-                        className="primary"
-                        disabled={
-                          !step.reading && !passed && (!user.admin || readOnly)
-                        }
-                        onClick={() => {
-                          const related = (course.resources || []).filter(
-                            (r) => r.page_id === page.id,
-                          );
-                          if (related.length && step.id === page.steps[0].id)
-                            location.hash = "resource/" + related[0].id + "/1";
-                          else if (next.page.id === page.id)
-                            navigate(next.step.id);
-                          else openPath("concept", next.page);
-                        }}
-                      >
-                        {passed || step.reading
-                          ? "다음 단계로"
-                          : "다음 단계 살펴보기"}{" "}
-                        →
-                      </button>
-                    ) : (
-                      <p>
-                        마지막 단계입니다. 목차에서 다른 과제를 다시 연습할 수
-                        있습니다.
-                      </p>
-                    )}
-                  </div>
+                  <nav
+                    className="lesson-navigation"
+                    aria-label="학습 단계 이동"
+                  >
+                    <span className="navigation-note" role="status">
+                      {!step.reading && !passed && !user.admin
+                        ? "실습을 통과하면 다음 단계가 열려요."
+                        : passed
+                          ? "✓ 통과했어요. 다음 단계로 이동할 수 있어요."
+                          : ""}
+                    </span>
+                    <button
+                      onClick={() =>
+                        previous && previous.page.id === page.id
+                          ? navigate(previous.step.id)
+                          : (location.hash = `concept/${page.id}/${6 + (course.resources || []).filter((r) => r.page_id === page.id).length}`)
+                      }
+                    >
+                      ← 이전
+                    </button>
+                    <button
+                      className="primary"
+                      disabled={
+                        !step.reading && !passed && (!user.admin || readOnly)
+                      }
+                      onClick={() => {
+                        if (!next) openPath("syllabus");
+                        else if (next.page.id === page.id)
+                          navigate(next.step.id);
+                        else openPath("concept", next.page);
+                      }}
+                    >
+                      {next ? "다음 →" : "학습과정으로 →"}
+                    </button>
+                  </nav>
                   <ResourceLinks
                     resources={(course.resources || []).filter(
                       (r) => r.page_id === page.id,
@@ -1367,27 +1363,6 @@ export default function App() {
                 </main>
                 {!mobile && (
                   <>
-                    <div className="pane-resize">
-                      <label className="sr-only" htmlFor="pane-width">
-                        설명 영역 너비
-                      </label>
-                      <input
-                        id="pane-width"
-                        type="range"
-                        min={35}
-                        max={65}
-                        defaultValue={localGet("ct-pane-width", 50)}
-                        onChange={(e) => {
-                          localSet("ct-pane-width", Number(e.target.value));
-                          document
-                            .querySelector<HTMLElement>(".learning-shell")
-                            ?.style.setProperty(
-                              "--lesson-width",
-                              e.target.value + "%",
-                            );
-                        }}
-                      />
-                    </div>
                     <section
                       className="coding-pane"
                       aria-label="코드 작성과 실행"
@@ -1490,6 +1465,7 @@ export default function App() {
                       </div>
                       <pre
                         className="output"
+                        tabIndex={0}
                         aria-label="Python 실행 결과"
                         aria-live="polite"
                       >

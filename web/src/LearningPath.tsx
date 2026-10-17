@@ -38,16 +38,29 @@ export function CourseSidebar({
   onSyllabus: () => void;
   onClose: () => void;
 }) {
+  const [hash, setHash] = useState(() => location.hash);
+  useEffect(() => {
+    const update = () => setHash(location.hash);
+    window.addEventListener("hashchange", update);
+    return () => window.removeEventListener("hashchange", update);
+  }, []);
+  const videoIndex = Number(hash.split("/").at(-1)) - 7;
+  const watchingVideo = view === "concept" && videoIndex >= 0;
+  const term = (value?: string) => value?.split(" · ")[0].trim() || "";
+  const extraResources = (course.resources || []).filter((r) => !r.page_id);
   return (
     <aside
-      className="course-sidebar"
+      className="course-sidebar simple-sidebar"
       id="course-sidebar"
       aria-label="학습 사이드바"
+      onKeyDown={(event) => {
+        if (event.key === "Escape") onClose();
+      }}
     >
       <div className="sidebar-heading">
-        <strong>나의 학습 경로</strong>
+        <strong>학습 목차</strong>
         <button onClick={onClose} aria-label="사이드바 닫기">
-          닫기
+          <span aria-hidden="true">×</span>
         </button>
       </div>
       <button
@@ -55,125 +68,213 @@ export function CourseSidebar({
         onClick={onSyllabus}
         aria-current={view === "syllabus" ? "page" : undefined}
       >
-        전체 학습과정 보기
+        <SidebarIcon kind="book" />
+        <span>전체 학습과정</span>
+        <span className="sidebar-chevron" aria-hidden="true">
+          ›
+        </span>
       </button>
-      <p className="sidebar-help">그림에서 해보고, 코드로 옮겨 봐요.</p>
       <nav aria-label="단원별 학습 목차">
-        {chapters(course).map((ch) => (
-          <section key={ch.id}>
-            <h2>{ch.title}</h2>
-            {ch.pages[0].chapterTerm && (
-              <span className="sidebar-term">
-                {ch.pages[0].chapterTerm.split(" · ")[0].trim()}
-              </span>
-            )}
-            <ol>
-              {ch.pages.map((p) => {
-                const exercises = p.steps.filter((s) => !s.reading);
-                const passed = exercises.filter((s) =>
-                  progress.some((r) => r.step_id === s.id && r.passed),
-                ).length;
-                return (
-                  <li key={p.id}>
-                    <button
-                      className={
-                        p.id === page.id && view !== "syllabus"
-                          ? "active-page"
-                          : ""
-                      }
-                      onClick={() => onConcept(p)}
-                      aria-current={
-                        p.id === page.id && view === "concept"
-                          ? "page"
-                          : undefined
-                      }
-                    >
-                      <span>{p.title}</span>
-                      {p.story?.term && (
-                        <span className="sidebar-term">
-                          {p.story.term.split(" · ")[0].trim()}
+        {chapters(course).map((ch, chapterIndex) => {
+          const chapterTerm = term(ch.pages[0].chapterTerm) || ch.title;
+          return (
+            <section className="sidebar-chapter" key={ch.id}>
+              <h2>
+                <span className="sidebar-chapter-number" aria-hidden="true">
+                  {String(chapterIndex + 1).padStart(2, "0")}
+                </span>
+                <span className="sidebar-term">{chapterTerm}</span>
+              </h2>
+              <ol>
+                {ch.pages.map((p) => {
+                  const exercises = p.steps.filter((s) => !s.reading);
+                  const passed = exercises.filter((s) =>
+                    progress.some((r) => r.step_id === s.id && r.passed),
+                  ).length;
+                  const active = p.id === page.id && view !== "syllabus";
+                  const pageTerm = term(p.story?.term);
+                  const videos = (course.resources || []).filter(
+                    (r) => r.page_id === p.id,
+                  );
+                  return (
+                    <li key={p.id}>
+                      <button
+                        className={
+                          "sidebar-page" + (active ? " active-page" : "")
+                        }
+                        onClick={() => onConcept(p)}
+                        aria-label={`${p.title}${pageTerm ? ", " + pageTerm : ""}, ${exercises.length ? `실습 ${passed} / ${exercises.length}` : "개념 읽기"}`}
+                        aria-current={active ? "page" : undefined}
+                      >
+                        <span className="sidebar-page-copy">
+                          <span className="sidebar-page-title">{p.title}</span>
+                          {pageTerm && pageTerm !== chapterTerm && (
+                            <span className="sidebar-term">{pageTerm}</span>
+                          )}
                         </span>
-                      )}
-                      <small>
-                        {exercises.length
-                          ? `실습 ${passed} / ${exercises.length}`
-                          : "개념 읽기"}
-                      </small>
-                    </button>
-                    {p.id === page.id && view !== "syllabus" && (
-                      <ul className="sidebar-steps">
-                        <li>
-                          <button
-                            onClick={() => onConcept(p)}
-                            aria-current={
-                              view === "concept" ? "step" : undefined
+                        {exercises.length > 0 && (
+                          <span
+                            className={
+                              "sidebar-count" +
+                              (passed === exercises.length ? " complete" : "")
                             }
+                            aria-hidden="true"
                           >
-                            01 개념 먼저 배우기
-                          </button>
-                        </li>
-                        {(course.resources || [])
-                          .filter((r) => r.page_id === p.id)
-                          .map((r, ri) => (
-                            <li key={r.id}>
-                              <button
-                                onClick={() => {
-                                  location.hash = `concept/${p.id}/${7 + ri}`;
-                                  if (matchMedia("(max-width:900px)").matches)
-                                    onClose();
-                                }}
-                              >
-                                <span>
-                                  ▶ 영상 {ri + 1} · {r.title}
-                                </span>
-                              </button>
-                            </li>
-                          ))}
-                        {p.steps.map((s, i) => (
-                          <li key={s.id}>
+                            {passed === exercises.length
+                              ? "✓"
+                              : `${passed}/${exercises.length}`}
+                          </span>
+                        )}
+                      </button>
+                      {active && (
+                        <ul className="sidebar-steps">
+                          <li>
                             <button
-                              onClick={() => onPractice(s.id)}
-                              aria-disabled={access[s.id]?.unlocked === false}
+                              onClick={() => onConcept(p)}
                               aria-current={
-                                view === "practice" && current === s.id
+                                view === "concept" && !watchingVideo
                                   ? "step"
                                   : undefined
                               }
                             >
-                              <span>
-                                {String(
-                                  i +
-                                    2 +
-                                    (course.resources || []).filter(
-                                      (r) => r.page_id === p.id,
-                                    ).length,
-                                ).padStart(2, "0")}{" "}
-                                {access[s.id]?.unlocked === false ? "🔒 " : ""}
-                                {s.reading ? "단원 정리" : `실습 ${i + 1}`}
-                              </span>
-                              {progress.some(
-                                (r) => r.step_id === s.id && r.passed,
-                              ) && <span aria-label="통과">✓</span>}
+                              <SidebarIcon kind="book" />
+                              <span>개념 배우기</span>
                             </button>
                           </li>
-                        ))}
-                      </ul>
-                    )}
-                  </li>
-                );
-              })}
-            </ol>
+                          {videos.length > 0 && (
+                            <li>
+                              <button
+                                onClick={() => {
+                                  location.hash = `concept/${p.id}/7`;
+                                  if (matchMedia("(max-width:900px)").matches)
+                                    onClose();
+                                }}
+                                aria-label={`영상 보기, ${videos.length}편${watchingVideo && videos[videoIndex] ? ", " + videos[videoIndex].title : ""}`}
+                                aria-current={
+                                  watchingVideo ? "step" : undefined
+                                }
+                              >
+                                <SidebarIcon kind="play" />
+                                <span>영상 보기</span>
+                                <span
+                                  className="sidebar-count"
+                                  aria-hidden="true"
+                                >
+                                  {watchingVideo
+                                    ? `${videoIndex + 1}/${videos.length}`
+                                    : `${videos.length}편`}
+                                </span>
+                              </button>
+                            </li>
+                          )}
+                          {p.steps.map((s, i) => {
+                            const locked = access[s.id]?.unlocked === false;
+                            const completed = progress.some(
+                              (r) => r.step_id === s.id && r.passed,
+                            );
+                            return (
+                              <li key={s.id}>
+                                <button
+                                  onClick={() => onPractice(s.id)}
+                                  aria-disabled={locked}
+                                  aria-label={`${s.reading ? "단원 정리" : `실습 ${p.steps.slice(0, i + 1).filter((x) => !x.reading).length}`}${locked ? ", 잠김" : completed ? ", 통과" : ""}`}
+                                  aria-current={
+                                    view === "practice" && current === s.id
+                                      ? "step"
+                                      : undefined
+                                  }
+                                >
+                                  <SidebarIcon
+                                    kind={
+                                      locked
+                                        ? "lock"
+                                        : s.reading
+                                          ? "book"
+                                          : "code"
+                                    }
+                                  />
+                                  <span>
+                                    {s.reading
+                                      ? "단원 정리"
+                                      : `실습 ${p.steps.slice(0, i + 1).filter((x) => !x.reading).length}`}
+                                  </span>
+                                  {completed && (
+                                    <span
+                                      className="sidebar-count complete"
+                                      aria-hidden="true"
+                                    >
+                                      ✓
+                                    </span>
+                                  )}
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </li>
+                  );
+                })}
+              </ol>
+            </section>
+          );
+        })}
+        {extraResources.length > 0 && (
+          <section className="sidebar-chapter sidebar-extra">
+            <h2>확장 읽기 · 네트워크</h2>
+            <ul>
+              {extraResources.map((r) => (
+                <li key={r.id}>
+                  <a
+                    href={`#resource/${r.id}/2`}
+                    onClick={() => {
+                      if (matchMedia("(max-width:900px)").matches) onClose();
+                    }}
+                  >
+                    {r.title}
+                  </a>
+                </li>
+              ))}
+            </ul>
           </section>
-        ))}
-        <ResourceLinks
-          resources={(course.resources || []).filter(
-            (r) => r.page_id === page.id || !r.page_id,
-          )}
-        />
+        )}
       </nav>
     </aside>
   );
 }
+function SidebarIcon({ kind }: { kind: "book" | "play" | "code" | "lock" }) {
+  return (
+    <svg
+      className="sidebar-icon"
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {kind === "book" ? (
+        <>
+          <path d="M10 5c-2-2-5-2-7-1v12c2-1 5-1 7 1 2-2 5-2 7-1V4c-2-1-5-1-7 1Z" />
+          <path d="M10 5v12" />
+        </>
+      ) : kind === "play" ? (
+        <path d="m7 4 9 6-9 6Z" />
+      ) : kind === "lock" ? (
+        <>
+          <rect x="4" y="9" width="12" height="8" rx="2" />
+          <path d="M6 9V6a4 4 0 0 1 8 0v3" />
+        </>
+      ) : (
+        <>
+          <path d="m6 5-4 5 4 5m8-10 4 5-4 5m-3-12-2 14" />
+        </>
+      )}
+    </svg>
+  );
+}
+
 function SequencePicture({ kind }: { kind: "see" | "guess" | "write" }) {
   return (
     <svg viewBox="0 0 80 64" className="sequence-picture" aria-hidden="true">
@@ -536,8 +637,8 @@ export function ConceptLesson({
               <p className="concept-lead">{concept.transfer}</p>
               {resources.length > 0 && (
                 <p className="field-help">
-                  다음 장에서 관련 영상을 한 편씩 볼 수 있어요. 바로 실습을
-                  시작해도 괜찮아요.
+                  다음 장에서 관련 영상을 한 편씩 볼 수 있어요. 마지막 장 뒤에
+                  실습을 시작해요.
                 </p>
               )}
               <div className="concept-takeaway">
@@ -574,13 +675,6 @@ export function ConceptLesson({
           {card + 1} / {titles.length}
         </span>
         <div className="concept-pagination-actions">
-          {card === 5 && resources.length > 0 && (
-            <button onClick={onPractice}>
-              {page.steps.some((s) => !s.reading)
-                ? "코드 실습 시작 →"
-                : "단원 읽기 →"}
-            </button>
-          )}
           {card < titles.length - 1 ? (
             <button className="primary" onClick={() => move(card + 1)}>
               다음 →

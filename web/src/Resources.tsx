@@ -100,6 +100,10 @@ export function VideoStep({ resource }: { resource: Resource }) {
             url: resource.source_url,
             revision: resource.source_revision,
           },
+          ...(resource.additional_sources || []).map((url) => ({
+            label: "함께 참고한 Run of Show",
+            url,
+          })),
           {
             label: "영상: " + resource.creator + " · " + resource.title,
             url: "https://www.youtube.com/watch?v=" + resource.video_id,

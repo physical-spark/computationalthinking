@@ -271,3 +271,155 @@
     padding-top: 8px;
   }
 }
+
+/* Every reading, video and practice view uses the same bottom navigation. */
+:root {
+  --lesson-footer: 64px;
+}
+#root:has(.concept-pagination),
+#root:has(.lesson-navigation) {
+  padding-block-end: var(--lesson-footer);
+}
+#root .concept-pagination,
+#root .lesson-navigation {
+  position: fixed;
+  inset-block-end: 0;
+  inset-inline: 0;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  gap: 8px;
+  min-height: var(--lesson-footer);
+  margin: 0;
+  padding: 8px 24px;
+  border-block-start: 1px solid var(--border);
+  background: var(--surface);
+}
+#root .concept-pagination > span {
+  position: absolute;
+  inset-inline-start: 24px;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+#root .concept-pagination button,
+#root .lesson-navigation button {
+  min-height: 44px;
+  min-width: 88px;
+  white-space: nowrap;
+}
+#root .lesson-navigation .navigation-note {
+  margin-inline-end: auto;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+.course-workspace .course-content .learning-shell {
+  min-height: calc(100dvh - var(--lesson-chrome) - 48px - var(--lesson-footer));
+}
+.course-workspace .course-content .lesson-pane,
+.course-workspace .course-content .coding-pane {
+  max-height: calc(100dvh - var(--lesson-chrome) - 48px - var(--lesson-footer));
+}
+.course-workspace .course-content .lesson-pane {
+  width: 50%;
+}
+.course-workspace .course-content .coding-pane {
+  height: calc(100dvh - var(--lesson-chrome) - 48px - var(--lesson-footer));
+  min-height: 0;
+  padding-block-end: 8px;
+  border-inline-start: 1px solid var(--border);
+  overscroll-behavior: contain;
+}
+.coding-pane .coding-top {
+  min-height: 60px;
+  padding: 8px 16px;
+  gap: 8px;
+}
+.coding-pane .editor {
+  min-height: 100px;
+  flex: 1 1 42%;
+  overflow: hidden;
+}
+.coding-pane .cm-editor {
+  min-height: 0;
+  height: 100%;
+}
+.coding-pane .cm-scroller {
+  overflow: auto;
+}
+.coding-pane .output-heading {
+  padding: 8px 16px;
+}
+.coding-pane .output {
+  min-height: 72px;
+  max-height: none;
+  flex: 1 1 28%;
+  padding: 12px 16px;
+  overflow: auto;
+}
+.coding-pane .execution-tools {
+  margin: 8px 16px 0;
+}
+.coding-pane .execution-tools h2 {
+  margin: 0 0 6px;
+  font-size: 0.8125rem;
+}
+.coding-pane .execution-tools p {
+  margin: 0 0 8px;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+.coding-pane .tool-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.coding-pane .tool-actions button {
+  padding: 8px;
+  font-size: 0.75rem;
+}
+.coding-pane .keyboard-tip {
+  margin: 6px 16px 0;
+  font-size: 0.6875rem;
+}
+.coding-pane .trace,
+.coding-pane .prediction,
+.coding-pane .admin-answer {
+  max-height: 160px;
+  overflow: auto;
+  padding: 8px 16px;
+}
+@media (max-width: 900px) {
+  .course-workspace .course-content .lesson-pane {
+    width: 100%;
+  }
+}
+@media (max-width: 619px) {
+  #root .concept-pagination,
+  #root .lesson-navigation {
+    padding-inline: 16px;
+  }
+  #root .concept-pagination > span {
+    inset-inline-start: 16px;
+  }
+  #root .lesson-navigation .navigation-note {
+    display: none;
+  }
+}
+@media (min-width: 901px) and (max-height: 700px) {
+  .coding-pane .editor {
+    min-height: 72px;
+  }
+  .coding-pane .output {
+    min-height: 44px;
+  }
+  .coding-pane .execution-tools p,
+  .coding-pane .keyboard-tip {
+    display: none;
+  }
+}
+.coding-pane .cm-scroller:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
