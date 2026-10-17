@@ -802,6 +802,13 @@ async def google_start(request: Request, db: DB):
         db.add(u)
         db.flush()
     request.session["guest_id"] = u.id
+    lesson = request.query_params.get("lesson", "")
+    # Only a fragment is allowed: this cannot redirect to another host or path.
+    if (lesson.startswith("#") and len(lesson) <= 300
+            and all(c.isascii() and (c.isalnum() or c in "#/_-.") for c in lesson)):
+        request.session["lesson"] = lesson
+    else:
+        request.session.pop("lesson", None)
     response = await oauth.google.authorize_redirect(
         request, APP_ORIGIN + "/auth/google/callback", prompt="select_account"
     )
@@ -834,7 +841,9 @@ async def google_callback(request: Request, db: DB):
         target = u
     bind_configured_admin(db, target, info)
     db.execute(delete(Session).where(Session.token_hash == digest(request.cookies.get(COOKIE, ""))))
-    response = RedirectResponse(APP_ORIGIN + "/?connected=1", status_code=303)
+    response = RedirectResponse(
+        APP_ORIGIN + "/?connected=1" + request.session.get("lesson", ""), status_code=303
+    )
     session_cookie(response, db, target)
     request.session.clear()
     return response

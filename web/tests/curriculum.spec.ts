@@ -22,7 +22,7 @@ for (const width of [320, 390, 768, 1440]) {
     }
     await expect(page.locator(".syllabus-lessons button")).toHaveCount(69);
     await page.locator(".syllabus-lessons button").first().click();
-    await expect(page).toHaveURL(/#concept\/IntroducingTheShell$/);
+    await expect(page).toHaveURL(/#concept\/IntroducingTheShell\/1$/);
     await expect(
       page.getByRole("heading", { name: "컴퓨터에게 계산을 부탁하기" }),
     ).toBeVisible();
@@ -113,7 +113,7 @@ for (const width of [320, 390, 768, 1440]) {
       sidebar.getByRole("button", { name: /문자열 알아보기/ }),
     ).toBeVisible();
     await sidebar.getByRole("button", { name: /문자열 알아보기/ }).click();
-    await expect(page).toHaveURL(/#concept\/IntroducingStrings$/);
+    await expect(page).toHaveURL(/#concept\/IntroducingStrings\/1$/);
     await expect(
       page.getByRole("heading", { name: "숫자와 글자 구별하기" }),
     ).toBeVisible();

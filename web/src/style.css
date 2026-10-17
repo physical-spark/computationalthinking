@@ -2125,3 +2125,32 @@ input[type="checkbox"] {
 .profile-form p {
   overflow-wrap: anywhere;
 }
+
+.lesson-address {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding: 10px clamp(16px, 3vw, 32px);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.lesson-address > div {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+.lesson-address > div > span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+.lesson-address a {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+.lesson-address button {
+  min-height: 44px;
+}

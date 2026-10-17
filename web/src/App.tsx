@@ -1,3 +1,4 @@
+import LessonAddress from "./LessonAddress";
 import Profile, { Avatar } from "./Profile";
 import ResourceLesson, { Sources, ResourceLinks } from "./Resources";
 import type { Access } from "./types";
@@ -241,7 +242,9 @@ export default function App() {
     setView(destination);
     if (destination === "concept" && target) setCurrent(target.steps[0].id);
     location.hash =
-      destination === "concept" && target ? "concept/" + target.id : "syllabus";
+      destination === "concept" && target
+        ? "concept/" + target.id + "/1"
+        : "syllabus";
     if (mobile) setNavOpen(false);
   }
   async function refresh() {
@@ -797,7 +800,9 @@ export default function App() {
         {user.google_available ? (
           <a
             className="button primary"
-            href="/auth/google/start"
+            href={
+              "/auth/google/start?lesson=" + encodeURIComponent(location.hash)
+            }
             onClick={() => {
               if (user.id) localSet("ct-connecting-user", user.id);
             }}
@@ -947,6 +952,7 @@ export default function App() {
           )}
         </div>
       )}
+      <LessonAddress />
       <div className={"course-workspace" + (navOpen ? " sidebar-open" : "")}>
         {navOpen && (
           <CourseSidebar

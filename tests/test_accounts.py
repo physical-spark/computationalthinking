@@ -277,3 +277,26 @@ def test_admin_membership_migration_preserves_students_and_history(administrator
         history=db.scalar(select(GroupMove).where(GroupMove.learner_id==aid))
         assert json.loads(history.previous_groups)==[cid]
         assert history.group_id is None
+
+
+def test_oauth_returns_to_shared_lesson_without_open_redirect(client, monkeypatch):
+    from types import SimpleNamespace
+    from fastapi.responses import RedirectResponse
+    import backend.main as main
+    from urllib.parse import quote
+
+    uid = client.get("/api/v1/me").json()["id"]
+    with SessionLocal() as db:
+        sub = db.get(Learner, uid).google_sub
+    class Google:
+        async def authorize_redirect(self, *args, **kwargs):
+            return RedirectResponse("https://accounts.google.com/test")
+        async def authorize_access_token(self, *args):
+            return {"userinfo": {"sub": sub}}
+    monkeypatch.setattr(main, "oauth", SimpleNamespace(google=Google()))
+    monkeypatch.setenv("GOOGLE_CLIENT_ID", "test-client")
+    for lesson, expected in [("#concept/IntroducingTheShell/2", "#concept/IntroducingTheShell/2"),
+                             ("https://evil.example", ""), ("#x\r\nLocation:evil", "")]:
+        assert client.get("/auth/google/start?lesson=" + quote(lesson, safe=""), follow_redirects=False).status_code == 307
+        callback = client.get("/auth/google/callback", follow_redirects=False)
+        assert callback.headers["location"] == main.APP_ORIGIN + "/?connected=1" + expected
