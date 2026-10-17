@@ -1,0 +1,38 @@
+{
+  "resources": [
+    {
+      "id": "supplement-strings-yXWQW552BsI",
+      "page_id": "IntroducingStrings",
+      "topic": "strings",
+      "title": "생활코딩 · 문자 데이터 타입",
+      "video_id": "yXWQW552BsI",
+      "start": 0,
+      "end": null,
+      "before": "이번에는 따옴표 안에 글자를 담는 모습을 봐요. 영상 뒤쪽의 아직 배우지 않은 기능은 참고만 해도 괜찮아요.",
+      "reading": "이번에는 따옴표 안에 글자를 담는 모습을 봐요. 영상 뒤쪽의 아직 배우지 않은 기능은 참고만 해도 괜찮아요. 따옴표 안의 007과 숫자 7은 어떤 점이 다를까요?",
+      "after": "따옴표 안의 007과 숫자 7은 어떤 점이 다를까요?",
+      "source_url": "https://opentutorials.org/course/4769/30539",
+      "source_revision": "verified-2026-10-17",
+      "creator": "생활코딩 · egoing",
+      "reference_only": false,
+      "source_anchor": "official-video"
+    },
+    {
+      "id": "supplement-strings-at4wND3FW50",
+      "page_id": "AddingStrings",
+      "topic": "strings",
+      "title": "생활코딩 · 문자열의 처리",
+      "video_id": "at4wND3FW50",
+      "start": 0,
+      "end": null,
+      "before": "이번에는 문자열을 +로 잇는 부분과 공백을 살펴봐요. 실행은 이 서비스의 코드 창에서 할 수 있어요.",
+      "reading": "이번에는 문자열을 +로 잇는 부분과 공백을 살펴봐요. 실행은 이 서비스의 코드 창에서 할 수 있어요. 두 단어를 이을 때 사이의 공백은 누가 넣어 줘야 할까요?",
+      "after": "두 단어를 이을 때 사이의 공백은 누가 넣어 줘야 할까요?",
+      "source_url": "https://www.youtube.com/watch?v=at4wND3FW50",
+      "source_revision": "verified-2026-10-17",
+      "creator": "생활코딩 · egoing",
+      "reference_only": false,
+      "source_anchor": "official-video"
+    }
+  ]
+}

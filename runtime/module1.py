@@ -16,7 +16,7 @@ PROJECTS = [
             "for로 기록을 하나씩 꺼내 확인해 봐요.",
             'log["status"] == "FAIL"이면 result에 log["user"]를 하나 더 담아요.',
         ],
-        solution='def filter_failed(logs):\n    return [log["user"] for log in logs if log["status"] == "FAIL"]',
+        solution='def filter_failed(logs):\n    # 1. 골라낸 이름을 담을 빈 목록을 준비해요.\n    result = []\n    # 2. 기록을 하나씩 보고 실패한 이름만 담아요.\n    for log in logs:\n        if log["status"] == "FAIL":\n            result.append(log["user"])\n    # 3. 들어온 순서대로 모은 이름을 돌려줘요.\n    return result',
         tests=[
             ([[{"user": "ana", "status": "OK"}, {"user": "bo", "status": "FAIL"}]], ["bo"]),
             ([[]], []),
@@ -36,7 +36,7 @@ PROJECTS = [
             "줄을 나누고 strip()으로 앞뒤 빈칸을 지워 봐요. 아무 글자도 남지 않으면 빈 줄이에요.",
             'user, status = line.split(",")로 쉼표 양쪽의 값을 나눌 수 있어요.',
         ],
-        solution='def parse_log(text):\n    return [{"user": u.strip(), "status": s.strip()} for line in text.splitlines() if line.strip() for u, s in [line.split(",")]]',
+        solution='def parse_log(text):\n    result = []\n    # 1. 글 전체를 한 줄씩 나누어 살펴봐요.\n    for line in text.splitlines():\n        cleaned_line = line.strip()\n        if cleaned_line != "":\n            # 2. 빈 줄이 아니면 쉼표로 이름과 상태를 나눠요.\n            parts = cleaned_line.split(",")\n            user = parts[0].strip()\n            status = parts[1].strip()\n            # 3. 두 값에 이름을 붙여 새 기록으로 담아요.\n            record = {"user": user, "status": status}\n            result.append(record)\n    return result',
         tests=[
             (
                 ["ana,OK\nbo,FAIL\n"],
@@ -59,7 +59,7 @@ PROJECTS = [
             "딕셔너리에서 get으로 값을 찾아봐요. 찾는 키가 없을 때 대신 쓸 값도 정할 수 있어요.",
             "글자에 upper()를 쓰면 대문자로 바꿀 수 있어요.",
         ],
-        solution='def normalize(records):\n    return [{"user": r.get("user", r.get("username")), "status": r.get("status", r.get("result")).upper()} for r in records]',
+        solution='def normalize(records):\n    result = []\n    for record in records:\n        # 1. 이름이 저장된 키를 확인해 값을 꺼내요.\n        if "user" in record:\n            user = record["user"]\n        else:\n            user = record.get("username")\n        # 2. 상태도 키를 확인하고 대문자로 맞춰요.\n        if "status" in record:\n            status = record["status"]\n        else:\n            status = record.get("result")\n        status = status.upper()\n        # 3. 원래 기록을 고치지 않고 새 기록을 만들어요.\n        normalized_record = {"user": user, "status": status}\n        result.append(normalized_record)\n    return result',
         tests=[
             (
                 [[{"username": "ana", "result": "fail"}, {"user": "bo", "status": "ok"}]],
@@ -81,7 +81,7 @@ PROJECTS = [
             'response["status"] == 200이면 성공한 답이에요.',
             "리스트의 항목들을 하나씩 이어 담아야 해요. append와 extend 중 어느 쪽이 맞을까요?",
         ],
-        solution='def collect_pages(pages):\n    items = []\n    errors = 0\n    for page in pages:\n        if page["status"] == 200:\n            items.extend(page["items"])\n        else:\n            errors += 1\n    return {"items": items, "errors": errors}',
+        solution='def collect_pages(pages):\n    items = []\n    errors = 0\n    # 1. 응답을 하나씩 확인해요.\n    for page in pages:\n        if page["status"] == 200:\n            # 2. 성공한 응답의 항목을 하나씩 이어 담아요.\n            for item in page["items"]:\n                items.append(item)\n        else:\n            # 3. 나머지 응답은 오류 수만 늘려요.\n            errors += 1\n    return {"items": items, "errors": errors}',
         tests=[
             (
                 [
@@ -110,7 +110,7 @@ PROJECTS = [
             "이미 담은 id를 set에 남겨 두면 같은 소식이 또 왔는지 확인할 수 있어요.",
             "아직 시간이 안 된 소식은 seen에도 넣지 않아요.",
         ],
-        solution='def due_events(events, now):\n    seen = set()\n    result = []\n    for event in events:\n        if event["at"] <= now and event["id"] not in seen:\n            seen.add(event["id"])\n            result.append(event["id"])\n    return result',
+        solution='def due_events(events, now):\n    seen = set()\n    result = []\n    for event in events:\n        # 1. 예약 시간이 되었는지 먼저 확인해요.\n        if event["at"] <= now:\n            event_id = event["id"]\n            # 2. 아직 담지 않은 소식만 결과에 넣어요.\n            if event_id not in seen:\n                result.append(event_id)\n                # 3. 담은 ID를 기억해 중복을 막아요.\n                seen.add(event_id)\n    return result',
         tests=[
             ([[{"id": "a", "at": 2}, {"id": "a", "at": 2}, {"id": "b", "at": 8}], 5], ["a"]),
             ([[{"id": "a", "at": 8}, {"id": "a", "at": 1}], 2], ["a"]),
@@ -130,7 +130,7 @@ PROJECTS = [
             'response.get("tool")은 tool이 없어도 멈추지 않고 None을 돌려줘요.',
             "in으로 써도 되는 도구 목록에 있는지 확인해 봐요.",
         ],
-        solution='def route_tool(response):\n    tool = response.get("tool")\n    return tool if tool in ("search", "summarize") else "reject"',
+        solution='def route_tool(response):\n    allowed = {"search", "summarize"}\n    # 1. tool 키가 없으면 get은 None을 돌려줘요.\n    tool = response.get("tool")\n    # 2. 허용 목록에 있는 도구만 돌려줘요.\n    if tool in allowed:\n        return tool\n    else:\n        return "reject"',
         tests=[
             ([{"tool": "search"}], "search"),
             ([{"tool": "summarize"}], "summarize"),
@@ -151,7 +151,7 @@ PROJECTS = [
             "같은 사람이 여러 번 실패했다면 실패 수는 매번 늘려요.",
             "사람 이름은 set으로 같은 이름을 한 번만 남기고 sorted로 정렬해요.",
         ],
-        solution='def make_report(logs):\n    failed = [log for log in logs if log["status"] == "FAIL"]\n    return {"total": len(logs), "failures": len(failed), "users": sorted({log["user"] for log in failed})}',
+        solution='def make_report(logs):\n    failures = 0\n    users = set()\n    # 1. 실패 기록은 나올 때마다 한 건씩 세어요.\n    for log in logs:\n        if log["status"] == "FAIL":\n            failures += 1\n            # 2. set에는 같은 이름을 여러 번 넣어도 한 번만 남아요.\n            users.add(log["user"])\n    # 3. 전체 수, 실패 수, 정렬한 이름을 묶어 돌려줘요.\n    return {"total": len(logs), "failures": failures, "users": sorted(users)}',
         tests=[
             (
                 [
@@ -181,7 +181,7 @@ PROJECTS = [
             "그다음 normalize로 모양을 맞추고 make_report로 정리했던 방법을 다시 써 봐요.",
             "아무 값도 안 들어왔을 때와 실패한 답만 들어왔을 때도 확인해 봐요.",
         ],
-        solution='def pipeline(pages):\n    logs = [item for p in pages if p["status"] == 200 for item in p["items"]]\n    normalized = [{"user": r.get("user", r.get("username")), "status": r.get("status", r.get("result")).upper()} for r in logs]\n    failed = [r for r in normalized if r["status"] == "FAIL"]\n    return {"total": len(logs), "failures": len(failed), "users": sorted({r["user"] for r in failed}), "errors": sum(p["status"] != 200 for p in pages)}',
+        solution='def pipeline(pages):\n    logs = []\n    errors = 0\n    # 1. 성공한 응답의 기록만 모으고 오류 응답은 세어요.\n    for page in pages:\n        if page["status"] == 200:\n            for item in page["items"]:\n                logs.append(item)\n        else:\n            errors += 1\n\n    # 2. 원본을 바꾸지 않고 키 이름과 상태를 맞춰요.\n    normalized = []\n    for log in logs:\n        if "user" in log:\n            user = log["user"]\n        else:\n            user = log.get("username")\n        if "status" in log:\n            status = log["status"]\n        else:\n            status = log.get("result")\n        status = status.upper()\n        record = {"user": user, "status": status}\n        normalized.append(record)\n\n    # 3. 실패 횟수와 중복 없는 사용자 이름을 모아요.\n    failures = 0\n    users = set()\n    for record in normalized:\n        if record["status"] == "FAIL":\n            failures += 1\n            users.add(record["user"])\n    return {"total": len(logs), "failures": failures, "users": sorted(users), "errors": errors}',
         tests=[
             (
                 [

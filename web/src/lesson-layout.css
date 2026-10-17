@@ -562,3 +562,36 @@
   margin-block: 4px 0;
   color: var(--muted);
 }
+.number-problem {
+  margin: 20px 0;
+}
+.number-problem figcaption {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.number-problem svg {
+  display: block;
+  width: 100%;
+  max-width: 360px;
+  margin-inline: auto;
+}
+.number-problem text {
+  fill: var(--text);
+  font-size: 15px;
+}
+.number-problem .number-bag {
+  fill: var(--surface-muted);
+  stroke: var(--control-border);
+}
+.number-problem .number-tile {
+  fill: var(--code-string);
+}
+.number-problem .number-remainder {
+  fill: var(--accent-solid);
+}
+.number-problem p {
+  font-size: 0.875rem;
+}
+.simple-sidebar .sidebar-chapter-number {
+  font-size: 0.6875rem;
+}

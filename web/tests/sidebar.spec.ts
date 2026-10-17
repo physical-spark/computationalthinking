@@ -22,11 +22,9 @@ for (const width of [320, 390, 720, 1440]) {
       0,
     );
     const lesson = sidebar.locator(".sidebar-steps");
-    await expect(lesson.getByRole("button", { name: /영상 보기/ })).toHaveCount(
-      1,
-    );
+    await expect(lesson.getByRole("button", { name: /Watch/ })).toHaveCount(1);
     await expect(
-      lesson.getByRole("button", { name: "실습 2, 잠김", exact: true }),
+      lesson.getByRole("button", { name: "Exercise 2, 잠김", exact: true }),
     ).toHaveAttribute("aria-disabled", "true");
     await expect(sidebar.locator(".active-page")).toHaveAttribute(
       "aria-current",
@@ -59,7 +57,7 @@ for (const width of [320, 390, 720, 1440]) {
     await page.screenshot({
       path: test.info().outputPath(`sidebar-${width}.png`),
     });
-    await lesson.getByRole("button", { name: /영상 보기/ }).click();
+    await lesson.getByRole("button", { name: /Watch/ }).click();
     await expect(page).toHaveURL(/#concept\/IntroducingTheShell\/7$/);
     await expect(page.locator("iframe.lesson-video")).toHaveCount(1);
     await page.getByRole("button", { name: "다음 →", exact: true }).click();

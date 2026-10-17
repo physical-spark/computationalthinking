@@ -42,7 +42,7 @@ export default function ContentEditor() {
         <input
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          placeholder="단원 ID 또는 문구 검색"
+          placeholder="Lesson ID 또는 문구 검색"
         />
       </label>
       <label>

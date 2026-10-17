@@ -287,12 +287,15 @@ function WalkthroughSteps({
   const frame = frames[currentStep];
   const rows = Math.ceil(Math.min(frame.nodes.length, 6) / (narrow ? 2 : 3));
   const width = narrow ? 320 : 480;
-  const height =
-    index === 0 ? (narrow ? 230 : 210) : Math.max(96, rows * 74 + 10);
-  const description =
-    index === 0
-      ? `${frame.text} ${frame.result}`
-      : `${frame.text} ${frame.nodes.map((node) => `${node.label}: ${node.value}`).join("。 ")}。 ${frame.result}`;
+  const arithmetic = index === 0 && concept.visual !== "values";
+  const height = arithmetic
+    ? narrow
+      ? 230
+      : 210
+    : Math.max(96, rows * 74 + 10);
+  const description = arithmetic
+    ? `${frame.text} ${frame.result}`
+    : `${frame.text} ${frame.nodes.map((node) => `${node.label}: ${node.value}`).join("。 ")}。 ${frame.result}`;
   return (
     <figure
       ref={host}
@@ -311,7 +314,7 @@ function WalkthroughSteps({
       >
         <title id={`${id}-title`}>{frame.title}</title>
         <desc id={`${id}-description`}>{description}</desc>
-        {index === 0 ? (
+        {arithmetic ? (
           <Arithmetic step={currentStep} narrow={narrow} />
         ) : (
           <ValueFlow frame={frame} narrow={narrow} />

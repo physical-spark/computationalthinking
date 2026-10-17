@@ -63,26 +63,71 @@ for (const width of [320, 390, 768, 1440]) {
     });
   });
 }
-test("all twenty story scenes change, reset and preserve course requirements", async ({
+test("all 69 Learn concepts have aligned code and diagrams; representative scenes change and reset", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 900 });
   const c = await (await page.request.get("/api/v1/course")).json();
-  const representatives = new Map<number, any>();
-  for (const p of c.pages)
-    if (!representatives.has(p.diagram)) representatives.set(p.diagram, p);
-  expect(representatives.size).toBe(20);
-  for (const p of representatives.values()) {
-    await page.goto("/#concept/" + p.id + "/3");
+  expect(c.pages).toHaveLength(69);
+  expect(Object.keys(c.page_concepts).sort()).toEqual(
+    c.pages.map((p: any) => p.id).sort(),
+  );
+  // The old twenty scenes stay available to archived content; current Learn pages
+  // must each supply their own concept rather than select by shared diagram index.
+  expect(c.concepts).toHaveLength(20);
+  for (const p of c.pages) {
+    const concept = c.page_concepts[p.id];
+    for (const field of [
+      "title",
+      "idea",
+      "analogy",
+      "code",
+      "question",
+      "explanation",
+      "transfer",
+    ])
+      expect(concept[field], `${p.id}: ${field}`).toBeTruthy();
+    expect(concept.choices.length, p.id).toBeGreaterThanOrEqual(2);
+    expect(concept.answer, p.id).toBeGreaterThanOrEqual(0);
+    expect(concept.answer, p.id).toBeLessThan(concept.choices.length);
+    expect(concept.walkthrough.frames.length, p.id).toBeGreaterThanOrEqual(2);
+    const lines = concept.code.split("\n").length;
+    for (const frame of concept.walkthrough.frames) {
+      expect(frame.title, p.id).toBeTruthy();
+      expect(frame.text, p.id).toBeTruthy();
+      expect(frame.nodes.length, p.id).toBeGreaterThan(0);
+      expect(frame.result, p.id).toBeTruthy();
+      if (frame.line !== null) {
+        expect(Number.isInteger(frame.line), p.id).toBe(true);
+        expect(frame.line, p.id).toBeGreaterThanOrEqual(1);
+        expect(frame.line, p.id).toBeLessThanOrEqual(lines);
+      }
+    }
+  }
+  for (const id of [
+    "IntroducingTheShell",
+    "NavigatingShellHistory",
+    "IntroducingStrings",
+    "AddingStrings",
+    "IntroducingIfStatements",
+    "DefiningFunctions",
+    "m1-day3",
+    "m1-day8",
+  ]) {
+    const concept = c.page_concepts[id];
+    await page.goto("/#concept/" + id + "/3");
     const scene = page.locator(".concept-stage .code-walkthrough");
     const before = await scene.locator("svg").innerHTML();
-    const frameCount = c.concepts[p.diagram].walkthrough.frames.length;
+    const frameCount = concept.walkthrough.frames.length;
     for (let frame = 1; frame < frameCount; frame++) {
       await scene
         .getByRole("button", { name: "다음 장면", exact: true })
         .click();
       await expect(scene.locator(".code-walkthrough__position")).toHaveText(
         `${frame + 1} / ${frameCount}`,
+      );
+      await expect(scene.locator(".code-walkthrough__result")).toHaveText(
+        concept.walkthrough.frames[frame].result,
       );
     }
     expect(await scene.locator("svg").innerHTML()).not.toBe(before);
@@ -95,5 +140,12 @@ test("all twenty story scenes change, reset and preserve course requirements", a
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
+    expect(
+      (await new AxeBuilder({ page }).include("#lesson").analyze()).violations,
+    ).toEqual([]);
+    await page.getByRole("button", { name: "다음 →", exact: true }).click();
+    await expect(page.locator(".concept-stage .concept-code")).toHaveText(
+      concept.code,
+    );
   }
 });

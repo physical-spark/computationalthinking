@@ -27,6 +27,8 @@ COPY content/course.json content/course.json
 COPY content/concepts.json content/concepts.json
 COPY content/avatars.json content/avatars.json
 COPY content/resources.json content/resources.json
+COPY content/page-concepts.json content/page-concepts.json
+COPY content/supplemental-videos.json content/supplemental-videos.json
 COPY --from=frontend /build/web/dist web/dist
 COPY --from=frontend /build/runner/dist runner/dist
 RUN useradd --uid 10001 --create-home app

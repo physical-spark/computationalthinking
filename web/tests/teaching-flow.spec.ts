@@ -87,8 +87,16 @@ test("every placement opens one embedded video with the original playback range"
   expect(
     c.concepts.filter((x: any) => x.walkthrough?.frames.length),
   ).toHaveLength(20);
-  expect(c.resources).toHaveLength(46);
-  expect(new Set(c.resources.map((r: any) => r.video_id)).size).toBe(46);
+  expect(Object.keys(c.page_concepts)).toHaveLength(69);
+  for (const p of c.pages)
+    expect(
+      c.page_concepts[p.id].walkthrough.frames.length,
+    ).toBeGreaterThanOrEqual(2);
+  expect(
+    c.pages.flatMap((p: any) => p.steps).filter((s: any) => !s.reading),
+  ).toHaveLength(267);
+  expect(c.resources).toHaveLength(48);
+  expect(new Set(c.resources.map((r: any) => r.video_id)).size).toBe(48);
   await page.goto("/#concept/IntroducingTheShell/6");
   await expect(page.locator("#lesson .resource-links")).toHaveCount(0);
   await expect(page.locator("iframe.lesson-video")).toHaveCount(0);

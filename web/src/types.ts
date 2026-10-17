@@ -14,6 +14,9 @@ export type Reflection = {
 };
 export type Step = {
   recap?: boolean;
+  context_html?: string;
+  starter_from?: string;
+  previous_exercise?: string;
   sources?: Source[];
   thinking: Thinking;
   id: string;
@@ -76,6 +79,7 @@ export type Course = {
   version: string;
   text_version?: string;
   concepts?: import("./concepts").Concept[];
+  page_concepts?: Record<string, import("./concepts").Concept>;
   resources?: Resource[];
   language: string;
   pages: Page[];

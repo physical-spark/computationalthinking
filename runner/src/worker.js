@@ -28,11 +28,15 @@ const run = pyodideExpose(async (extras, entry, output, input) => {
   });
   return reloader.withPyodide(async (py) => {
     const core = py.pyimport("core.checker");
-    const cls = py
-      .pyimport("core.text")
-      .pages.get(entry.page_slug)
-      ?.get_step(entry.step_name);
     const key = entry.page_slug + "." + entry.step_name;
+    const numbers = py.pyimport("number_operators");
+    const numberExercise = numbers.handles(entry);
+    const cls = numberExercise
+      ? null
+      : py
+          .pyimport("core.text")
+          .pages.get(entry.page_slug)
+          ?.get_step(entry.step_name);
     if (key !== self.lastStep && cls) {
       cls.pre_run(core.default_runner);
       self.lastStep = key;
@@ -44,9 +48,11 @@ const run = pyodideExpose(async (extras, entry, output, input) => {
     }
     let result;
     try {
-      result = entry.page_slug.startsWith("m1-")
-        ? py.pyimport("module1").check(entry, callback)
-        : core.check_entry(entry, callback);
+      result = numberExercise
+        ? numbers.check(entry, callback)
+        : entry.page_slug.startsWith("m1-")
+          ? py.pyimport("module1").check(entry, callback)
+          : core.check_entry(entry, callback);
       if (key === "IntroducingTheShell.more_calculation")
         result = py.pyimport("life_expression").apply(entry, result);
     } finally {

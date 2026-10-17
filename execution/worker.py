@@ -31,6 +31,7 @@ from core.init_pyodide import init
 
 init("ko")
 import life_expression
+import number_operators
 import module1
 from core.checker import check_entry, default_runner
 from core.text import pages
@@ -56,7 +57,7 @@ while True:
 
     try:
         key = entry["page_slug"] + "." + entry["step_name"]
-        if not key.startswith("m1-") and key != last_step:
+        if not key.startswith("m1-") and not number_operators.handles(entry) and key != last_step:
             pages[entry["page_slug"]].get_step(entry["step_name"]).pre_run(default_runner)
         last_step = key
         if entry["source"] == "pythontutor":
@@ -84,7 +85,9 @@ while True:
             sys.settrace(tracer)
         try:
             result = (
-                module1.check(entry, callback)
+                number_operators.check(entry, callback)
+                if number_operators.handles(entry)
+                else module1.check(entry, callback)
                 if key.startswith("m1-")
                 else check_entry(entry, callback)
             )

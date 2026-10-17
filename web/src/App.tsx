@@ -25,6 +25,8 @@ import type {
   User,
 } from "./types";
 import Diagram from "./Diagram";
+import NumberProblem from "./NumberProblem";
+import CodeWalkthrough from "./CodeWalkthrough";
 import ExpressionProblem from "./ExpressionProblem";
 import PassCelebration, { type PassMoment } from "./PassCelebration";
 import { ThinkingGoal, ThinkingJournal } from "./Thinking";
@@ -471,9 +473,12 @@ export default function App() {
         ? { code: stored, revision: 0, dirty: true }
         : stored;
     const remote = drafts.find((d) => d.step_id === step.id);
+    const carried = step.starter_from
+      ? drafts.find((d) => d.step_id === step.starter_from)?.code
+      : undefined;
     const initial = local?.dirty
       ? local.code
-      : (remote?.code ?? local?.code ?? step.starter);
+      : (remote?.code ?? local?.code ?? (step.starter || carried || ""));
     if (!local?.dirty)
       localSet(draftKey, {
         code: initial,
@@ -1029,7 +1034,10 @@ export default function App() {
             <ConceptLesson
               key={page.id}
               page={page}
-              conceptData={course.concepts?.[page.diagram]}
+              conceptData={
+                course.page_concepts?.[page.id] ||
+                course.concepts?.[page.diagram]
+              }
               resources={(course.resources || []).filter(
                 (r) => r.page_id === page.id,
               )}
@@ -1103,11 +1111,9 @@ export default function App() {
                   className="text-button"
                   onClick={() => openPath("concept")}
                 >
-                  ← 단원 개념 다시 보기
+                  ← Learn 다시 보기
                 </button>
-                <span>
-                  {step.recap ? "03 생각 돌아보기" : "02 코드로 확인하기"}
-                </span>
+                <span>{step.recap ? "03 Review" : "02 Exercise"}</span>
               </div>
               <div
                 className={`learning-shell${step.recap ? " recap-shell" : ""}`}
@@ -1133,15 +1139,23 @@ export default function App() {
                   <div className="step-meta">
                     <span>
                       {step.reading
-                        ? "단원 정리"
+                        ? "Review"
                         : `학습 단계 ${page.steps.indexOf(step) + 1} / ${page.steps.filter((s) => !s.reading).length}`}
                     </span>
                     {passed && <span className="passed-label">✓ 통과</span>}
                   </div>
                   {!step.recap && <ThinkingGoal step={step} />}
                   {!step.recap &&
-                    (everydayExpression ? (
+                    (page.id === "NavigatingShellHistory" ? (
+                      <NumberProblem square={step.name === "square"} />
+                    ) : everydayExpression ? (
                       <ExpressionProblem />
+                    ) : course.page_concepts?.[page.id]?.visual === "values" ? (
+                      <CodeWalkthrough
+                        concept={course.page_concepts[page.id]}
+                        index={page.diagram}
+                        compact
+                      />
                     ) : (
                       <Diagram
                         key={page.id}
@@ -1157,11 +1171,28 @@ export default function App() {
                   <section
                     className={step.recap ? "unit-recap" : undefined}
                     aria-label={
-                      step.recap ? "컴퓨팅 사고 단원 정리" : "과제 설명"
+                      step.recap ? "Review · 컴퓨팅 사고" : "과제 설명"
                     }
                   >
                     <Html text={step.text} />
                   </section>
+                  {step.context_html && (
+                    <section
+                      className="exercise-context"
+                      aria-label="이 Exercise의 코드 선택 목록"
+                    >
+                      <h2>여기에서 한 줄을 골라요</h2>
+                      <Html text={step.context_html} />
+                    </section>
+                  )}
+                  {step.previous_exercise && !step.reading && (
+                    <button
+                      className="text-button"
+                      onClick={() => navigate(step.previous_exercise!)}
+                    >
+                      이전 Exercise 설명 다시 보기
+                    </button>
+                  )}
                   {page.prerequisite && (
                     <p className="prerequisite">
                       기초가 필요하면{" "}
@@ -1320,6 +1351,7 @@ export default function App() {
                       code={code}
                       output={output}
                       passed={passed}
+                      concept={course.page_concepts?.[page.id]}
                     />
                   </fieldset>
                   {!step.reading && (
@@ -1504,7 +1536,7 @@ export default function App() {
                       <Suspense fallback={<p>편집기 준비 중</p>}>
                         <Editor
                           readOnly={readOnly}
-                          shell={page.id === "NavigatingShellHistory"}
+                          shell={false}
                           value={code}
                           onChange={changeCode}
                           onRun={run}
@@ -1701,10 +1733,8 @@ export default function App() {
                         />
                       )}
                       <p className="keyboard-tip">
-                        {page.id === "NavigatingShellHistory"
-                          ? "Enter로 실행 · ↑·↓로 이전 코드 보기"
-                          : "Ctrl / ⌘ + Enter로 실행"}{" "}
-                        · 입력 기다림에는 입력 칸을 사용하세요.
+                        Ctrl / ⌘ + Enter로 실행 · 입력 기다림에는 입력 칸을
+                        사용하세요.
                       </p>
                     </section>
                   </>

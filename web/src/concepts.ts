@@ -1,5 +1,7 @@
 import authoredConcepts from "../../content/concepts.json" with { type: "json" };
 export type Concept = {
+  visual?: "values";
+  expected_output?: string;
   title: string;
   idea: string;
   analogy: string;

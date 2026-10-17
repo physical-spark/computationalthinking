@@ -13,20 +13,27 @@ def apply_recaps(pages, root: Path):
     assert set(recaps) == {p["id"] for p in pages}, "Recaps must cover every unit exactly"
     for page in pages:
         recap = recaps[page["id"]]
-        assert recap["did"] and recap["transfer"] and len(recap["skills"]) == 2
+        assert all(recap.get(k) for k in ("did", "transfer", "before", "key_idea", "curiosity")) and len(recap["skills"]) == 2
         esc = html.escape
         skills = "".join(
             f'<li><h3>{esc(skill["term"])}</h3><p>{esc(skill["action"])}</p></li>'
             for skill in recap["skills"]
         )
         prose = (
-            '<p class="recap-eyebrow">단원 정리 · Computational Thinking</p>'
-            '<h2>이번에는 어떤 생각을 연습했을까요?</h2>'
+            '<p class="recap-eyebrow">Review · Computational Thinking</p>'
+            '<h2>이번 Chapter에서 생각하는 방법이 어떻게 달라졌을까요?</h2>'
             f'<p class="recap-did">{esc(recap["did"])}</p>'
+            '<h3>핵심 개념 다시 보기</h3>'
+            f'<p>{esc(recap["key_idea"])}</p>'
+            '<h3>이 방법을 쓰기 전에는</h3>'
+            f'<p>{esc(recap["before"])}</p>'
+            '<h3>이제는 이렇게 생각해요</h3>'
             f'<ol class="recap-skills">{skills}</ol>'
             '<h3>다른 상황에도 써 볼까요?</h3>'
             f'<p class="recap-transfer">{esc(recap["transfer"])}</p>'
-            '<p class="recap-research-note">이 단원에서 해 본 일을 아래 연구의 사고 틀과 연결했어요.</p>'
+            '<h3>이런 의문도 떠올릴 수 있어요</h3>'
+            f'<p>{esc(recap["curiosity"])}</p>'
+            '<p class="recap-research-note">이번 Chapter에서 해 본 일을 아래 연구의 사고 틀과 연결했어요.</p>'
             '<h3>더 알아보고 싶다면 · 연구 자료</h3>'
             '<ul class="recap-papers">'
             '<li><a href="https://myweb.fsu.edu/vshute/pdf/CT.pdf" target="_blank" rel="noopener noreferrer">Shute 외 (2017) · Demystifying computational thinking · 저자 공개 PDF</a><p>문제 분해·추상화·알고리즘·디버깅·반복 개선·일반화를 설명한 문헌 검토예요. 4절과 표 4에서 사고의 종류를 자세히 볼 수 있어요.</p></li>'
@@ -38,5 +45,5 @@ def apply_recaps(pages, root: Path):
             page["steps"].append(final)
         final["text"] = prose
         final["recap"] = True
-        final["thinking"] = {"focus": "이번 단원의 생각을 돌아봐요", "why": recap["did"], "question": recap["transfer"], "activity": "다른 상황에 연결해요"}
-        final["sources"] = [{"label": "단원 회고 자체 작성: Computational Thinking", "url": "https://github.com/physical-spark/computationalthinking/blob/main/content/unit-recaps.json"}, *RESEARCH]
+        final["thinking"] = {"focus": "이번 Chapter의 생각을 돌아봐요", "why": recap["did"], "question": recap["transfer"] + " " + recap["curiosity"], "activity": "다른 상황에 연결해요"}
+        final["sources"] = [{"label": "Review 자체 작성: Computational Thinking", "url": "https://github.com/physical-spark/computationalthinking/blob/main/content/unit-recaps.json"}, *RESEARCH]

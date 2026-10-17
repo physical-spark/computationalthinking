@@ -12,7 +12,7 @@ for (const width of [390, 1068, 1440]) {
     );
     await page.goto("/#concept/IntroducingTheShell/6");
     await expect(
-      page.getByRole("button", { name: "코드 실습 시작 →", exact: true }),
+      page.getByRole("button", { name: "Exercise 시작 →", exact: true }),
     ).toHaveCount(0);
     const forward = page.getByRole("button", { name: "다음 →", exact: true });
     const initial = (await forward.boundingBox())!;
@@ -20,7 +20,7 @@ for (const width of [390, 1068, 1440]) {
     await expect(page.locator("iframe.lesson-video")).toHaveCount(1);
     await forward.click();
     const start = page.getByRole("button", {
-      name: "코드 실습 시작 →",
+      name: "Exercise 시작 →",
       exact: true,
     });
     const last = (await start.boundingBox())!;
@@ -86,7 +86,7 @@ for (const width of [390, 1068, 1440]) {
     await page.goto("/#concept/IntroducingTheShell/9");
     await expect(page).toHaveURL(/#concept\/IntroducingTheShell\/7$/);
     const c = await (await page.request.get("/api/v1/course")).json();
-    expect(c.resources).toHaveLength(46);
-    expect(new Set(c.resources.map((r: any) => r.video_id)).size).toBe(46);
+    expect(c.resources).toHaveLength(48);
+    expect(new Set(c.resources.map((r: any) => r.video_id)).size).toBe(48);
   });
 }

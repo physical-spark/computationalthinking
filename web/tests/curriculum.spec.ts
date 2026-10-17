@@ -1,6 +1,5 @@
 import { test, expect } from "./fixtures";
 import AxeBuilder from "@axe-core/playwright";
-import { concepts } from "../src/concepts";
 for (const width of [320, 390, 768, 1440]) {
   test(`curriculum to concept to practice at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: width <= 390 ? 740 : 1000 });
@@ -17,14 +16,16 @@ for (const width of [320, 390, 768, 1440]) {
     const course = await (await page.request.get("/api/v1/course")).json();
     expect(course.pages).toHaveLength(69);
     for (const p of course.pages) {
-      expect(concepts[p.diagram].explanation).toBeTruthy();
+      expect(course.page_concepts[p.id].explanation).toBeTruthy();
       expect(p.steps[0].thinking.why).toBeTruthy();
     }
     await expect(page.locator(".syllabus-lessons button")).toHaveCount(69);
     await page.locator(".syllabus-lessons button").first().click();
     await expect(page).toHaveURL(/#concept\/IntroducingTheShell\/1$/);
     await expect(
-      page.getByRole("heading", { name: concepts[0].title }),
+      page.getByRole("heading", {
+        name: course.page_concepts.IntroducingTheShell.title,
+      }),
     ).toBeVisible();
     await expect(
       page.getByRole("textbox", { name: "Python 코드 편집기" }),
@@ -85,7 +86,7 @@ for (const width of [320, 390, 768, 1440]) {
     )
       await page.getByRole("button", { name: "다음 →", exact: true }).click();
     await page
-      .getByRole("button", { name: "코드 실습 시작 →", exact: true })
+      .getByRole("button", { name: "Exercise 시작 →", exact: true })
       .click();
     await expect(page).toHaveURL(/#IntroducingTheShell.first_expression$/);
     await expect(page.locator("details,summary")).toHaveCount(0);
@@ -129,7 +130,9 @@ for (const width of [320, 390, 768, 1440]) {
       .click();
     await expect(page).toHaveURL(/#concept\/IntroducingStrings\/1$/);
     await expect(
-      page.getByRole("heading", { name: concepts[1].title }),
+      page.getByRole("heading", {
+        name: course.page_concepts.IntroducingStrings.title,
+      }),
     ).toBeVisible();
     await page.goBack();
     await expect(page).toHaveURL(/#IntroducingTheShell.first_expression$/);

@@ -124,7 +124,7 @@ test("reduced motion keeps the success cue with no transforms or code flights", 
   });
 });
 
-test("all 69 units have specific CT recaps and research; reading loads no runner", async ({
+test("all 69 Chapter reviews explain CT changes and research; reading loads no runner", async ({
   page,
 }) => {
   let connections = 0;
@@ -139,8 +139,17 @@ test("all 69 units have specific CT recaps and research; reading loads no runner
     expect(final, unit.id).toBeTruthy();
     expect(final.recap).toBe(true);
     expect(final.reading).toBe(true);
-    expect(final.text).toContain("이번에는 어떤 생각을 연습했을까요?");
+    expect(final.text).toContain(
+      "이번 Chapter에서 생각하는 방법이 어떻게 달라졌을까요?",
+    );
     expect(final.text).toContain("recap-skills");
+    for (const heading of [
+      "핵심 개념 다시 보기",
+      "이 방법을 쓰기 전에는",
+      "이제는 이렇게 생각해요",
+      "이런 의문도 떠올릴 수 있어요",
+    ])
+      expect(final.text, unit.id).toContain(heading);
     expect(final.text).toContain("https://myweb.fsu.edu/vshute/pdf/CT.pdf");
     expect(final.sources).toHaveLength(3);
     prose.add(final.text);
@@ -154,11 +163,20 @@ test("all 69 units have specific CT recaps and research; reading loads no runner
     await page.setViewportSize({ width, height: 805 });
     await page.goto(`/#${id}.final_text`);
     await expect(
-      page.getByRole("region", { name: "컴퓨팅 사고 단원 정리" }),
+      page.getByRole("region", { name: "Review · 컴퓨팅 사고" }),
     ).toContainText(text);
     await expect(
       page.locator(".coding-pane, .mobile-code, .review"),
     ).toHaveCount(0);
+    await expect(
+      page.getByRole("textbox", { name: "더 궁금한 점", exact: true }),
+    ).toHaveCount(1);
+    await expect(
+      page.getByRole("button", { name: "AI 질문 프롬프트 복사", exact: true }),
+    ).toHaveCount(1);
+    await expect(
+      page.getByRole("button", { name: "질문 메모 저장", exact: true }),
+    ).toHaveCount(1);
     await expect(
       page
         .getByRole("button", { name: "다음 →", exact: true })

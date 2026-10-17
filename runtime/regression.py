@@ -49,7 +49,13 @@ def verify(language="ko", golden_programs=None):
         result = life_expression.apply(entry, check_entry(entry, lambda *_: None, runner))
         if result["passed"] != expected:
             failures.append("authored-life-expression: " + source)
-    return {"cases": count, "authored_cases": len(authored), "failures": failures, "passed": not failures, "language": language}
+    import number_operators
+    number_cases = [("remainder", "17 % 5", True), ("remainder", "17 // 5", False), ("remainder", "2", False), ("square", "6 ** 2", True), ("square", "6 * 2", False), ("square", "36", False)]
+    for name, source, expected in number_cases:
+        result = number_operators.check({"page_slug": number_operators.PAGE, "step_name": name, "source": "shell", "input": source}, lambda *_: None)
+        if result["passed"] != expected:
+            failures.append("authored-number-operators: " + source)
+    return {"operator_cases": len(number_cases), "cases": count, "authored_cases": len(authored), "failures": failures, "passed": not failures, "language": language}
 
 
 if __name__ == "__main__":

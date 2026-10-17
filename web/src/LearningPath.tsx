@@ -74,13 +74,14 @@ export function CourseSidebar({
           ›
         </span>
       </button>
-      <nav aria-label="단원별 학습 목차">
+      <nav aria-label="Chapter별 학습 목차">
         {chapters(course).map((ch, chapterIndex) => {
           const chapterTerm = term(ch.pages[0].chapterTerm) || ch.title;
           return (
             <section className="sidebar-chapter" key={ch.id}>
               <h2>
                 <span className="sidebar-chapter-number" aria-hidden="true">
+                  Chapter
                   {String(chapterIndex + 1).padStart(2, "0")}
                 </span>
                 <span className="sidebar-term">{chapterTerm}</span>
@@ -103,7 +104,7 @@ export function CourseSidebar({
                           "sidebar-page" + (active ? " active-page" : "")
                         }
                         onClick={() => onConcept(p)}
-                        aria-label={`${p.title}${pageTerm ? ", " + pageTerm : ""}, ${exercises.length ? `실습 ${passed} / ${exercises.length}` : "개념 읽기"}`}
+                        aria-label={`${p.title}${pageTerm ? ", " + pageTerm : ""}, ${exercises.length ? `Exercise ${passed} / ${exercises.length}` : "Learn"}`}
                         aria-current={active ? "page" : undefined}
                       >
                         <span className="sidebar-page-copy">
@@ -138,7 +139,7 @@ export function CourseSidebar({
                               }
                             >
                               <SidebarIcon kind="book" />
-                              <span>개념 배우기</span>
+                              <span>Learn</span>
                             </button>
                           </li>
                           {videos.length > 0 && (
@@ -149,13 +150,13 @@ export function CourseSidebar({
                                   if (matchMedia("(max-width:900px)").matches)
                                     onClose();
                                 }}
-                                aria-label={`영상 보기, ${videos.length}편${watchingVideo && videos[videoIndex] ? ", " + videos[videoIndex].title : ""}`}
+                                aria-label={`Watch, ${videos.length}편${watchingVideo && videos[videoIndex] ? ", " + videos[videoIndex].title : ""}`}
                                 aria-current={
                                   watchingVideo ? "step" : undefined
                                 }
                               >
                                 <SidebarIcon kind="play" />
-                                <span>영상 보기</span>
+                                <span>Watch</span>
                                 <span
                                   className="sidebar-count"
                                   aria-hidden="true"
@@ -177,7 +178,7 @@ export function CourseSidebar({
                                 <button
                                   onClick={() => onPractice(s.id)}
                                   aria-disabled={locked}
-                                  aria-label={`${s.reading ? "단원 정리" : `실습 ${p.steps.slice(0, i + 1).filter((x) => !x.reading).length}`}${locked ? ", 잠김" : completed ? ", 통과" : ""}`}
+                                  aria-label={`${s.reading ? "Review" : `Exercise ${p.steps.slice(0, i + 1).filter((x) => !x.reading).length}`}${locked ? ", 잠김" : completed ? ", 통과" : ""}`}
                                   aria-current={
                                     view === "practice" && current === s.id
                                       ? "step"
@@ -195,8 +196,8 @@ export function CourseSidebar({
                                   />
                                   <span>
                                     {s.reading
-                                      ? "단원 정리"
-                                      : `실습 ${p.steps.slice(0, i + 1).filter((x) => !x.reading).length}`}
+                                      ? "Review"
+                                      : `Exercise ${p.steps.slice(0, i + 1).filter((x) => !x.reading).length}`}
                                   </span>
                                   {completed && (
                                     <span
@@ -375,28 +376,27 @@ export function Syllabus({
         <li>
           <SequencePicture kind="see" />
           <div>
-            <b>그림에서 해봐요</b>
+            <b>Learn</b>
             <span>사과를 모으고, 우산을 챙겨요.</span>
           </div>
         </li>
         <li>
           <SequencePicture kind="guess" />
           <div>
-            <b>어떻게 될지 골라요</b>
+            <b>Predict</b>
             <span>실행하기 전에 먼저 생각해 봐요.</span>
           </div>
         </li>
         <li>
           <SequencePicture kind="write" />
           <div>
-            <b>내 코드로 해봐요</b>
+            <b>Exercise</b>
             <span>한 줄을 바꾸고 결과를 살펴봐요.</span>
           </div>
         </li>
       </ol>
       <p className="field-help">
-        Python 이야기 12장과 응용 과제 8개가 있어요. 그림과 영상은 언제든 볼 수
-        있어요. 코드 과제는 앞의 과제를 풀면 다음 과제가 열려요.
+        Chapter는 큰 묶음, Lesson은 그 안의 주제 하나예요. 각 Lesson은 Learn → Exercise → Review로 이어져요. 설명과 영상은 언제든 볼 수 있고, Exercise는 앞의 문제를 풀면 다음 문제가 열려요.
       </p>
       {chapters(course).map((ch, i) => (
         <section className="syllabus-chapter" key={ch.id}>
@@ -414,7 +414,7 @@ export function Syllabus({
                 <p className="chapter-term">{ch.pages[0].chapterTerm}</p>
               )}
               <p>
-                {ch.pages.length}개 단원 ·{" "}
+                {ch.pages.length} Lessons ·{" "}
                 {ch.pages[0].track === "python"
                   ? "Python 이야기"
                   : "따로 설치하지 않고 해보는 응용 과제"}
@@ -436,8 +436,8 @@ export function Syllabus({
                     </span>
                     <span className="lesson-status">
                       {tasks.length
-                        ? `실습 ${done}/${tasks.length}`
-                        : "개념 읽기"}
+                        ? `Exercise ${done}/${tasks.length}`
+                        : "Learn"}
                       <span aria-hidden="true"> →</span>
                     </span>
                   </button>
@@ -531,7 +531,7 @@ export function ConceptLesson({
         </div>
         <h1>{page.title}</h1>
         <div className="concept-progress">
-          <span>개념 학습</span>
+          <span>Learn · 개념 배우기</span>
           <span aria-live="polite">
             {card + 1} / {titles.length} · {titles[card]}
           </span>
@@ -539,7 +539,7 @@ export function ConceptLesson({
         <progress
           value={card + 1}
           max={titles.length}
-          aria-label="개념 페이지 위치"
+          aria-label="Learn 페이지 위치"
         />
       </header>
       <section
@@ -567,19 +567,33 @@ export function ConceptLesson({
           </h2>
           {card === 0 && (
             <>
-              <StoryScene index={page.diagram} />
+              {concept.visual === "values" ? (
+                <CodeWalkthrough
+                  concept={concept}
+                  index={page.diagram}
+                  compact
+                />
+              ) : (
+                <StoryScene index={page.diagram} />
+              )}
               <p className="concept-lead">
-                {page.story?.scene || concept.analogy}
+                {concept.visual === "values"
+                  ? concept.analogy
+                  : page.story?.scene || concept.analogy}
               </p>
             </>
           )}
           {card === 1 && (
             <>
               <CodeWalkthrough concept={concept} index={page.diagram} compact />
-              {page.story?.term && (
-                <p className="story-term">{page.story.term}</p>
-              )}
-              <p className="concept-lead">{concept.idea}</p>
+              <p className="story-term">
+                {concept.walkthrough?.term || page.story?.term}
+              </p>
+              {concept.idea.split(/(?<=[.!?])\s+/).map((part, i) => (
+                <p className="concept-lead" key={i}>
+                  {part}
+                </p>
+              ))}
             </>
           )}
           {card === 2 && (
@@ -631,18 +645,18 @@ export function ConceptLesson({
           )}
           {card === 5 && (
             <>
-              {page.story?.bridge && (
+              {page.story?.bridge && !concept.visual && (
                 <p className="field-help">{page.story.bridge}</p>
               )}
               <p className="concept-lead">{concept.transfer}</p>
               {resources.length > 0 && (
                 <p className="field-help">
                   다음 장에서 관련 영상을 한 편씩 볼 수 있어요. 마지막 장 뒤에
-                  실습을 시작해요.
+                  Exercise를 시작해요.
                 </p>
               )}
               <div className="concept-takeaway">
-                <strong>실습에서 해 볼 일</strong>
+                <strong>Exercise에서 해 볼 일</strong>
                 <ul>
                   {Array.from(
                     new Set(
@@ -664,10 +678,20 @@ export function ConceptLesson({
               resource={resources[card - 6]}
             />
           )}
-          {card < 6 && <Sources concept />}
+          {card < 6 && (
+            <Sources
+              concept
+              sources={[
+                {
+                  label: "Learn · 설명·그림 자체 작성",
+                  url: "https://github.com/physical-spark/computationalthinking/blob/main/content/page-concepts.json",
+                },
+              ]}
+            />
+          )}
         </div>
       </section>
-      <nav className="concept-pagination" aria-label="개념 페이지 이동">
+      <nav className="concept-pagination" aria-label="Learn 페이지 이동">
         <button disabled={card === 0} onClick={() => move(card - 1)}>
           ← 이전
         </button>
@@ -682,8 +706,8 @@ export function ConceptLesson({
           ) : (
             <button className="primary" onClick={onPractice}>
               {page.steps.some((s) => !s.reading)
-                ? "코드 실습 시작 →"
-                : "단원 읽기 →"}
+                ? "Exercise 시작 →"
+                : "Review 열기 →"}
             </button>
           )}
         </div>

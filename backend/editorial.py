@@ -31,8 +31,13 @@ def base_course():
 
     c = copy.deepcopy(published_course())
     c["concepts"] = json.loads((ROOT / "content/concepts.json").read_text())
+    page_path = ROOT / "content/page-concepts.json"
+    c["page_concepts"] = json.loads(page_path.read_text()) if page_path.exists() else {}
     path = ROOT / "content/resources.json"
     c["resources"] = json.loads(path.read_text())["resources"] if path.exists() else []
+    extra = ROOT / "content/supplemental-videos.json"
+    if extra.exists():
+        c["resources"].extend(json.loads(extra.read_text())["resources"])
     for p in c["pages"]:
         source = (
             {
@@ -85,6 +90,13 @@ def blocks(c):
         add("concept/" + str(i) + "/walkthrough", walkthrough, ["term"])
         for j, frame in enumerate(walkthrough.get("frames", [])):
             add("concept/" + str(i) + "/walkthrough/frame/" + str(j), frame, ["title", "text"])
+    for page_id, concept in c.get("page_concepts", {}).items():
+        prefix = "learn/" + page_id
+        add(prefix, concept, ["title", "idea", "analogy", "question", "explanation", "transfer"])
+        walkthrough = concept.get("walkthrough", {})
+        add(prefix + "/walkthrough", walkthrough, ["term", "intro"])
+        for j, frame in enumerate(walkthrough.get("frames", [])):
+            add(prefix + "/walkthrough/frame/" + str(j), frame, ["title", "text"])
     for resource in c["resources"]:
         add("resource/" + resource["id"], resource, ["title", "before", "after", "reading"])
     return out
@@ -252,6 +264,11 @@ def block(request: Request, id: str, db=Depends(database)):
     target = id.split("/")[0]
     if id.startswith("resource/"):
         target = "resource/" + id.split("/")[1] + "/1"
+    elif id.startswith("learn/"):
+        card = {"title": 1, "analogy": 1, "idea": 2, "question": 5, "explanation": 5, "transfer": 6}.get(id.split("/")[-1], 1)
+        if "/walkthrough/" in id:
+            card = 3
+        target = "concept/" + id.split("/")[1] + "/" + str(card)
     elif id.startswith("concept/"):
         page = next(p for p in base_course()["pages"] if p["diagram"] == int(id.split("/")[1]))
         card = {
