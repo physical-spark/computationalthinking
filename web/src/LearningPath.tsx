@@ -1,12 +1,12 @@
 import StoryScene from "./StoryScene";
+import CodeWalkthrough from "./CodeWalkthrough";
 import "./learning-story.css";
-import { Sources, ResourceLinks } from "./Resources";
+import { Sources, ResourceLinks, VideoStep } from "./Resources";
 import type { Access, Resource } from "./types";
 import type { Concept } from "./concepts";
 import { useEffect, useRef, useState } from "react";
 import type { Course, Page, Progress } from "./types";
 import { concepts } from "./concepts";
-import Diagram from "./Diagram";
 
 export function chapters(course: Course) {
   return Array.from(new Set(course.pages.map((p) => p.chapter))).map((ch) => ({
@@ -62,6 +62,11 @@ export function CourseSidebar({
         {chapters(course).map((ch) => (
           <section key={ch.id}>
             <h2>{ch.title}</h2>
+            {ch.pages[0].chapterTerm && (
+              <span className="sidebar-term">
+                {ch.pages[0].chapterTerm.split("·")[0].trim()}
+              </span>
+            )}
             <ol>
               {ch.pages.map((p) => {
                 const exercises = p.steps.filter((s) => !s.reading);
@@ -84,6 +89,11 @@ export function CourseSidebar({
                       }
                     >
                       <span>{p.title}</span>
+                      {p.story?.term && (
+                        <span className="sidebar-term">
+                          {p.story.term.split("·")[0].trim()}
+                        </span>
+                      )}
                       <small>
                         {exercises.length
                           ? `실습 ${passed} / ${exercises.length}`
@@ -102,6 +112,23 @@ export function CourseSidebar({
                             01 개념 먼저 배우기
                           </button>
                         </li>
+                        {(course.resources || [])
+                          .filter((r) => r.page_id === p.id)
+                          .map((r, ri) => (
+                            <li key={r.id}>
+                              <button
+                                onClick={() => {
+                                  location.hash = `concept/${p.id}/${7 + ri}`;
+                                  if (matchMedia("(max-width:900px)").matches)
+                                    onClose();
+                                }}
+                              >
+                                <span>
+                                  ▶ 영상 {ri + 1} · {r.title}
+                                </span>
+                              </button>
+                            </li>
+                          ))}
                         {p.steps.map((s, i) => (
                           <li key={s.id}>
                             <button
@@ -114,7 +141,13 @@ export function CourseSidebar({
                               }
                             >
                               <span>
-                                {String(i + 2).padStart(2, "0")}{" "}
+                                {String(
+                                  i +
+                                    2 +
+                                    (course.resources || []).filter(
+                                      (r) => r.page_id === p.id,
+                                    ).length,
+                                ).padStart(2, "0")}{" "}
                                 {access[s.id]?.unlocked === false ? "🔒 " : ""}
                                 {s.reading ? "단원 정리" : `실습 ${i + 1}`}
                               </span>
@@ -358,11 +391,15 @@ export function ConceptLesson({
     "코드 읽어보기",
     "먼저 맞혀보기",
     "직접 해보기",
+    ...resources.map((_, i) => `영상 ${i + 1}`),
   ];
   const readCard = () =>
     Math.max(
       0,
-      Math.min(5, Math.trunc(Number(location.hash.split("/")[2]) || 1) - 1),
+      Math.min(
+        titles.length - 1,
+        Math.trunc(Number(location.hash.split("/")[2]) || 1) - 1,
+      ),
     );
   const [card, setCard] = useState(readCard);
   const [choice, setChoice] = useState<number | null>(null);
@@ -423,6 +460,7 @@ export function ConceptLesson({
                 "컴퓨터가 할 일을 읽어 봐요",
                 concept.question,
                 "이번에는 내가 해볼 차례예요",
+                ...resources.map((r) => r.title),
               ][card]
             }
           </h2>
@@ -436,25 +474,23 @@ export function ConceptLesson({
           )}
           {card === 1 && (
             <>
-              <StoryScene index={page.diagram} compact />
+              <CodeWalkthrough concept={concept} index={page.diagram} compact />
               {page.story?.term && (
                 <p className="story-term">{page.story.term}</p>
               )}
               <p className="concept-lead">{concept.idea}</p>
-              {page.story?.bridge && <p>{page.story.bridge}</p>}
             </>
           )}
           {card === 2 && (
             <>
-              <Diagram index={page.diagram} concept={page.concept} />
+              <CodeWalkthrough concept={concept} index={page.diagram} />
               <p className="concept-lead">{concept.analogy}</p>
             </>
           )}
           {card === 3 && (
             <>
               <p>
-                그림에서 본 일을 다른 숫자나 글자로 해볼게요. 이 코드를 읽으면
-                어떤 일이 일어날까요?
+                그림에서 한 일을 코드로 적었어요. 어떤 순서로 읽을지 살펴봐요.
               </p>
               <pre className="concept-code">{concept.code}</pre>
               <p className="field-help">다음 장에서 결과를 골라 봐요.</p>
@@ -494,8 +530,16 @@ export function ConceptLesson({
           )}
           {card === 5 && (
             <>
+              {page.story?.bridge && (
+                <p className="field-help">{page.story.bridge}</p>
+              )}
               <p className="concept-lead">{concept.transfer}</p>
-              <ResourceLinks resources={resources} />
+              {resources.length > 0 && (
+                <p className="field-help">
+                  다음 장에서 관련 영상을 한 편씩 볼 수 있어요. 바로 실습을
+                  시작해도 괜찮아요.
+                </p>
+              )}
               <div className="concept-takeaway">
                 <strong>실습에서 해 볼 일</strong>
                 <ul>
@@ -513,7 +557,13 @@ export function ConceptLesson({
               </div>
             </>
           )}
-          <Sources concept />
+          {card >= 6 && resources[card - 6] && (
+            <VideoStep
+              key={resources[card - 6].id}
+              resource={resources[card - 6]}
+            />
+          )}
+          {card < 6 && <Sources concept />}
         </div>
       </section>
       <nav className="concept-pagination" aria-label="개념 페이지 이동">
@@ -523,17 +573,26 @@ export function ConceptLesson({
         <span>
           {card + 1} / {titles.length}
         </span>
-        {card < titles.length - 1 ? (
-          <button className="primary" onClick={() => move(card + 1)}>
-            다음 →
-          </button>
-        ) : (
-          <button className="primary" onClick={onPractice}>
-            {page.steps.some((s) => !s.reading)
-              ? "코드 실습 시작 →"
-              : "단원 읽기 →"}
-          </button>
-        )}
+        <div className="concept-pagination-actions">
+          {card === 5 && resources.length > 0 && (
+            <button onClick={onPractice}>
+              {page.steps.some((s) => !s.reading)
+                ? "코드 실습 시작 →"
+                : "단원 읽기 →"}
+            </button>
+          )}
+          {card < titles.length - 1 ? (
+            <button className="primary" onClick={() => move(card + 1)}>
+              다음 →
+            </button>
+          ) : (
+            <button className="primary" onClick={onPractice}>
+              {page.steps.some((s) => !s.reading)
+                ? "코드 실습 시작 →"
+                : "단원 읽기 →"}
+            </button>
+          )}
+        </div>
       </nav>
     </main>
   );

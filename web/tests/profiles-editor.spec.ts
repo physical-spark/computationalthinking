@@ -123,7 +123,7 @@ for (const width of [320, 390, 768, 1440])
       page.getByRole("heading", { name: "보기 전에 읽어요" }),
     ).toBeVisible();
     await page.getByRole("button", { name: "다음 →", exact: true }).click();
-    await expect(page.locator("iframe")).toHaveCount(0);
+    await expect(page.locator("iframe.lesson-video")).toHaveCount(1);
     await expect(
       page.getByRole("link", { name: "YouTube에서 원본 보기" }),
     ).toBeVisible();
@@ -269,7 +269,7 @@ test("short viewport preserves reading area and reachable pagination", async ({
     await next.focus();
     await page.keyboard.press("Enter");
     await expect(
-      page.getByRole("button", { name: "영상 불러오기", exact: true }),
+      page.locator("iframe.lesson-video"),
     ).toBeVisible();
     await page.screenshot({
       path: test.info().outputPath(`short-${size.width}.png`),

@@ -81,6 +81,10 @@ def blocks(c):
             concept,
             ["title", "idea", "analogy", "question", "explanation", "transfer"],
         )
+        walkthrough = concept.get("walkthrough", {})
+        add("concept/" + str(i) + "/walkthrough", walkthrough, ["term"])
+        for j, frame in enumerate(walkthrough.get("frames", [])):
+            add("concept/" + str(i) + "/walkthrough/frame/" + str(j), frame, ["title", "text"])
     for resource in c["resources"]:
         add("resource/" + resource["id"], resource, ["title", "before", "after", "reading"])
     return out
@@ -137,7 +141,7 @@ class SafeProse(HTMLParser):
 
 
 def rich_block(block_id):
-    return block_id.endswith("/text") or "/hint/" in block_id
+    return (block_id.endswith("/text") and "/walkthrough/" not in block_id) or "/hint/" in block_id
 
 
 def validate_prose(body, original, block_id=None):
@@ -230,9 +234,11 @@ def block(request: Request, id: str, db=Depends(database)):
             "explanation": 5,
             "transfer": 6,
         }.get(id.split("/")[-1], 1)
+        if "/walkthrough/" in id:
+            card = 3
         target = "concept/" + page["id"] + "/" + str(card)
     elif "/story/" in id:
-        card = 1 if id.endswith("/scene") else 2
+        card = 1 if id.endswith("/scene") else 6 if id.endswith("/bridge") else 2
         target = "concept/" + target + "/" + str(card)
     elif "." not in target:
         target = "concept/" + target + "/1"

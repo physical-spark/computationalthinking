@@ -1,0 +1,273 @@
+/* Keep the course controls reachable while giving each teaching page more room. */
+:root {
+  --lesson-chrome: 56px;
+}
+#root:has(.preview-banner) {
+  --lesson-chrome: 84px;
+}
+#root > .topbar {
+  min-height: 56px;
+  padding: 4px 20px;
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+#root > .topbar .brand {
+  font-size: 0.9375rem;
+  gap: 8px;
+  flex-shrink: 0;
+}
+#root > .topbar .brand small {
+  display: none;
+}
+#root > .topbar .brand-mark {
+  width: 30px;
+  height: 30px;
+  font-size: 1.25rem;
+  border-radius: 8px;
+}
+.header-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.header-progress b {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+#root > .topbar .header-actions {
+  gap: 4px;
+  width: auto;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+#root > .topbar .header-actions button,
+#root > .topbar .header-actions .button {
+  min-height: 44px;
+  padding: 6px 9px;
+  font-size: 0.8125rem;
+}
+#root > .preview-banner {
+  padding: 4px 20px;
+  font-size: 0.75rem;
+  line-height: 20px;
+}
+.learning-shell {
+  min-height: calc(100dvh - var(--lesson-chrome));
+}
+.lesson-pane,
+.coding-pane,
+.course-sidebar {
+  max-height: calc(100dvh - var(--lesson-chrome));
+}
+.coding-pane {
+  min-height: calc(100dvh - var(--lesson-chrome));
+}
+.course-workspace .course-content .learning-shell {
+  min-height: calc(100dvh - var(--lesson-chrome) - 48px);
+}
+.course-workspace .course-content .lesson-pane,
+.course-workspace .course-content .coding-pane {
+  max-height: calc(100dvh - var(--lesson-chrome) - 48px);
+}
+.course-workspace .course-content .coding-pane {
+  min-height: calc(100dvh - var(--lesson-chrome) - 48px);
+}
+.sidebar {
+  inset-block-start: var(--lesson-chrome);
+}
+.sidebar-term {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--accent);
+  margin: 2px 0 6px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.course-sidebar nav h2 {
+  margin-bottom: 2px;
+}
+.course-sidebar nav button .sidebar-term {
+  font-size: 0.6875rem;
+  margin: 2px 0;
+}
+.paged-concept.concept-page {
+  padding: 12px 24px 10px;
+}
+.paged-concept .concept-breadcrumb {
+  margin-bottom: 2px;
+  font-size: 0.75rem;
+}
+.paged-concept h1 {
+  font-size: clamp(1.125rem, 1.7vw, 1.4rem);
+  margin: 4px 0 8px;
+}
+.paged-concept .concept-page-header progress {
+  height: 4px;
+  margin-top: 6px;
+}
+.paged-concept .concept-stage {
+  padding: 12px 8px 12px 0;
+}
+.paged-concept .concept-card-content {
+  max-width: 700px;
+}
+.paged-concept .concept-card-content h2 {
+  font-size: clamp(1.1rem, 1.7vw, 1.35rem);
+  margin: 4px 0 12px;
+}
+.paged-concept .concept-card-content p {
+  line-height: 1.7;
+}
+.paged-concept .concept-lead {
+  font-size: 0.9375rem;
+  margin: 10px 0;
+}
+.paged-concept .story-scene {
+  margin: 8px auto 12px;
+}
+.paged-concept .story-scene__picture {
+  max-height: 190px;
+}
+.paged-concept .story-scene figcaption {
+  font-size: 0.9375rem;
+  margin-bottom: 6px;
+}
+.paged-concept .story-scene__caption {
+  font-size: 0.9375rem;
+  margin: 8px 0;
+}
+.paged-concept .source-note {
+  margin-top: 12px;
+  padding: 8px 0 0;
+  font-size: 0.6875rem;
+  line-height: 1.5;
+}
+.paged-concept .concept-pagination {
+  padding-top: 8px;
+}
+.paged-concept .concept-code {
+  padding: 16px;
+  font-size: 0.9375rem;
+  margin: 12px 0;
+}
+.paged-concept .concept-takeaway {
+  padding: 12px 16px;
+  margin-top: 12px;
+}
+.paged-concept .concept-options {
+  margin: 12px 0;
+}
+.paged-concept .concept-options label {
+  padding: 10px 12px;
+  margin: 6px 0;
+}
+.paged-concept .story-term {
+  margin: 8px 0;
+}
+.concept-pagination-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.video-step .lesson-video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16/9;
+  min-height: 180px;
+  max-height: 36dvh;
+  background: var(--surface-muted);
+  margin: 8px 0;
+}
+.video-step .video-note {
+  font-size: 0.8125rem;
+  margin: 8px 0;
+}
+.video-step .video-question {
+  font-size: 0.875rem;
+  margin: 10px 0;
+}
+.resource-links .resource-step {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.resource-step > span:first-child {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+}
+@media (max-width: 1100px) {
+  #root > .topbar .account-name,
+  #root > .topbar .account-button small {
+    display: none;
+  }
+  #root > .topbar .header-actions {
+    margin-inline-start: auto;
+  }
+}
+@media (max-width: 619px) {
+  :root {
+    --lesson-chrome: 104px;
+  }
+  #root:has(.preview-banner) {
+    --lesson-chrome: 132px;
+  }
+  #root > .topbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 4px 16px;
+    gap: 2px 8px;
+  }
+  #root > .topbar .header-actions {
+    grid-column: 1/-1;
+    width: 100%;
+    justify-content: space-between;
+    margin: 0;
+  }
+  #root > .topbar .header-actions button,
+  #root > .topbar .header-actions .button {
+    padding-inline: 6px;
+    font-size: 0.75rem;
+  }
+  .header-progress {
+    gap: 8px;
+    font-size: 0.6875rem;
+  }
+  .paged-concept.concept-page {
+    padding: 8px 16px;
+  }
+  #root > .preview-banner {
+    padding-inline: 16px;
+  }
+  .concept-pagination-actions {
+    gap: 4px;
+  }
+  .concept-pagination-actions button {
+    min-width: 70px;
+    font-size: 0.75rem;
+    padding-inline: 8px;
+  }
+}
+@media (min-width: 620px) and (max-width: 900px) {
+  #root > .topbar {
+    display: flex;
+    flex-wrap: nowrap;
+    padding-inline: 16px;
+  }
+  #root > .topbar .header-actions {
+    width: auto;
+  }
+}
+@media (max-height: 500px) {
+  .paged-concept .concept-progress {
+    display: none;
+  }
+  .paged-concept .concept-stage {
+    padding-top: 8px;
+  }
+}

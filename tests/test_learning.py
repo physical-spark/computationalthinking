@@ -329,11 +329,59 @@ def test_story_prose_can_be_edited_without_changing_assessment(administrator, ot
     payload = info.json()
     assert payload["preview_hash"] == "concept/IntroducingTheShell/1"
     original = other.get("/api/v1/course").json()["pages"][0]
-    edit = administrator.post("/api/v1/admin/content/drafts", json={"block_id": bid, "body": "사과를 하나씩 모아 봐요.", "base_hash": payload["base_hash"]})
+    edit = administrator.post(
+        "/api/v1/admin/content/drafts",
+        json={
+            "block_id": bid,
+            "body": "사과를 하나씩 모아 봐요.",
+            "base_hash": payload["base_hash"],
+        },
+    )
     assert edit.status_code == 200, edit.text
     rid = edit.json()["id"]
-    assert other.get("/api/v1/course").json()["pages"][0]["story"]["scene"] == original["story"]["scene"]
-    assert administrator.post("/api/v1/admin/content/" + rid + "/publish", json={}).status_code == 200
+    assert (
+        other.get("/api/v1/course").json()["pages"][0]["story"]["scene"]
+        == original["story"]["scene"]
+    )
+    assert (
+        administrator.post("/api/v1/admin/content/" + rid + "/publish", json={}).status_code == 200
+    )
     published = other.get("/api/v1/course").json()["pages"][0]
     assert published["story"]["scene"] == "사과를 하나씩 모아 봐요."
     assert published["steps"] == original["steps"]
+
+
+def test_walkthrough_edits_are_plain_prose_and_preserve_execution_values(administrator, other):
+    bid = "concept/0/walkthrough/frame/0/text"
+    info = administrator.get("/api/v1/admin/content/block", params={"id": bid}).json()
+    assert info["preview_hash"] == "concept/IntroducingTheShell/3"
+    assert info["rich_text"] is False
+    before = other.get("/api/v1/course").json()["concepts"][0]
+    payload = {
+        "block_id": bid,
+        "body": "<strong>사과를 세어요.</strong>",
+        "base_hash": info["base_hash"],
+    }
+    assert administrator.post("/api/v1/admin/content/drafts", json=payload).status_code == 422
+    payload["body"] = "네 묶음을 하나씩 살펴봐요."
+    edit = administrator.post("/api/v1/admin/content/drafts", json=payload)
+    assert edit.status_code == 200, edit.text
+    assert (
+        administrator.post(
+            "/api/v1/admin/content/" + edit.json()["id"] + "/publish", json={}
+        ).status_code
+        == 200
+    )
+    after = other.get("/api/v1/course").json()["concepts"][0]
+    assert after["walkthrough"]["frames"][0]["text"] == payload["body"]
+    for a, b in zip(before["walkthrough"]["frames"], after["walkthrough"]["frames"]):
+        for key in ["nodes", "line", "result"]:
+            assert a[key] == b[key]
+    for key in ["code", "choices", "answer"]:
+        assert before[key] == after[key]
+    assert (
+        administrator.get(
+            "/api/v1/admin/content/block", params={"id": "concept/0/walkthrough/frame/0/result"}
+        ).status_code
+        == 404
+    )

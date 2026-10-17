@@ -33,6 +33,13 @@ with SessionLocal.begin() as db:
 }
 export const test = base.extend({
   context: async ({ context, baseURL }, use) => {
+    // Verify our embed routes/attributes without depending on third-party playback in CI.
+    await context.route("https://www.youtube-nocookie.com/embed/**", (route) =>
+      route.fulfill({
+        contentType: "text/html",
+        body: "<!doctype html><html lang='ko'><title>영상 플레이어 검증</title><body>외부 재생은 운영 브라우저에서 별도로 확인합니다.</body></html>",
+      }),
+    );
     const account = testIdentity();
     await context.addCookies([
       { name: "ct-session", value: account.token, url: baseURL! },

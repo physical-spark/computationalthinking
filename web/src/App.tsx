@@ -1,4 +1,5 @@
 import Profile, { Avatar } from "./Profile";
+import "./lesson-layout.css";
 import ResourceLesson, { Sources, ResourceLinks } from "./Resources";
 import type { Access } from "./types";
 import { CourseSidebar, Syllabus, ConceptLesson } from "./LearningPath";
@@ -231,6 +232,7 @@ export default function App() {
     setCurrent(
       conceptPage?.steps[0].id ||
         target?.id ||
+        c.pages.find((p) => p.id === resource?.page_id)?.steps[0].id ||
         fallback ||
         c.pages[0].steps[0].id,
     );
@@ -880,6 +882,15 @@ export default function App() {
             컴퓨팅 사고력<small>그림으로 보고, 코드로 해봐요</small>
           </span>
         </a>
+        <div className="header-progress" aria-label="학습 진도">
+          <span>
+            읽음 <b>{counts.viewed}</b>
+          </span>
+          <span>
+            통과 <b>{counts.passed}</b>
+            <span className="progress-total"> / 265</span>
+          </span>
+        </div>
         <nav className="header-actions" aria-label="학습 메뉴">
           <button
             id="sidebar-toggle"
@@ -908,9 +919,11 @@ export default function App() {
           </button>
           <button
             className="account-button"
+            aria-label={`${user.nickname} · ${user.admin ? "관리자" : user.group_name || "로비"} 계정`}
             onClick={() => account.current?.showModal()}
           >
-            <Avatar id={user.avatar_id} url={user.avatar_url} /> {user.nickname}
+            <Avatar id={user.avatar_id} url={user.avatar_url} />{" "}
+            <span className="account-name">{user.nickname}</span>
             <small>{user.admin ? "관리자" : user.group_name || "로비"}</small>
           </button>
           {user.admin && (
@@ -920,23 +933,6 @@ export default function App() {
           )}
         </nav>
       </header>
-      <div className="status-strip">
-        <span>
-          읽은 단계 <b>{counts.viewed}</b>
-        </span>
-        <span>
-          통과한 과제 <b>{counts.passed}</b> / 265
-        </span>
-        <span>
-          {view === "syllabus"
-            ? "전체 학습과정"
-            : view === "concept"
-              ? "개념 먼저 배우기"
-              : mobile
-                ? "모바일 읽기 모드"
-                : "직접 실행하는 학습"}
-        </span>
-      </div>
       {user.admin && (
         <div className="preview-banner" role="status">
           {readOnly

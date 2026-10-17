@@ -1,8 +1,8 @@
 [
   {
     "title": "사과는 모두 몇 개일까요?",
-    "idea": "이번에는 사과 두 개에, 사과 세 개씩 든 봉지 네 개를 더해요. 봉지 속 사과를 먼저 세고, 밖에 있는 두 개를 더하면 돼요. 컴퓨터도 정해진 순서대로 계산해요.",
-    "analogy": "사과 한 개와 두 개를 모으면 세 개가 돼요. 코드 창에 1 + 2를 쓰고 실행 버튼을 누르면 같은 답을 볼 수 있어요.",
+    "idea": "사과를 세 개씩 네 묶음으로 놓아요. 따로 놓은 사과 두 개도 있어요. 묶음 속 사과를 먼저 센 뒤 두 개를 더해요.",
+    "analogy": "세 개씩 네 묶음은 3 * 4로 써요. 따로 놓은 두 개까지 더하면 2 + 3 * 4예요.",
     "code": "2 + 3 * 4",
     "question": "어떤 수가 나올까요?",
     "choices": [
@@ -11,13 +11,91 @@
       "234"
     ],
     "answer": 1,
-    "explanation": "곱셈부터 해요. 3 * 4는 12예요. 여기에 2를 더하면 14가 돼요. (2 + 3) * 4처럼 괄호를 쓰면 답은 20이에요.",
-    "transfer": "답이 예상과 다르면 식과 계산 순서를 하나씩 살펴봐요. 어디에서 생각과 달라졌는지 찾는 연습이에요."
+    "explanation": "곱셈을 먼저 해요. 세 개씩 네 묶음은 12개예요. 따로 놓은 두 개를 더하면 모두 14개예요.",
+    "transfer": "답이 예상과 다르면 식과 계산 순서를 하나씩 살펴봐요. 어디에서 생각과 달라졌는지 찾는 연습이에요.",
+    "walkthrough": {
+      "term": "계산식과 연산 순서",
+      "intro": "사과를 세 개씩 네 묶음으로 놓아요. 따로 놓은 사과 두 개도 있어요.",
+      "frames": [
+        {
+          "title": "사과를 놓아요",
+          "text": "한 묶음에 세 개예요. 같은 묶음이 네 개 있어요.",
+          "line": null,
+          "nodes": [
+            {
+              "label": "첫째 묶음",
+              "value": "🍎🍎🍎"
+            },
+            {
+              "label": "둘째 묶음",
+              "value": "🍎🍎🍎"
+            },
+            {
+              "label": "셋째 묶음",
+              "value": "🍎🍎🍎"
+            },
+            {
+              "label": "넷째 묶음",
+              "value": "🍎🍎🍎"
+            },
+            {
+              "label": "따로 놓은 사과",
+              "value": "🍎🍎"
+            }
+          ],
+          "result": "세 개씩 네 묶음 + 따로 두 개"
+        },
+        {
+          "title": "묶음부터 세어요",
+          "text": "곱셈을 먼저 해요. 세 개씩 네 묶음은 열두 개예요.",
+          "line": 1,
+          "nodes": [
+            {
+              "label": "한 묶음",
+              "value": "3"
+            },
+            {
+              "label": "묶음 수",
+              "value": "4"
+            },
+            {
+              "label": "곱셈 결과",
+              "value": "12"
+            },
+            {
+              "label": "따로 놓은 사과",
+              "value": "2"
+            }
+          ],
+          "result": "3 * 4 = 12"
+        },
+        {
+          "title": "두 개를 더해요",
+          "text": "묶음 속 열두 개에 따로 놓은 두 개를 더해요.",
+          "line": 1,
+          "nodes": [
+            {
+              "label": "묶음 속 사과",
+              "value": "12"
+            },
+            {
+              "label": "따로 놓은 사과",
+              "value": "2"
+            },
+            {
+              "label": "모두",
+              "value": "14"
+            }
+          ],
+          "result": "2 + 12 = 14"
+        }
+      ]
+    }
   },
   {
     "title": "글자 조각을 이어 볼까요?",
-    "idea": "종이에 적은 2와 3을 나란히 놓으면 23이 돼요. 따옴표 안에 쓴 글자도 이렇게 이을 수 있어요. 글자를 담은 값을 String(문자열)이라고 해요.",
-    "analogy": "버스 번호 23은 버스 두 대와 세 대를 더하라는 뜻이 아니에요. 숫자 모양이어도 이름이나 번호를 적은 글자일 수 있어요.",
+    "idea": "글자 카드 두 장에 2와 3을 적었어요. 두 카드를 나란히 놓으면 23이 돼요. 따옴표 안의 글자를 문자열이라고 해요.",
+    "analogy": "카드의 글자를 이어 붙여요. 숫자를 더하는 일이 아니에요. 2라고 적힌 카드와 3이라고 적힌 카드로 23을 만들어요.",
     "code": "\"2\" + \"3\"",
     "question": "이 글자 조각을 이으면 무엇이 될까요?",
     "choices": [
@@ -27,12 +105,62 @@
     ],
     "answer": 1,
     "explanation": "문자열에 +를 쓰면 글자가 이어져요. \"2\"와 \"3\"을 이으면 \"23\"이에요. 빈칸을 넣지 않았으니 사이도 붙어 있어요.",
-    "transfer": "계산할 숫자인지, 읽을 글자인지 먼저 살펴봐요. 같은 모양을 보고도 다르게 다뤄야 할 때를 알아차릴 수 있어요."
+    "transfer": "계산할 숫자인지, 읽을 글자인지 먼저 살펴봐요. 같은 모양을 보고도 다르게 다뤄야 할 때를 알아차릴 수 있어요.",
+    "walkthrough": {
+      "term": "문자열과 이어 붙이기",
+      "intro": "글자 카드에 2와 3을 써요. 두 카드를 옆으로 붙여 볼까요?",
+      "frames": [
+        {
+          "title": "글자 카드 두 장",
+          "text": "따옴표 안의 2와 3은 계산할 숫자가 아니라 글자예요.",
+          "line": null,
+          "nodes": [
+            {
+              "label": "왼쪽 글자",
+              "value": "\"2\""
+            },
+            {
+              "label": "오른쪽 글자",
+              "value": "\"3\""
+            }
+          ],
+          "result": "글자 \"2\"와 글자 \"3\""
+        },
+        {
+          "title": "두 글자를 이어요",
+          "text": "문자열 사이의 +는 글자를 순서대로 이어요.",
+          "line": 1,
+          "nodes": [
+            {
+              "label": "앞에 놓을 글자",
+              "value": "2"
+            },
+            {
+              "label": "뒤에 놓을 글자",
+              "value": "3"
+            }
+          ],
+          "result": "\"2\" + \"3\" → \"23\""
+        },
+        {
+          "title": "새 글자를 읽어요",
+          "text": "사이에 빈칸을 넣지 않았어요. 두 글자가 붙어서 23이 돼요.",
+          "line": 1,
+          "nodes": [
+            {
+              "label": "새 문자열",
+              "value": "\"23\""
+            }
+          ],
+          "result": "\"23\""
+        }
+      ]
+    }
   },
   {
     "title": "값에 이름표를 붙여요",
     "idea": "게임 점수가 3점이에요. 이 값에 score라는 이름표를 붙여 봐요. 이렇게 값을 가리키는 이름을 Variable(변수)이라고 해요.",
-    "analogy": "점수판에 새 점수를 적듯 이름이 가리키는 값을 바꿀 수 있어요. 이름표 자체가 지난 점수를 모두 기억해 주지는 않아요.",
+    "analogy": "점수가 오르면 score 이름이 새 점수를 가리켜요. 3을 가리키다가 5를 가리키게 바꿀 수 있어요.",
     "code": "score = 3\nscore = score + 2\nprint(score)",
     "question": "마지막 점수는 몇 점일까요?",
     "choices": [
@@ -42,11 +170,65 @@
     ],
     "answer": 1,
     "explanation": "score는 처음에 3이에요. 다음 줄에서 3 + 2를 계산해요. 그 결과인 5에 score 이름을 다시 붙여요.",
-    "transfer": "코드를 한 줄 읽을 때마다 지금 값을 적어 봐요. 값이 언제 바뀌었는지 찾는 데 도움이 돼요."
+    "transfer": "코드를 한 줄 읽을 때마다 지금 값을 적어 봐요. 값이 언제 바뀌었는지 찾는 데 도움이 돼요.",
+    "walkthrough": {
+      "term": "변수와 대입",
+      "intro": "점수 3에 score라는 이름을 붙여요. 점수가 오르면 같은 이름으로 새 점수를 찾아요.",
+      "frames": [
+        {
+          "title": "처음 점수에 이름 붙이기",
+          "text": "score가 3을 가리켜요.",
+          "line": 1,
+          "nodes": [
+            {
+              "label": "score",
+              "value": "3"
+            }
+          ],
+          "result": "score = 3"
+        },
+        {
+          "title": "두 점을 더하기",
+          "text": "지금 score 값 3에 2를 더해요. 결과 5를 score에 다시 넣어요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "원래 점수",
+              "value": "3"
+            },
+            {
+              "label": "더할 점수",
+              "value": "2"
+            },
+            {
+              "label": "새 score",
+              "value": "5"
+            }
+          ],
+          "result": "score = 5"
+        },
+        {
+          "title": "지금 점수 보여 주기",
+          "text": "print가 지금 score 값 5를 화면에 보여 줘요.",
+          "line": 3,
+          "nodes": [
+            {
+              "label": "score",
+              "value": "5"
+            },
+            {
+              "label": "화면",
+              "value": "5"
+            }
+          ],
+          "result": "5"
+        }
+      ]
+    }
   },
   {
     "title": "같은 일을 하나씩 되풀이해요",
-    "idea": "출석을 부를 때는 이름을 하나 읽고, 다음 이름을 읽어요. Python의 for도 항목을 하나씩 꺼내 같은 일을 해요. 이것을 Loop(반복)라고 해요.",
+    "idea": "A를 읽고 B를 읽어요. 글자마다 같은 일을 해요. for 반복문은 이렇게 항목을 하나씩 꺼내요.",
     "analogy": "A를 읽고 B를 읽은 뒤에 “다 읽었어”라고 한 번 말해요. 매번 할 일과 마지막에 한 번 할 일을 따로 두는 거예요.",
     "code": "for letter in \"AB\":\n    print(letter)\nprint(\"done\")",
     "question": "done은 몇 번 나올까요?",
@@ -57,12 +239,66 @@
     ],
     "answer": 0,
     "explanation": "들여쓴 print(letter)는 A와 B마다 실행돼요. print(\"done\")은 반복 밖에 있어요. 반복이 끝난 뒤 한 번 실행돼요.",
-    "transfer": "여러 번 할 일에서 똑같은 행동을 찾아봐요. 길게 되풀이해 쓰지 않고 하나의 규칙으로 말할 수 있어요."
+    "transfer": "여러 번 할 일에서 똑같은 행동을 찾아봐요. 길게 되풀이해 쓰지 않고 하나의 규칙으로 말할 수 있어요.",
+    "walkthrough": {
+      "term": "for 반복문과 들여쓰기",
+      "intro": "A와 B를 하나씩 읽어요. 두 글자를 다 읽으면 done을 한 번 말해요.",
+      "frames": [
+        {
+          "title": "첫 글자를 읽어요",
+          "text": "letter가 A를 가리켜요. 들여쓴 줄에서 A를 보여 줘요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "letter",
+              "value": "\"A\""
+            },
+            {
+              "label": "첫 출력",
+              "value": "A"
+            }
+          ],
+          "result": "A"
+        },
+        {
+          "title": "다음 글자를 읽어요",
+          "text": "letter가 B를 가리켜요. 같은 줄에서 B를 보여 줘요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "letter",
+              "value": "\"B\""
+            },
+            {
+              "label": "다음 출력",
+              "value": "B"
+            }
+          ],
+          "result": "A\nB"
+        },
+        {
+          "title": "반복이 끝났어요",
+          "text": "더 읽을 글자가 없어요. 반복 밖의 줄에서 done을 한 번 보여 줘요.",
+          "line": 3,
+          "nodes": [
+            {
+              "label": "반복 횟수",
+              "value": "2"
+            },
+            {
+              "label": "done 출력 횟수",
+              "value": "1"
+            }
+          ],
+          "result": "A\nB\ndone"
+        }
+      ]
+    }
   },
   {
     "title": "이럴 때만 해요",
     "idea": "추운 날에는 길이 얼 수 있어요. 기온이 0도보다 낮을 때만 안내를 띄워 볼까요? if는 이런 조건을 확인해요.",
-    "analogy": "“0도보다 낮으면 알려 줘”라고 약속했어요. 그렇다면 딱 0도일 때도 알려야 할까요? 약속의 말을 꼼꼼히 읽어 봐요.",
+    "analogy": "지금 기온은 딱 0도예요. “0도보다 낮으면 알려 줘”라는 조건에 맞는지 살펴봐요.",
     "code": "temperature = 0\nif temperature < 0:\n    print(\"ice\")",
     "question": "ice가 화면에 나올까요?",
     "choices": [
@@ -71,12 +307,62 @@
     ],
     "answer": 1,
     "explanation": "0은 0보다 작지 않아서 ice가 나오지 않아요. <= 0으로 바꾸면 0도 포함해요.",
-    "transfer": "딱 기준에 걸친 경우도 넣어 봐요. 규칙이 빠뜨린 경우를 찾을 수 있어요."
+    "transfer": "딱 기준에 걸친 경우도 넣어 봐요. 규칙이 빠뜨린 경우를 찾을 수 있어요.",
+    "walkthrough": {
+      "term": "if 조건문과 비교",
+      "intro": "기온이 0도보다 낮을 때만 ice를 보여 주기로 해요. 지금은 0도예요.",
+      "frames": [
+        {
+          "title": "지금 기온을 적어요",
+          "text": "temperature에 0을 넣어요.",
+          "line": 1,
+          "nodes": [
+            {
+              "label": "temperature",
+              "value": "0"
+            }
+          ],
+          "result": "기온 0도"
+        },
+        {
+          "title": "0도보다 낮나요?",
+          "text": "0은 0보다 작지 않아요. 조건의 답은 False예요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "지금 기온",
+              "value": "0"
+            },
+            {
+              "label": "비교할 기온",
+              "value": "0"
+            },
+            {
+              "label": "0 < 0",
+              "value": "False"
+            }
+          ],
+          "result": "조건이 맞지 않아요."
+        },
+        {
+          "title": "안쪽 줄을 건너뛰어요",
+          "text": "조건이 맞지 않아서 print 줄을 실행하지 않아요.",
+          "line": null,
+          "nodes": [
+            {
+              "label": "ice 출력 횟수",
+              "value": "0"
+            }
+          ],
+          "result": "아무것도 출력하지 않아요."
+        }
+      ]
+    }
   },
   {
     "title": "물건을 한 줄로 놓아요",
     "idea": "색연필을 빨강, 파랑, 초록 순서로 놓았어요. Python에서는 List(리스트)에 여러 값을 순서대로 넣을 수 있어요.",
-    "analogy": "각 자리 아래에 0, 1, 2라는 번호표를 붙여 봐요. Python의 첫 자리 번호는 0이에요. 자리 번호와 그 자리에 든 색은 달라요.",
+    "analogy": "빨강 아래에는 0, 파랑 아래에는 1, 초록 아래에는 2를 붙여요. Python의 첫 자리 번호는 0이에요.",
     "code": "items = [\"red\", \"blue\", \"green\"]\nprint(items[1])",
     "question": "1번 자리에 있는 색은 무엇일까요?",
     "choices": [
@@ -86,12 +372,66 @@
     ],
     "answer": 1,
     "explanation": "첫 색 red의 자리 번호는 0이에요. 다음 색 blue는 1번 자리에 있어요. len(items)는 자리 번호가 아니라 색의 개수인 3을 알려 줘요.",
-    "transfer": "물건과 자리 번호를 따로 살펴봐요. 한 칸을 잘못 짚어서 생긴 실수를 찾을 수 있어요."
+    "transfer": "물건과 자리 번호를 따로 살펴봐요. 한 칸을 잘못 짚어서 생긴 실수를 찾을 수 있어요.",
+    "walkthrough": {
+      "term": "리스트와 인덱스",
+      "intro": "빨강, 파랑, 초록을 차례로 놓아요. 각 자리의 번호는 0부터 시작해요.",
+      "frames": [
+        {
+          "title": "색을 순서대로 놓아요",
+          "text": "items에 세 색을 담아요. 첫 자리 번호는 0이에요.",
+          "line": 1,
+          "nodes": [
+            {
+              "label": "0번 자리",
+              "value": "red"
+            },
+            {
+              "label": "1번 자리",
+              "value": "blue"
+            },
+            {
+              "label": "2번 자리",
+              "value": "green"
+            }
+          ],
+          "result": "items에 세 값이 있어요."
+        },
+        {
+          "title": "1번 자리를 골라요",
+          "text": "items[1]은 둘째 자리에 있는 blue를 찾아요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "고른 자리 번호",
+              "value": "1"
+            },
+            {
+              "label": "그 자리의 값",
+              "value": "blue"
+            }
+          ],
+          "result": "items[1] → \"blue\""
+        },
+        {
+          "title": "고른 색을 보여 줘요",
+          "text": "print가 찾은 값을 화면에 보여 줘요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "화면",
+              "value": "blue"
+            }
+          ],
+          "result": "blue"
+        }
+      ]
+    }
   },
   {
     "title": "안내판의 숫자를 바꿔요",
     "idea": "가게에 물건이 3개 남았어요. 안내판에 숫자만 적지 말고 문장으로 보여 줄까요? f 문자열을 쓰면 문장 사이에 값을 넣을 수 있어요.",
-    "analogy": "안내판의 “개 남음”은 그대로 두고 숫자만 갈아 끼워요. 물건이 줄어도 문장을 처음부터 다시 만들 필요가 없어요.",
+    "analogy": "안내판의 items라는 글은 그대로 둬요. {count} 자리만 현재 개수로 바꿔 넣어요. items는 여기서 물건이라는 뜻이에요.",
     "code": "count = 3\nprint(f\"{count} items\")",
     "question": "화면에 어떤 문장이 나올까요?",
     "choices": [
@@ -101,11 +441,61 @@
     ],
     "answer": 1,
     "explanation": "f 문자열의 {count} 자리에 count 값이 들어가요. count가 3이므로 3 items가 나와요.",
-    "transfer": "늘 같은 글과 달라지는 값을 찾아봐요. 하나의 문장 틀을 여러 값에 써 볼 수 있어요."
+    "transfer": "늘 같은 글과 달라지는 값을 찾아봐요. 하나의 문장 틀을 여러 값에 써 볼 수 있어요.",
+    "walkthrough": {
+      "term": "f 문자열",
+      "intro": "물건이 3개 남았어요. 숫자 3을 안내 문장 안에 넣어 봐요.",
+      "frames": [
+        {
+          "title": "개수를 적어요",
+          "text": "count에 3을 넣어요.",
+          "line": 1,
+          "nodes": [
+            {
+              "label": "count",
+              "value": "3"
+            }
+          ],
+          "result": "남은 개수는 3이에요."
+        },
+        {
+          "title": "빈자리에 값을 넣어요",
+          "text": "f 문자열의 {count} 자리에 지금 값 3을 넣어요. items라는 글은 그대로예요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "값을 넣을 자리",
+              "value": "{count}"
+            },
+            {
+              "label": "넣을 값",
+              "value": "3"
+            },
+            {
+              "label": "그대로 둘 글",
+              "value": " items"
+            }
+          ],
+          "result": "3 items"
+        },
+        {
+          "title": "안내를 보여 줘요",
+          "text": "print가 완성한 문장을 화면에 보여 줘요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "화면",
+              "value": "3 items"
+            }
+          ],
+          "result": "3 items"
+        }
+      ]
+    }
   },
   {
     "title": "선반마다 컵을 놓아요",
-    "idea": "선반이 두 칸 있어요. 한 칸에 컵 세 개를 놓고, 다음 칸에도 세 개를 놓아요. 반복 안에 반복을 넣으면 이렇게 할 수 있어요.",
+    "idea": "선반 두 칸을 골라 볼 거예요. 각 선반에는 컵 세 개를 놓을 자리가 있어요. 반복문 안에 반복문을 넣어 모든 자리를 살펴봐요.",
     "analogy": "바깥 반복은 선반 한 칸을 골라요. 안쪽 반복은 그 선반에 컵을 하나씩 놓아요. 다음 선반으로 가면 컵 놓기를 처음부터 해요.",
     "code": "for row in range(2):\n    for column in range(3):\n        print(row, column)",
     "question": "두 반복을 모두 마치면 print를 몇 번 했을까요?",
@@ -116,12 +506,94 @@
     ],
     "answer": 1,
     "explanation": "선반 두 칸마다 세 번씩 실행해요. 2 × 3은 6이에요. row가 바뀔 때 column은 다시 0부터 시작해요.",
-    "transfer": "전체를 한꺼번에 세기 어려우면 한 묶음부터 세어 봐요. 표의 모든 칸을 빠뜨리지 않고 살피는 데도 써요."
+    "transfer": "전체를 한꺼번에 세기 어려우면 한 묶음부터 세어 봐요. 표의 모든 칸을 빠뜨리지 않고 살피는 데도 써요.",
+    "walkthrough": {
+      "term": "중첩 반복문",
+      "intro": "선반 두 칸에 컵을 세 개씩 놓아요. 한 선반을 고른 뒤 세 자리를 차례로 살펴봐요.",
+      "frames": [
+        {
+          "title": "첫 선반을 골라요",
+          "text": "바깥 반복에서 row는 0이에요. 이제 안쪽 반복을 시작해요.",
+          "line": 1,
+          "nodes": [
+            {
+              "label": "row",
+              "value": "0"
+            },
+            {
+              "label": "column 순서",
+              "value": "0, 1, 2"
+            }
+          ],
+          "result": "첫 선반에서 세 자리를 살펴봐요."
+        },
+        {
+          "title": "첫 자리를 보여 줘요",
+          "text": "안쪽 반복에서 column이 0이에요. row와 column을 함께 보여 줘요.",
+          "line": 3,
+          "nodes": [
+            {
+              "label": "row",
+              "value": "0"
+            },
+            {
+              "label": "column",
+              "value": "0"
+            },
+            {
+              "label": "출력 횟수",
+              "value": "1"
+            }
+          ],
+          "result": "0 0"
+        },
+        {
+          "title": "첫 선반을 마쳐요",
+          "text": "column이 1, 2로 바뀌어요. 같은 print 줄을 두 번 더 실행해요.",
+          "line": 3,
+          "nodes": [
+            {
+              "label": "row",
+              "value": "0"
+            },
+            {
+              "label": "column 순서",
+              "value": "1, 2"
+            },
+            {
+              "label": "출력 횟수",
+              "value": "3"
+            }
+          ],
+          "result": "0 0\n0 1\n0 2"
+        },
+        {
+          "title": "다음 선반도 살펴봐요",
+          "text": "row가 1이 돼요. column은 다시 0, 1, 2로 돌아요. 모두 여섯 번 출력해요.",
+          "line": 3,
+          "nodes": [
+            {
+              "label": "row",
+              "value": "1"
+            },
+            {
+              "label": "column 순서",
+              "value": "0, 1, 2"
+            },
+            {
+              "label": "전체 출력 횟수",
+              "value": "6"
+            }
+          ],
+          "result": "0 0\n0 1\n0 2\n1 0\n1 1\n1 2"
+        }
+      ]
+    }
   },
   {
     "title": "자주 할 일에 이름을 붙여요",
-    "idea": "숫자를 받아 두 배로 만드는 작은 도우미를 만들어 봐요. 이처럼 할 일을 묶고 이름을 붙인 코드를 Function(함수)이라고 해요.",
-    "analogy": "요리법을 적어 두면 재료를 바꿔 같은 순서로 요리할 수 있어요. 함수도 값을 받아 약속한 일을 해요. return은 만든 결과를 부른 곳에 돌려줘요.",
+    "idea": "숫자에 2를 곱하는 double 함수를 만들어요. 4를 건네면 8을 돌려줘요. 그 뒤에 1을 더해요.",
+    "analogy": "double은 받은 수를 두 배로 만드는 일이에요. 이름을 불러 값을 건네면 정한 계산을 해요. return이 계산한 값을 돌려줘요.",
     "code": "def double(number):\n    return number * 2\n\nprint(double(4) + 1)",
     "question": "마지막에 어떤 수가 나올까요?",
     "choices": [
@@ -131,12 +603,86 @@
     ],
     "answer": 1,
     "explanation": "double(4)는 4의 두 배인 8을 돌려줘요. 그 값에 1을 더해서 9가 나와요. print는 화면에 보여 주고, return은 값을 돌려줘요.",
-    "transfer": "큰 일을 작은 할 일로 나눠 봐요. 각각 잘되는지 확인한 뒤 이어 붙이면 문제를 찾기 쉬워요."
+    "transfer": "큰 일을 작은 할 일로 나눠 봐요. 각각 잘되는지 확인한 뒤 이어 붙이면 문제를 찾기 쉬워요.",
+    "walkthrough": {
+      "term": "함수 호출과 반환",
+      "intro": "숫자를 두 배로 만드는 double 함수를 만들어요. 돌려받은 값에 1을 더해요.",
+      "frames": [
+        {
+          "title": "할 일에 이름 붙이기",
+          "text": "double은 받은 number에 2를 곱하도록 정해요. 아직 계산하지는 않아요.",
+          "line": 1,
+          "nodes": [
+            {
+              "label": "함수 이름",
+              "value": "double"
+            },
+            {
+              "label": "받을 값의 이름",
+              "value": "number"
+            },
+            {
+              "label": "정한 계산",
+              "value": "number * 2"
+            }
+          ],
+          "result": "double 함수를 만들었어요."
+        },
+        {
+          "title": "4를 건네요",
+          "text": "double(4)를 부르면 함수 안의 number가 4예요.",
+          "line": 4,
+          "nodes": [
+            {
+              "label": "number",
+              "value": "4"
+            }
+          ],
+          "result": "함수 안으로 들어가요."
+        },
+        {
+          "title": "8을 돌려줘요",
+          "text": "return이 4 * 2를 계산해요. 부른 곳으로 8을 돌려줘요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "number",
+              "value": "4"
+            },
+            {
+              "label": "두 배",
+              "value": "8"
+            }
+          ],
+          "result": "double(4) → 8"
+        },
+        {
+          "title": "1을 더해서 보여 줘요",
+          "text": "돌려받은 8에 1을 더해요. print가 9를 보여 줘요.",
+          "line": 4,
+          "nodes": [
+            {
+              "label": "돌려받은 값",
+              "value": "8"
+            },
+            {
+              "label": "더할 값",
+              "value": "1"
+            },
+            {
+              "label": "화면",
+              "value": "9"
+            }
+          ],
+          "result": "9"
+        }
+      ]
+    }
   },
   {
     "title": "두 가지 약속을 함께 살펴봐요",
     "idea": "놀이공원에 표는 있지만 문이 닫혀 있어요. 들어갈 수 있을까요? and는 두 조건이 모두 맞는지 확인해요.",
-    "analogy": "“표도 있고 문도 열려야 해”는 and예요. “표나 초대장 중 하나가 있으면 돼”는 or예요. not은 맞다와 아니다를 뒤집어요.",
+    "analogy": "표가 있는지와 문이 열렸는지를 따로 확인해요. and는 두 조건이 모두 맞아야 True예요.",
     "code": "has_ticket = True\nopen_gate = False\nprint(has_ticket and open_gate)",
     "question": "두 조건을 and로 묶으면 어떤 값일까요?",
     "choices": [
@@ -145,12 +691,66 @@
     ],
     "answer": 1,
     "explanation": "표는 있지만 문이 닫혀 있어요. 두 조건이 모두 맞지는 않으므로 False예요.",
-    "transfer": "두 조건이 모두 맞을 때, 하나만 맞을 때, 둘 다 아닐 때를 떠올려 봐요. 빠진 경우를 찾을 수 있어요."
+    "transfer": "두 조건이 모두 맞을 때, 하나만 맞을 때, 둘 다 아닐 때를 떠올려 봐요. 빠진 경우를 찾을 수 있어요.",
+    "walkthrough": {
+      "term": "논리 연산자 and",
+      "intro": "표도 있고 문도 열려야 들어갈 수 있어요. 지금은 표는 있지만 문이 닫혀 있어요.",
+      "frames": [
+        {
+          "title": "표가 있는지 적어요",
+          "text": "has_ticket에 True를 넣어요. 표가 있다는 뜻이에요.",
+          "line": 1,
+          "nodes": [
+            {
+              "label": "has_ticket",
+              "value": "True"
+            }
+          ],
+          "result": "표가 있어요."
+        },
+        {
+          "title": "문이 열렸는지 적어요",
+          "text": "open_gate에 False를 넣어요. 문이 닫혔다는 뜻이에요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "has_ticket",
+              "value": "True"
+            },
+            {
+              "label": "open_gate",
+              "value": "False"
+            }
+          ],
+          "result": "문은 닫혀 있어요."
+        },
+        {
+          "title": "두 조건을 함께 봐요",
+          "text": "and는 두 조건이 모두 맞아야 True예요. 하나가 맞지 않아서 False를 출력해요.",
+          "line": 3,
+          "nodes": [
+            {
+              "label": "표가 있나요?",
+              "value": "True"
+            },
+            {
+              "label": "문이 열렸나요?",
+              "value": "False"
+            },
+            {
+              "label": "화면",
+              "value": "False"
+            }
+          ],
+          "result": "False"
+        }
+      ]
+    }
   },
   {
     "title": "게임판 한 칸을 골라요",
     "idea": "빈 게임판에서 한 칸을 골라 X를 놓아 볼까요? 게임을 만들려면 판의 모습과 바꿀 자리를 따로 알아야 해요.",
-    "analogy": "먼저 몇 번째 줄인지 고르고, 그 줄에서 몇 번째 칸인지 골라요. 칸이 비었는지와 누구 차례인지도 따로 확인해요.",
+    "analogy": "먼저 첫째 줄을 골라요. 그 줄의 둘째 칸을 골라 X로 바꿔요. 줄 번호와 칸 번호는 모두 0부터 시작해요.",
     "code": "board = [[\"\", \"\"], [\"\", \"\"]]\nboard[0][1] = \"X\"",
     "question": "X는 어느 칸에 놓일까요?",
     "choices": [
@@ -159,12 +759,82 @@
     ],
     "answer": 0,
     "explanation": "board[0]은 첫째 줄이에요. 그 줄의 [1]은 둘째 칸이에요. 첫째 줄 둘째 칸에 X가 놓여요.",
-    "transfer": "지금 모습, 바꿀 자리, 끝낼 때를 하나씩 정해 봐요. 여러 규칙이 있는 놀이도 작은 할 일로 나눌 수 있어요."
+    "transfer": "지금 모습, 바꿀 자리, 끝낼 때를 하나씩 정해 봐요. 여러 규칙이 있는 놀이도 작은 할 일로 나눌 수 있어요.",
+    "walkthrough": {
+      "term": "중첩 리스트와 대입",
+      "intro": "두 줄에 두 칸씩 있는 작은 게임판이에요. 첫째 줄 둘째 칸에 X를 놓아요.",
+      "frames": [
+        {
+          "title": "빈 게임판을 만들어요",
+          "text": "board의 안쪽 리스트 하나가 한 줄이에요. 두 줄 모두 비어 있어요.",
+          "line": 1,
+          "nodes": [
+            {
+              "label": "0행 0열",
+              "value": "빈 문자열"
+            },
+            {
+              "label": "0행 1열",
+              "value": "빈 문자열"
+            },
+            {
+              "label": "1행 0열",
+              "value": "빈 문자열"
+            },
+            {
+              "label": "1행 1열",
+              "value": "빈 문자열"
+            }
+          ],
+          "result": "두 줄에 두 칸씩 있어요."
+        },
+        {
+          "title": "줄과 칸을 골라요",
+          "text": "board[0]으로 첫째 줄을 골라요. 그 줄의 [1]로 둘째 칸을 골라요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "행 번호",
+              "value": "0"
+            },
+            {
+              "label": "열 번호",
+              "value": "1"
+            }
+          ],
+          "result": "board[0][1]을 골랐어요."
+        },
+        {
+          "title": "고른 칸을 바꿔요",
+          "text": "첫째 줄 둘째 칸에 X를 넣어요. 다른 세 칸은 그대로예요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "0행 0열",
+              "value": "빈 문자열"
+            },
+            {
+              "label": "0행 1열",
+              "value": "X"
+            },
+            {
+              "label": "1행 0열",
+              "value": "빈 문자열"
+            },
+            {
+              "label": "1행 1열",
+              "value": "빈 문자열"
+            }
+          ],
+          "result": "첫째 행 둘째 칸에 X가 있어요."
+        }
+      ]
+    }
   },
   {
     "title": "이름으로 정보를 찾아요",
-    "idea": "친구의 전화번호를 찾으려고 주소록을 열었어요. 몇 번째인지 세는 대신 이름을 찾아요. Dictionary(딕셔너리)도 이름과 값을 짝지어 보관해요.",
-    "analogy": "주소록의 이름처럼 찾을 때 쓰는 것을 키라고 해요. 그 이름 옆의 전화번호처럼 연결된 정보가 값이에요.",
+    "idea": "기록에 user와 status라는 이름표가 있어요. user에는 사용자 이름을, status에는 상태를 적어요. 딕셔너리는 이렇게 키와 값을 짝지어요.",
+    "analogy": "status라는 키를 찾으면 상태 값 OK를 꺼낼 수 있어요. 키는 찾을 때 쓰는 이름이고, 값은 연결된 정보예요.",
     "code": "record = {\"user\": \"ana\", \"status\": \"OK\"}\nprint(record[\"status\"])",
     "question": "어떤 값이 화면에 나올까요?",
     "choices": [
@@ -174,12 +844,62 @@
     ],
     "answer": 1,
     "explanation": "찾는 키는 status예요. 여기에 연결된 값은 OK이므로 OK가 나와요.",
-    "transfer": "필요한 정보에 알맞은 이름을 붙여 봐요. 긴 기록에서도 원하는 항목을 바로 찾을 수 있어요."
+    "transfer": "필요한 정보에 알맞은 이름을 붙여 봐요. 긴 기록에서도 원하는 항목을 바로 찾을 수 있어요.",
+    "walkthrough": {
+      "term": "딕셔너리의 키와 값",
+      "intro": "한 기록에 사용자 이름과 상태를 적어요. 상태라는 이름표로 값을 찾아봐요.",
+      "frames": [
+        {
+          "title": "이름과 값을 짝지어요",
+          "text": "user에는 ana가, status에는 OK가 연결돼 있어요.",
+          "line": 1,
+          "nodes": [
+            {
+              "label": "user",
+              "value": "ana"
+            },
+            {
+              "label": "status",
+              "value": "OK"
+            }
+          ],
+          "result": "키 두 개에 값이 하나씩 연결돼요."
+        },
+        {
+          "title": "status로 찾아요",
+          "text": "record에서 status 키를 찾아 연결된 OK를 꺼내요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "찾을 키",
+              "value": "status"
+            },
+            {
+              "label": "찾은 값",
+              "value": "OK"
+            }
+          ],
+          "result": "record[\"status\"] → \"OK\""
+        },
+        {
+          "title": "찾은 값을 보여 줘요",
+          "text": "print가 키 이름이 아니라 찾은 값 OK를 보여 줘요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "화면",
+              "value": "OK"
+            }
+          ],
+          "result": "OK"
+        }
+      ]
+    }
   },
   {
     "title": "필요한 기록만 골라요",
-    "idea": "출석부에서 결석한 친구만 다른 종이에 적어 볼까요? 컴퓨터 기록인 로그에서도 조건에 맞는 항목만 고를 수 있어요.",
-    "analogy": "전체 명단은 그대로 두어요. 한 명씩 확인하며 조건에 맞는 이름만 새 종이에 적어요. 이런 일을 필터링이라고 해요.",
+    "idea": "기록의 상태가 OK, FAIL, OK예요. 하나씩 보며 FAIL만 골라 새 목록에 남겨요. 이런 일을 필터링이라고 해요.",
+    "analogy": "전체 목록은 그대로 두어요. 조건에 맞는 FAIL만 새 목록에 넣어요. OK인 두 항목은 넣지 않아요.",
     "code": "statuses = [\"OK\", \"FAIL\", \"OK\"]\nselected = [s for s in statuses if s == \"FAIL\"]",
     "question": "고른 항목은 몇 개일까요?",
     "choices": [
@@ -189,12 +909,74 @@
     ],
     "answer": 0,
     "explanation": "FAIL은 한 개예요. 조건에 맞는 그 항목만 selected에 들어가요.",
-    "transfer": "무엇을 남길지 말로 먼저 정해 봐요. 조건을 분명히 하면 다른 기록에서도 같은 방법을 쓸 수 있어요."
+    "transfer": "무엇을 남길지 말로 먼저 정해 봐요. 조건을 분명히 하면 다른 기록에서도 같은 방법을 쓸 수 있어요.",
+    "walkthrough": {
+      "term": "리스트 컴프리헨션과 필터링",
+      "intro": "세 기록의 상태를 하나씩 봐요. FAIL인 상태만 새 목록에 남겨요.",
+      "frames": [
+        {
+          "title": "세 상태를 놓아요",
+          "text": "statuses에는 OK, FAIL, OK가 차례로 있어요.",
+          "line": 1,
+          "nodes": [
+            {
+              "label": "첫 상태",
+              "value": "OK"
+            },
+            {
+              "label": "둘째 상태",
+              "value": "FAIL"
+            },
+            {
+              "label": "셋째 상태",
+              "value": "OK"
+            }
+          ],
+          "result": "아직 고른 상태는 없어요."
+        },
+        {
+          "title": "하나씩 비교해요",
+          "text": "s가 각 상태를 가리켜요. FAIL과 같은 둘째 항목만 남겨요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "첫째 OK 비교",
+              "value": "False"
+            },
+            {
+              "label": "FAIL 비교",
+              "value": "True"
+            },
+            {
+              "label": "셋째 OK 비교",
+              "value": "False"
+            }
+          ],
+          "result": "조건에 맞는 항목은 하나예요."
+        },
+        {
+          "title": "새 목록을 만들어요",
+          "text": "selected에는 FAIL 하나가 들어가요. 원래 statuses는 그대로예요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "selected",
+              "value": "[\"FAIL\"]"
+            },
+            {
+              "label": "고른 항목 수",
+              "value": "1"
+            }
+          ],
+          "result": "고른 항목은 1개예요."
+        }
+      ]
+    }
   },
   {
     "title": "한 줄을 작은 칸으로 나눠요",
     "idea": "명단 한 줄에 이름과 상태가 쉼표로 붙어 있어요. 이름 칸과 상태 칸에 나눠 담아 볼까요? 이런 일을 파싱이라고 해요.",
-    "analogy": "종이 가장자리의 불필요한 공백을 지운 뒤 쉼표를 기준으로 나눠요. 줄을 어디에서 자를지 약속이 있어야 해요.",
+    "analogy": "ana,OK라는 글 양 끝에 공백이 있어요. 공백을 지우고 쉼표에서 나누면 ana와 OK를 따로 찾을 수 있어요.",
     "code": "line = \" ana,OK \"\nfields = line.strip().split(\",\")",
     "question": "fields의 첫 값은 무엇일까요?",
     "choices": [
@@ -204,12 +986,62 @@
     ],
     "answer": 1,
     "explanation": "strip()으로 양 끝 공백을 지워요. 이어서 split(\",\")으로 쉼표에서 나누면 ana와 OK가 돼요.",
-    "transfer": "긴 자료를 한 번에 읽기 어렵다면 나눌 자리를 먼저 찾아봐요. 작은 조각으로 바꾸면 다루기 쉬워져요."
+    "transfer": "긴 자료를 한 번에 읽기 어렵다면 나눌 자리를 먼저 찾아봐요. 작은 조각으로 바꾸면 다루기 쉬워져요.",
+    "walkthrough": {
+      "term": "문자열 메서드 strip과 split",
+      "intro": "한 줄에 ana와 OK가 쉼표로 이어져 있어요. 양 끝의 빈칸을 지운 뒤 두 값으로 나눠요.",
+      "frames": [
+        {
+          "title": "원래 줄을 봐요",
+          "text": "line의 양 끝에는 공백이 있어요. 이름과 상태 사이는 쉼표예요.",
+          "line": 1,
+          "nodes": [
+            {
+              "label": "line",
+              "value": "\" ana,OK \""
+            }
+          ],
+          "result": "양 끝 공백과 쉼표가 있어요."
+        },
+        {
+          "title": "양 끝 공백을 지워요",
+          "text": "strip()이 양 끝 공백이 없는 새 문자열을 만들어요. 원래 line은 그대로예요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "원래 line",
+              "value": "\" ana,OK \""
+            },
+            {
+              "label": "strip 결과",
+              "value": "\"ana,OK\""
+            }
+          ],
+          "result": "\"ana,OK\""
+        },
+        {
+          "title": "쉼표에서 나눠요",
+          "text": "split(\",\")이 두 문자열의 리스트를 만들어요. fields의 첫 값은 ana예요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "fields[0]",
+              "value": "\"ana\""
+            },
+            {
+              "label": "fields[1]",
+              "value": "\"OK\""
+            }
+          ],
+          "result": "fields = [\"ana\", \"OK\"]"
+        }
+      ]
+    }
   },
   {
     "title": "다르게 쓴 말을 맞춰요",
-    "idea": "한 친구는 서울, 다른 친구는 SEOUL이라고 적었어요. 같은 뜻으로 묶으려면 쓸 이름을 하나 정해야 해요. 이런 일을 정규화라고 해요.",
-    "analogy": "기록의 항목 이름이나 대소문자가 달라도 같은 뜻일 수 있어요. 무엇을 같은 뜻으로 볼지 먼저 약속해요.",
+    "idea": "원래 기록에서는 사용자 이름을 username, 결과를 result라고 적었어요. 새 기록에서는 user와 status를 쓰기로 해요. 이렇게 표현을 맞추는 일을 정규화라고 해요.",
+    "analogy": "사용자 값 ana는 그대로 옮겨요. 결과 ok는 대문자 OK로 바꿔요. 기록을 맞출 규칙을 먼저 정해 두는 거예요.",
     "code": "raw = {\"username\": \"ana\", \"result\": \"ok\"}\nrecord = {\"user\": raw[\"username\"], \"status\": raw[\"result\"].upper()}",
     "question": "맞춰 놓은 status 값은 무엇일까요?",
     "choices": [
@@ -219,12 +1051,66 @@
     ],
     "answer": 1,
     "explanation": "upper()가 ok를 대문자 OK로 바꿔요. 항목 이름도 result 대신 status를 써요.",
-    "transfer": "겉모양이 달라도 같은 뜻인 부분을 찾아봐요. 여러 곳에서 받은 기록을 함께 살피는 데 도움이 돼요."
+    "transfer": "겉모양이 달라도 같은 뜻인 부분을 찾아봐요. 여러 곳에서 받은 기록을 함께 살피는 데 도움이 돼요.",
+    "walkthrough": {
+      "term": "데이터 정규화",
+      "intro": "기록에 username과 result라는 항목이 있어요. 새 기록에서는 user와 status라는 이름을 쓰기로 해요.",
+      "frames": [
+        {
+          "title": "원래 기록을 읽어요",
+          "text": "사용자 이름은 ana예요. 결과는 소문자 ok로 적혀 있어요.",
+          "line": 1,
+          "nodes": [
+            {
+              "label": "username",
+              "value": "ana"
+            },
+            {
+              "label": "result",
+              "value": "ok"
+            }
+          ],
+          "result": "원래 항목 이름과 값을 확인해요."
+        },
+        {
+          "title": "같은 정보에 새 이름을 써요",
+          "text": "username의 값을 새 키 user에 연결해요. result의 값도 꺼내요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "새 user",
+              "value": "ana"
+            },
+            {
+              "label": "꺼낸 result",
+              "value": "ok"
+            }
+          ],
+          "result": "사용자 값 ana는 그대로예요."
+        },
+        {
+          "title": "상태 표기도 맞춰요",
+          "text": "upper()가 ok를 대문자 OK로 바꿔요. 새 키 status에 연결해요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "record의 user",
+              "value": "ana"
+            },
+            {
+              "label": "새 status",
+              "value": "OK"
+            }
+          ],
+          "result": "record[\"status\"]는 \"OK\"예요."
+        }
+      ]
+    }
   },
   {
     "title": "답장을 받으면 먼저 확인해요",
-    "idea": "도서관에 책 목록을 부탁했어요. 답장이 왔다고 늘 목록이 있는 것은 아니에요. API로 받은 답도 잘 처리됐는지 먼저 확인해요.",
-    "analogy": "“목록을 보냈어요”라는 답과 “지금은 처리할 수 없어요”라는 답을 나눠요. 성공한 답의 목록만 모아야 해요.",
+    "idea": "연습용 API에 목록을 부탁했어요. 받은 답에는 status와 items가 있어요. status부터 보고 성공한 답인지 확인해요.",
+    "analogy": "이 연습에서는 200이 성공이라는 약속이에요. 지금 받은 코드는 429예요. 두 코드가 같은지 비교해요.",
     "code": "response = {\"status\": 429, \"items\": []}\nsuccess = response[\"status\"] == 200",
     "question": "이 답을 성공한 목록에 모아도 될까요?",
     "choices": [
@@ -232,13 +1118,67 @@
       "안 된다"
     ],
     "answer": 1,
-    "explanation": "이 모의 API에서는 상태가 200일 때 성공이에요. 지금은 429이므로 오류로 따로 세어요.",
-    "transfer": "잘됐을 때와 안 됐을 때의 할 일을 모두 정해 봐요. 뜻밖의 답이 와도 다음 행동을 고를 수 있어요."
+    "explanation": "429는 이 모의 API의 성공 코드 200과 달라요. success는 False예요. 성공한 응답으로 모으면 안 돼요.",
+    "transfer": "잘됐을 때와 안 됐을 때의 할 일을 모두 정해 봐요. 뜻밖의 답이 와도 다음 행동을 고를 수 있어요.",
+    "walkthrough": {
+      "term": "API 응답과 상태 코드",
+      "intro": "연습용 API에 목록을 부탁했어요. 답의 상태 코드를 보고 성공인지 확인해요.",
+      "frames": [
+        {
+          "title": "받은 답을 살펴봐요",
+          "text": "상태 코드는 429예요. items 목록은 비어 있어요.",
+          "line": 1,
+          "nodes": [
+            {
+              "label": "status",
+              "value": "429"
+            },
+            {
+              "label": "items",
+              "value": "[]"
+            }
+          ],
+          "result": "성공인지 아직 확인하지 않았어요."
+        },
+        {
+          "title": "성공 코드와 비교해요",
+          "text": "이 모의 API에서는 200이 성공이에요. 받은 429는 200과 같지 않아요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "받은 코드",
+              "value": "429"
+            },
+            {
+              "label": "성공 코드",
+              "value": "200"
+            },
+            {
+              "label": "429 == 200",
+              "value": "False"
+            }
+          ],
+          "result": "비교 결과는 False예요."
+        },
+        {
+          "title": "성공 여부를 남겨요",
+          "text": "success에 False가 들어가요. 이 응답을 성공한 목록으로 모으면 안 돼요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "success",
+              "value": "False"
+            }
+          ],
+          "result": "성공한 응답이 아니에요."
+        }
+      ]
+    }
   },
   {
     "title": "때가 되었는지 확인해요",
     "idea": "12시에 안내를 보내기로 했어요. 지금은 10시예요. 아직 기다려야겠지요? 이벤트를 처리할 때도 약속한 시각을 확인해요.",
-    "analogy": "시간이 됐는지 확인하고, 이미 보낸 안내인지도 확인해요. 처리한 번호를 기억하면 같은 안내를 두 번 보내지 않을 수 있어요.",
+    "analogy": "지금 시각과 예약 시각을 나란히 놓아요. 예약 시각이 현재 시각보다 작거나 같으면 처리할 때예요.",
     "code": "now = 10\nevent = {\"id\": \"a\", \"at\": 12}\nready = event[\"at\"] <= now",
     "question": "지금 처리할 때가 되었을까요?",
     "choices": [
@@ -247,12 +1187,66 @@
     ],
     "answer": 0,
     "explanation": "예약 시각 12는 현재 시각 10보다 뒤예요. 아직 처리하지 않아요. 여기의 시계와 이벤트는 연습용 모의 자료예요.",
-    "transfer": "언제 할지와 이미 했는지를 따로 살펴봐요. 같은 일을 두 번 하는 실수를 줄일 수 있어요."
+    "transfer": "언제 할지와 이미 했는지를 따로 살펴봐요. 같은 일을 두 번 하는 실수를 줄일 수 있어요.",
+    "walkthrough": {
+      "term": "예약 시각과 비교 연산자 <=",
+      "intro": "12시에 안내하기로 했어요. 지금 시각 10이 예약 시각에 도달했는지 확인해요.",
+      "frames": [
+        {
+          "title": "지금 시각을 적어요",
+          "text": "now에 10을 넣어요.",
+          "line": 1,
+          "nodes": [
+            {
+              "label": "now",
+              "value": "10"
+            }
+          ],
+          "result": "지금은 10시예요."
+        },
+        {
+          "title": "예약 시각을 읽어요",
+          "text": "이벤트 a의 예약 시각 at은 12예요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "event의 id",
+              "value": "a"
+            },
+            {
+              "label": "event의 at",
+              "value": "12"
+            }
+          ],
+          "result": "예약은 12시예요."
+        },
+        {
+          "title": "예약 시각이 되었나요?",
+          "text": "12 <= 10은 False예요. ready도 False라서 아직 처리할 때가 아니에요.",
+          "line": 3,
+          "nodes": [
+            {
+              "label": "예약 시각",
+              "value": "12"
+            },
+            {
+              "label": "현재 시각",
+              "value": "10"
+            },
+            {
+              "label": "ready",
+              "value": "False"
+            }
+          ],
+          "result": "아직 아니에요. 12시까지 기다려요."
+        }
+      ]
+    }
   },
   {
     "title": "부탁을 들어줘도 될까요?",
     "idea": "누군가 물건을 지워 달라고 해요. 부탁을 받았다고 모두 들어줘도 될까요? AI가 고른 도구도 허용한 이름인지 먼저 확인해요.",
-    "analogy": "출입할 수 있는 방 목록과 방문자가 말한 방 번호를 맞춰 보는 것처럼, 요청한 도구를 허용 목록과 비교해요.",
+    "analogy": "허용 목록에 search와 count를 적었어요. 요청한 delete가 그 목록에 있는지 찾아봐요.",
     "code": "allowed = [\"search\", \"count\"]\nrequested = \"delete\"\nprint(requested in allowed)",
     "question": "이 도구를 써도 될까요?",
     "choices": [
@@ -261,12 +1255,66 @@
     ],
     "answer": 1,
     "explanation": "delete는 search와 count만 있는 목록에 없어요. 그래서 False예요. 여기서는 실제 LLM 대신 연습용 모의 응답을 써요.",
-    "transfer": "받은 말과 해도 되는 행동을 따로 생각해 봐요. 요청을 확인한 뒤 행동하는 습관을 익혀요."
+    "transfer": "받은 말과 해도 되는 행동을 따로 생각해 봐요. 요청을 확인한 뒤 행동하는 습관을 익혀요.",
+    "walkthrough": {
+      "term": "허용 목록과 in 연산자",
+      "intro": "search와 count만 써도 된다고 정했어요. 요청한 delete도 목록에 있는지 살펴봐요.",
+      "frames": [
+        {
+          "title": "허용한 도구를 정해요",
+          "text": "allowed에는 search와 count가 있어요.",
+          "line": 1,
+          "nodes": [
+            {
+              "label": "허용한 도구 1",
+              "value": "search"
+            },
+            {
+              "label": "허용한 도구 2",
+              "value": "count"
+            }
+          ],
+          "result": "이 두 이름만 허용했어요."
+        },
+        {
+          "title": "요청한 이름을 읽어요",
+          "text": "requested는 delete예요. 아직 이 도구를 실행하지 않아요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "requested",
+              "value": "delete"
+            }
+          ],
+          "result": "delete를 요청했어요."
+        },
+        {
+          "title": "허용 목록에서 찾아요",
+          "text": "delete는 allowed에 없어요. in의 결과 False를 출력해요.",
+          "line": 3,
+          "nodes": [
+            {
+              "label": "요청 이름",
+              "value": "delete"
+            },
+            {
+              "label": "목록에 있나요?",
+              "value": "False"
+            },
+            {
+              "label": "화면",
+              "value": "False"
+            }
+          ],
+          "result": "False"
+        }
+      ]
+    }
   },
   {
     "title": "실패한 횟수를 세어요",
-    "idea": "같은 친구의 배달이 두 번 실패할 수도 있어요. 실패한 횟수와 실패한 사람 수는 다를 수 있겠지요? 보고서에 무엇을 셀지 먼저 정해 봐요.",
-    "analogy": "실패한 기록마다 표시를 하나씩 해요. 사람 수를 알고 싶다면 같은 이름은 한 번만 세요.",
+    "idea": "두 기록의 상태는 OK와 FAIL이에요. 이번에는 실패한 기록의 개수를 세어요. 사람 수를 세는 코드는 아니에요.",
+    "analogy": "각 기록을 보고 실패라면 1, 아니라면 0으로 세어요. 두 수를 더하면 실패 횟수를 알 수 있어요.",
     "code": "records = [{\"status\": \"OK\"}, {\"status\": \"FAIL\"}]\nfailures = sum(r[\"status\"] == \"FAIL\" for r in records)",
     "question": "실패한 기록은 몇 개일까요?",
     "choices": [
@@ -275,13 +1323,71 @@
       "2"
     ],
     "answer": 1,
-    "explanation": "status가 FAIL인 기록은 한 개예요. 먼저 수를 세고, 그 수를 보여 줄 문장을 따로 만들 수 있어요.",
-    "transfer": "횟수를 셀 때와 사람을 셀 때를 구별해 봐요. 무엇을 세는지 정하면 보고서의 뜻도 분명해져요."
+    "explanation": "OK는 False여서 0, FAIL은 True여서 1로 더해요. 실패 기록의 수는 0 + 1인 1이에요.",
+    "transfer": "횟수를 셀 때와 사람을 셀 때를 구별해 봐요. 무엇을 세는지 정하면 보고서의 뜻도 분명해져요.",
+    "walkthrough": {
+      "term": "조건 검사와 합계 집계",
+      "intro": "기록 두 개에서 실패 횟수를 세어요. OK는 세지 않고 FAIL만 하나로 세어요.",
+      "frames": [
+        {
+          "title": "두 기록을 놓아요",
+          "text": "records에는 OK인 기록 하나와 FAIL인 기록 하나가 있어요.",
+          "line": 1,
+          "nodes": [
+            {
+              "label": "첫 기록 status",
+              "value": "OK"
+            },
+            {
+              "label": "둘째 기록 status",
+              "value": "FAIL"
+            }
+          ],
+          "result": "전체 기록은 2개예요."
+        },
+        {
+          "title": "실패한 기록인지 봐요",
+          "text": "각 기록의 status를 FAIL과 비교해요. 결과는 False, True예요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "첫 비교",
+              "value": "False"
+            },
+            {
+              "label": "둘째 비교",
+              "value": "True"
+            }
+          ],
+          "result": "실패한 기록만 True예요."
+        },
+        {
+          "title": "합계로 모아요",
+          "text": "sum은 여기서 False를 0, True를 1로 더해요. failures에 1이 들어가요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "첫 기록에서 더함",
+              "value": "0"
+            },
+            {
+              "label": "둘째 기록에서 더함",
+              "value": "1"
+            },
+            {
+              "label": "failures",
+              "value": "1"
+            }
+          ],
+          "result": "0 + 1 = 1. 실패 기록은 1개예요."
+        }
+      ]
+    }
   },
   {
     "title": "모두 이은 뒤 다시 살펴봐요",
-    "idea": "자전거 부품을 잘 만들었어도 조립한 뒤에는 다시 확인해요. 작은 함수를 이어 만든 프로그램도 여러 경우로 시험해야 해요.",
-    "analogy": "잘될 것 같은 입력뿐 아니라 아무것도 없는 입력도 넣어 봐요. 자료가 없거나 겹치거나 잘못됐을 때를 하나씩 살펴봐요.",
+    "idea": "기록이 하나도 없는 빈 목록도 입력으로 들어올 수 있어요. 아무것도 없을 때 개수를 세면 어떤 답이 나올까요?",
+    "analogy": "빈 목록에는 항목이 없어요. len으로 항목 수를 세면 0을 돌려줘요. 다른 입력처럼 결과를 정해 둘 수 있어요.",
     "code": "records = []\nprint(len(records))",
     "question": "입력이 비었을 때도 결과를 정해야 할까요?",
     "choices": [
@@ -290,6 +1396,52 @@
     ],
     "answer": 0,
     "explanation": "빈 입력도 들어올 수 있어요. 여기서는 항목 수가 0이에요. 각 함수가 빈 입력에서 무엇을 할지 정해 둬야 해요.",
-    "transfer": "한 번 잘됐다고 끝내지 않고 다른 경우를 찾아봐요. 작은 기능을 이었을 때 새로 생긴 문제를 찾는 연습이에요."
+    "transfer": "한 번 잘됐다고 끝내지 않고 다른 경우를 찾아봐요. 작은 기능을 이었을 때 새로 생긴 문제를 찾는 연습이에요.",
+    "walkthrough": {
+      "term": "빈 리스트와 len 함수",
+      "intro": "기록이 하나도 없는 경우예요. 빈 목록도 프로그램이 다룰 수 있어야 해요.",
+      "frames": [
+        {
+          "title": "빈 목록을 놓아요",
+          "text": "records에 빈 리스트를 넣어요. 안에 항목이 없어요.",
+          "line": 1,
+          "nodes": [
+            {
+              "label": "records",
+              "value": "[]"
+            }
+          ],
+          "result": "아직 기록이 없어요."
+        },
+        {
+          "title": "개수를 세어요",
+          "text": "len(records)는 항목 수를 세어요. 아무 항목도 없으므로 0이에요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "records",
+              "value": "[]"
+            },
+            {
+              "label": "len 결과",
+              "value": "0"
+            }
+          ],
+          "result": "len(records) → 0"
+        },
+        {
+          "title": "0을 보여 줘요",
+          "text": "print가 0을 보여 줘요. 자료가 없어도 이 결과를 정해 둘 수 있어요.",
+          "line": 2,
+          "nodes": [
+            {
+              "label": "화면",
+              "value": "0"
+            }
+          ],
+          "result": "0"
+        }
+      ]
+    }
   }
 ]

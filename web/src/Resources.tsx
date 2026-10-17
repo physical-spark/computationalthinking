@@ -39,12 +39,75 @@ export function ResourceLinks({ resources }: { resources: Resource[] }) {
       <ul>
         {resources.map((r) => (
           <li key={r.id}>
-            <a href={"#resource/" + r.id + "/1"}>{r.title}</a>
+            <a className="resource-step" href={"#resource/" + r.id + "/2"}>
+              <span aria-hidden="true">▶ 영상</span>
+              <span>{r.title}</span>
+            </a>
           </li>
         ))}
       </ul>
     </section>
   ) : null;
+}
+export function VideoStep({ resource }: { resource: Resource }) {
+  return (
+    <section
+      className="video-step"
+      aria-label={"영상 학습 · " + resource.title}
+    >
+      <p className="video-note">{resource.before}</p>
+      <iframe
+        key={resource.id}
+        className="lesson-video"
+        title={resource.title}
+        src={
+          "https://www.youtube-nocookie.com/embed/" +
+          resource.video_id +
+          "?autoplay=0&playsinline=1&start=" +
+          resource.start +
+          (resource.end ? "&end=" + resource.end : "")
+        }
+        loading="lazy"
+        allow="encrypted-media; picture-in-picture; fullscreen"
+        referrerPolicy="strict-origin-when-cross-origin"
+        allowFullScreen
+      />
+      <p className="video-question">{resource.after}</p>
+      <p className="video-note">
+        <a href={"#resource/" + resource.id + "/1"}>관련 설명 읽기</a>.{" "}
+        {resource.reference_only &&
+          "참고 영상이에요. 도구를 따로 설치하지 않아도 돼요. "}
+        재생되지 않으면{" "}
+        <a
+          href={
+            "https://www.youtube.com/watch?v=" +
+            resource.video_id +
+            "&t=" +
+            resource.start +
+            "s"
+          }
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          YouTube에서 원본 보기
+        </a>
+        로 열어요. 영상은 건너뛰어도 괜찮아요.
+      </p>
+      <Sources
+        sources={[
+          {
+            label: "설명 재구성: 홍정민 Run of Show",
+            url: resource.source_url,
+            revision: resource.source_revision,
+          },
+          {
+            label: "영상: " + resource.creator + " · " + resource.title,
+            url: "https://www.youtube.com/watch?v=" + resource.video_id,
+          },
+        ]}
+      />
+    </section>
+  );
 }
 export default function ResourceLesson({
   resource,
@@ -58,13 +121,11 @@ export default function ResourceLesson({
       0,
       Math.min(2, (Math.trunc(Number(location.hash.split("/")[2])) || 1) - 1),
     );
-  const [card, setCard] = useState(read),
-    [load, setLoad] = useState(false);
+  const [card, setCard] = useState(read);
   const stage = useRef<HTMLElement>(null);
   useEffect(() => {
     const f = () => {
       setCard(read());
-      setLoad(false);
     };
     window.addEventListener("hashchange", f);
     return () => window.removeEventListener("hashchange", f);
@@ -96,53 +157,7 @@ export default function ResourceLesson({
           {card === 1 && (
             <>
               <h2>영상으로 살펴봐요</h2>
-              {resource.reference_only && (
-                <p>
-                  다른 곳에서는 이렇게 쓰기도 해요. 영상에 나온 도구를 직접
-                  설치할 필요는 없어요.
-                </p>
-              )}
-              <p>
-                재생 구간: {resource.start}초부터
-                {resource.end ? " " + resource.end + "초까지" : ""}
-              </p>
-              {load ? (
-                <iframe
-                  className="lesson-video"
-                  title={resource.title}
-                  src={
-                    "https://www.youtube-nocookie.com/embed/" +
-                    resource.video_id +
-                    "?autoplay=0&playsinline=1&start=" +
-                    resource.start +
-                    (resource.end ? "&end=" + resource.end : "")
-                  }
-                  allow="encrypted-media; picture-in-picture; fullscreen"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  allowFullScreen
-                />
-              ) : (
-                <button className="primary" onClick={() => setLoad(true)}>
-                  영상 불러오기
-                </button>
-              )}
-              <p>
-                재생되지 않으면{" "}
-                <a
-                  href={
-                    "https://www.youtube.com/watch?v=" +
-                    resource.video_id +
-                    "&t=" +
-                    resource.start +
-                    "s"
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  YouTube에서 원본 보기
-                </a>
-                를 이용하세요. 시청하지 않아도 다음으로 이동할 수 있습니다.
-              </p>
+              <VideoStep resource={resource} />
             </>
           )}
           {card === 2 && (
@@ -155,25 +170,27 @@ export default function ResourceLesson({
               </p>
             </>
           )}
-          <Sources
-            sources={[
-              {
-                label:
-                  "설명 재구성: 홍정민 Run of Show · " +
-                  resource.source_url
-                    .split("/")
-                    .pop()!
-                    .split("#")[0]
-                    .slice(0, 4),
-                url: resource.source_url,
-                revision: resource.source_revision,
-              },
-              {
-                label: "영상: " + resource.creator + " · " + resource.title,
-                url: "https://www.youtube.com/watch?v=" + resource.video_id,
-              },
-            ]}
-          />
+          {card !== 1 && (
+            <Sources
+              sources={[
+                {
+                  label:
+                    "설명 재구성: 홍정민 Run of Show · " +
+                    resource.source_url
+                      .split("/")
+                      .pop()!
+                      .split("#")[0]
+                      .slice(0, 4),
+                  url: resource.source_url,
+                  revision: resource.source_revision,
+                },
+                {
+                  label: "영상: " + resource.creator + " · " + resource.title,
+                  url: "https://www.youtube.com/watch?v=" + resource.video_id,
+                },
+              ]}
+            />
+          )}
         </div>
       </section>
       <nav className="concept-pagination" aria-label="보충 학습 페이지 이동">

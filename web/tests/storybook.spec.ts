@@ -74,19 +74,20 @@ test("all twenty story scenes change, reset and preserve course requirements", a
   expect(representatives.size).toBe(20);
   for (const p of representatives.values()) {
     await page.goto("/#concept/" + p.id + "/3");
-    const scene = page.locator(".concept-stage .story-scene");
+    const scene = page.locator(".concept-stage .code-walkthrough");
     const before = await scene.locator("svg").innerHTML();
-    await scene.getByRole("button").click();
-    await expect(
-      scene.getByRole("img", { name: "그림 2 / 3", exact: true }),
-    ).toBeVisible();
+    const frameCount = c.concepts[p.diagram].walkthrough.frames.length;
+    for (let frame = 1; frame < frameCount; frame++) {
+      await scene
+        .getByRole("button", { name: "다음 장면", exact: true })
+        .click();
+      await expect(scene.locator(".code-walkthrough__position")).toHaveText(
+        `${frame + 1} / ${frameCount}`,
+      );
+    }
     expect(await scene.locator("svg").innerHTML()).not.toBe(before);
-    await scene.getByRole("button", { name: "결과 보기", exact: true }).click();
-    await expect(
-      scene.getByRole("img", { name: "그림 3 / 3", exact: true }),
-    ).toBeVisible();
     await scene
-      .getByRole("button", { name: "처음부터 다시 보기", exact: true })
+      .getByRole("button", { name: "처음부터 보기", exact: true })
       .click();
     expect(await scene.locator("svg").innerHTML()).toBe(before);
     expect(
