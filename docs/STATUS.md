@@ -1,3 +1,15 @@
+# Current release — 2026-10-17
+
+Deployed `58963938417c99cf8b97f2c9c763b0db52afd0d1` / `sha256:e69e6274963aeb462e2cfd85cbf909827142312043c7050e1719acfe390807e5`. [CI and deployment](https://github.com/physical-spark/computationalthinking/actions/runs/38986160394) succeeded with 285 Korean grading cases, 27 PostgreSQL backend tests, 29 browser tests, all eight Module 1 projects and execution-limit regressions (30.12s timeout).
+
+Students must register full name, birth date and avatar; administrators are exempt and outside groups. Independent sequential tracks use server-owned execution receipts. Added 46 videos / 50 placements from 18 Run of Show documents, per-page provenance, read-only student views and audited prose drafts/publication/restore/conflicts. Existing code/table/quotation/separator blocks and heading structures are protected. Details: [learning operations](LEARNING-OPERATIONS.md).
+
+Final public HTTPS/WSS checks used disposable synthetic identities: mandatory profile, locked-step denial, forged completion denial, 1+2 → 3 with saved unlock, path independence, step-change shell reset, CSV privacy, administrator no-record preview and private drafts. All synthetic records were removed. Existing identity/progress/draft/question/membership fingerprints match before and after migration. Latest encrypted backup restored into a separate DB; encrypted offsite copies synchronized.
+
+Authenticated public Chrome verified administrator preview, representative YouTube playback on desktop and 390px, and actual 200% zoom with a 201px reading stage and reachable pagination/keyboard navigation. Zoom and viewport restored. All video source placements are checked; full playback of every video and full screen-reader narration are not claimed. [Wiki evidence](https://course-studio.futurereadycampus.com/course-network/wiki/futurecoder/verification-learning-20261017.html).
+
+The following entries preserve earlier releases and their measurements.
+
 # Implementation and verification ledger — 2026-10-16
 
 **The entries below document the browser-runtime release. The server-runtime update is described at the end; historical measurements are not server-Python measurements.**
