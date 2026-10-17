@@ -24,7 +24,17 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
 
 from .db import database
+from .editorial import router as editorial_router
 from .execution import router as execution_router
+from .learning import (
+    ProfilePayload,
+    access_map,
+    profile_complete,
+    profile_data,
+    require_step,
+    update_profile,
+)
+from .learning import router as learning_router
 from .models import (
     AdminClaim,
     Attempt,
@@ -108,7 +118,7 @@ def client_ip(request):
     return peer
 
 
-def identity(request, db, require_google=True):
+def identity(request, db, require_google=True, require_profile=True):
     token = request.cookies.get(COOKIE)
     session = db.get(Session, digest(token)) if token else None
     if not session or session.expires < time.time():
@@ -118,6 +128,8 @@ def identity(request, db, require_google=True):
         fail(401, "학습 세션을 다시 연결해 주세요.")
     if require_google and not user.google_sub:
         fail(401, "Google로 로그인한 뒤 이용해 주세요.")
+    if require_google and require_profile and not profile_complete(user):
+        fail(428, "성명·생년월일·이모지를 등록한 뒤 학습해 주세요.")
     return user
 
 
@@ -218,7 +230,8 @@ def me(request: Request, response: Response, db: DB):
     )
     return {
         "id": u.id,
-        "nickname": u.nickname,
+        "nickname": u.full_name or (u.nickname if u.admin else "프로필 미등록"),
+        **profile_data(u),
         "connected": bool(u.google_sub),
         "admin": u.admin,
         "current_step": u.current_step,
@@ -229,18 +242,10 @@ def me(request: Request, response: Response, db: DB):
     }
 
 
-class Nickname(BaseModel):
-    nickname: str = Field(min_length=2, max_length=24)
-
-
 @app.patch("/api/v1/me")
-def nickname(payload: Nickname, request: Request, db: DB):
-    u = identity(request, db)
-    name = payload.nickname.strip()
-    if len(name) < 2 or any(ord(c) < 32 for c in name):
-        fail(422, "닉네임은 2~24자의 글자로 입력해 주세요.")
-    u.nickname = name
-    return {"nickname": name}
+def profile(payload: ProfilePayload, request: Request, db: DB):
+    u = identity(request, db, require_profile=False)
+    return update_profile(u, payload)
 
 
 @app.post("/api/v1/logout")
@@ -255,7 +260,9 @@ def logout(request: Request, response: Response, db: DB):
 @app.get("/api/v1/course")
 def course(request: Request, db: DB):
     identity(request, db)
-    return published_course()
+    from .editorial import rendered_course
+
+    return rendered_course(db)
 
 
 @app.get("/api/v1/progress")
@@ -263,6 +270,7 @@ def progress(request: Request, db: DB):
     u = identity(request, db)
     return {
         "progress": [data(r) for r in rows(db, Progress, u)],
+        **access_map(db, u),
         "drafts": [data(r) for r in rows(db, Draft, u)],
         "conflicts": [data(r) for r in rows(db, DraftConflict, u)],
         "reflections": [data(r) for r in rows(db, Reflection, u)],
@@ -282,6 +290,8 @@ class ViewPayload(StepPayload):
 def viewed(p: ViewPayload, request: Request, db: DB):
     u = identity(request, db)
     validate_step(p.step_id, p.version)
+    if u.admin:
+        return {"ok": True, "preview": True}
     entry = db.get(Progress, (u.id, p.step_id))
     if not entry:
         db.add(Progress(learner_id=u.id, step_id=p.step_id, version=p.version))
@@ -301,6 +311,7 @@ class DraftPayload(StepPayload):
 @app.put("/api/v1/drafts")
 def draft(p: DraftPayload, request: Request, db: DB):
     u = identity(request, db)
+    require_step(db, u, p.step_id)
     validate_step(p.step_id, p.version)
     existing = db.get(Draft, (u.id, p.step_id), with_for_update=True)
     if existing and existing.revision != p.revision:
@@ -328,6 +339,7 @@ def draft(p: DraftPayload, request: Request, db: DB):
 @app.post("/api/v1/drafts/resolve")
 def resolve_draft(p: DraftPayload, request: Request, db: DB):
     u = identity(request, db)
+    require_step(db, u, p.step_id)
     validate_step(p.step_id, p.version)
     draft = db.get(Draft, (u.id, p.step_id), with_for_update=True)
     if not draft or draft.revision != p.revision:
@@ -353,6 +365,7 @@ class AlternativePayload(StepPayload):
 @app.post("/api/v1/draft-alternatives")
 def save_alternative(p: AlternativePayload, request: Request, db: DB):
     u = identity(request, db)
+    require_step(db, u, p.step_id)
     validate_step(p.step_id)
     old = db.get(DraftConflict, str(p.id))
     if old and old.learner_id != u.id:
@@ -375,34 +388,10 @@ class AttemptPayload(StepPayload):
 
 @app.post("/api/v1/attempts")
 def attempt(p: AttemptPayload, request: Request, db: DB):
-    u = identity(request, db)
+    identity(request, db)
     validate_step(p.step_id, p.version, gradable=True)
-    existing = db.get(Attempt, str(p.id))
-    if existing:
-        if existing.learner_id != u.id:
-            fail(409, "이미 사용된 요청 번호입니다.")
-        return {"ok": True, "duplicate": True}
-    throttle(db, "attempt:" + u.id, 120, 60)
-    db.add(
-        Attempt(
-            id=str(p.id),
-            learner_id=u.id,
-            step_id=p.step_id,
-            version=p.version,
-            code=p.code,
-            passed=p.passed,
-            hints=p.hints,
-        )
-    )
-    progress = db.get(Progress, (u.id, p.step_id))
-    if not progress:
-        db.add(Progress(learner_id=u.id, step_id=p.step_id, version=p.version, passed=p.passed))
-    else:
-        progress.passed = progress.passed or p.passed
-        progress.updated = time.time()
-    u.current_step = p.step_id
-    u.active = time.time()
-    return {"ok": True}
+    # Legacy queued browser claims cannot unlock coursework.
+    fail(409, "실행 기록 방식이 바뀌었습니다. 새로고침한 뒤 다시 실행해 주세요.")
 
 
 class ReflectionPayload(StepPayload):
@@ -549,7 +538,8 @@ def learner_stats(db, cohort=None):
         result.append(
             {
                 "id": u.id,
-                "nickname": u.nickname,
+                "nickname": u.full_name or (u.nickname if u.admin else "프로필 미등록"),
+                **profile_data(u),
                 "group_ids": [m.cohort_id for m in rows(db, Membership, u)],
                 "group_name": ", ".join(
                     c.name
@@ -618,11 +608,14 @@ def learner(lid: str, request: Request, db: DB):
         fail(404, "학습자를 찾지 못했습니다.")
     return {
         "id": u.id,
-        "nickname": u.nickname,
+        "nickname": u.full_name or (u.nickname if u.admin else "프로필 미등록"),
+        **profile_data(u),
         **{
             m.__tablename__: [data(x) for x in rows(db, m, u)]
             for m in [Progress, Attempt, Reflection, Draft]
         },
+        **access_map(db, u),
+        "current_step": u.current_step,
         "questions": [question_json(q, db) for q in rows(db, Question, u)],
     }
 
@@ -633,7 +626,7 @@ def admin_questions(request: Request, db: DB):
     return [
         {**question_json(q, db), "nickname": nickname}
         for q, nickname in db.execute(
-            select(Question, Learner.nickname)
+            select(Question, Learner.full_name)
             .join(Learner, Learner.id == Question.learner_id)
             .order_by(Question.created.desc())
         ).all()
@@ -870,6 +863,9 @@ class SPAFiles(StaticFiles):
 
 
 app.include_router(execution_router)
+app.include_router(learning_router)
+
+app.include_router(editorial_router)
 
 
 if (ROOT / "web/dist").exists():

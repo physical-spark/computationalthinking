@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures";
+import { test, expect, priorLessons } from "./fixtures";
 
 test("simple execution, reflection restoration and real feedback clipboard", async ({
   page,
@@ -57,6 +57,7 @@ test("simple execution, reflection restoration and real feedback clipboard", asy
   );
   await page.reload();
   await expect(answer).toHaveValue(thought);
+  await priorLessons(page,"IntroducingStrings.hello_string");
   await page.goto("/#IntroducingStrings.hello_string");
   await expect(answer).toHaveValue("");
   await answer.fill("문자열에서는 따옴표 안의 내용이 데이터다.");
@@ -127,6 +128,7 @@ test("required debugging tools run automatically with one execute button", async
     const lesson = course.pages.find((p: any) => p.id === id);
     const step = lesson.steps.find((s: any) => s.name === name);
     expect(step.mode).toBe(mode);
+    await priorLessons(page,step.id);
     await page.goto("/#" + step.id);
     await expect(
       page.getByRole("heading", { name: lesson.title, exact: true }),

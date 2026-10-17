@@ -13,6 +13,7 @@ export type Reflection = {
   version: string;
 };
 export type Step = {
+  sources?: Source[];
   thinking: Thinking;
   id: string;
   name: string;
@@ -31,6 +32,7 @@ export type Step = {
   reading: boolean;
 };
 export type Page = {
+  sources?: Source[];
   id: string;
   title: string;
   chapter: number;
@@ -41,8 +43,41 @@ export type Page = {
   prerequisite?: string;
   steps: Step[];
 };
-export type Course = { version: string; language: string; pages: Page[] };
+export type Source = { label: string; url: string; revision?: string };
+export type Resource = {
+  group_title?: string;
+  id: string;
+  page_id: string | null;
+  topic: string;
+  title: string;
+  video_id: string;
+  start: number;
+  end: number | null;
+  before: string;
+  reading: string;
+  after: string;
+  source_url: string;
+  source_revision: string;
+  creator: string;
+  reference_only: boolean;
+};
+export type Access = Record<
+  string,
+  { unlocked: boolean; requires: string | null }
+>;
+export type Course = {
+  version: string;
+  text_version?: string;
+  concepts?: import("./concepts").Concept[];
+  resources?: Resource[];
+  language: string;
+  pages: Page[];
+};
 export type User = {
+  full_name?: string | null;
+  birth_date?: string | null;
+  avatar_id?: string | null;
+  profile_complete?: boolean;
   id: string;
   nickname: string;
   connected: boolean;

@@ -20,11 +20,13 @@ const highlighting = HighlightStyle.define([
 export default function Editor({
   value,
   onChange,
+  readOnly = false,
   onRun,
   shell,
 }: {
   value: string;
   onChange: (v: string) => void;
+  readOnly?: boolean;
   onRun: () => void;
   shell: boolean;
 }) {
@@ -49,6 +51,7 @@ export default function Editor({
       parent: host.current,
       doc: value,
       extensions: [
+        EditorView.editable.of(!readOnly),
         keymap.of([
           {
             key: "Enter",

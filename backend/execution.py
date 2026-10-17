@@ -5,11 +5,14 @@ import contextlib
 import json
 import os
 import time
+import uuid
 
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from websockets.asyncio.client import connect
 
 from .db import SessionLocal
+from .learning import access_map, finish_execution, require_step
+from .models import ExecutionRecord, Learner
 
 router = APIRouter()
 
@@ -25,6 +28,7 @@ async def execution(ws: WebSocket):
         with SessionLocal() as db:
             user = identity(ws, db)
             uid = user.id
+            preview = user.admin
     except HTTPException:
         await ws.close(code=4401)
         return
@@ -49,6 +53,7 @@ async def execution(ws: WebSocket):
             max_size=2_100_000,
             open_timeout=10,
         ) as broker:
+            pending = {}
 
             async def to_broker():
                 runs = []
@@ -62,7 +67,7 @@ async def execution(ws: WebSocket):
                     if kind == "run":
                         # Recheck expiry/Google identity on every new execution.
                         with SessionLocal() as db:
-                            identity(ws, db)
+                            user = identity(ws, db)
                         now = time.monotonic()
                         runs[:] = [t for t in runs if t > now - 60]
                         if len(runs) >= 60:
@@ -79,6 +84,22 @@ async def execution(ws: WebSocket):
                             str(entry.get("page_slug", "")) + "." + str(entry.get("step_name", "")),
                             gradable=True,
                         )
+                        sid = (
+                            str(entry.get("page_slug", "")) + "." + str(entry.get("step_name", ""))
+                        )
+                        with SessionLocal() as db:
+                            user = identity(ws, db)
+                            try:
+                                require_step(db, user, sid)
+                            except HTTPException:
+                                await ws.send_json(
+                                    {
+                                        "type": "error",
+                                        "id": value.get("id"),
+                                        "message": "앞선 과제를 먼저 통과해 주세요.",
+                                    }
+                                )
+                                continue
                         if (
                             not isinstance(entry.get("input"), str)
                             or len(entry["input"]) > 64000
@@ -88,14 +109,87 @@ async def execution(ws: WebSocket):
                             await ws.close(code=1008)
                             return
                         runs.append(now)
+                        if pending:
+                            await ws.send_json(
+                                {
+                                    "type": "error",
+                                    "id": value.get("id"),
+                                    "message": "현재 실행이 끝난 뒤 다시 시도해 주세요.",
+                                }
+                            )
+                            continue
+                        from .main import published_course
+
+                        rid = str(uuid.uuid4())
+                        pending[rid] = value.get("id")
+                        if not preview:
+                            with SessionLocal.begin() as db:
+                                db.add(
+                                    ExecutionRecord(
+                                        id=rid,
+                                        learner_id=uid,
+                                        step_id=sid,
+                                        code=entry["input"],
+                                        version=published_course()["version"],
+                                    )
+                                )
+                        value["id"] = rid
+                        # The broker receives an authenticated instruction, never a student reset flag.
+                        value["step_id"] = sid
                     elif kind not in {"input", "stop", "restart"}:
                         await ws.close(code=1008)
                         return
-                    await broker.send(raw)
+                    await broker.send(json.dumps(value))
 
             async def to_browser():
                 async for raw in broker:
-                    await ws.send_text(raw)
+                    event = json.loads(raw)
+                    rid = event.get("id")
+                    if rid:
+                        if rid not in pending:
+                            continue
+                        event["id"] = pending[rid]
+                    if event.get("type") == "result":
+                        try:
+                            result = event["result"]
+                            result["run_id"] = rid
+                            result["preview"] = preview
+                            if not preview:
+                                from .main import published_course
+
+                                with SessionLocal.begin() as db:
+                                    run = db.get(ExecutionRecord, rid)
+                                    run.outcome = bool(result.get("passed"))
+                                    step = next(
+                                        s
+                                        for p in published_course()["pages"]
+                                        for s in p["steps"]
+                                        if s["id"] == run.step_id
+                                    )
+                                    needs_prediction = run.outcome and bool(
+                                        step["prediction"].get("choices")
+                                    )
+                                    result["needs_prediction"] = needs_prediction
+                                    if not needs_prediction:
+                                        finish_execution(db, run)
+                                    db.flush()
+                                    result.update(access_map(db, db.get(Learner, uid)))
+                            result["recorded"] = True
+                        except Exception:
+                            event = {
+                                "type": "error",
+                                "id": event.get("id"),
+                                "message": "실행 결과를 저장하지 못했습니다. 다시 실행해 주세요.",
+                            }
+                            event["message"] = (
+                                "실행 결과 저장에 실패했습니다. 코드는 유지됩니다. 다시 실행해 주세요."
+                            )
+                        pending.pop(rid, None)
+                    elif event.get("type") == "error":
+                        pending.pop(rid, None)
+                    elif event.get("type") == "reset":
+                        pending.clear()
+                    await ws.send_json(event)
 
             tasks = [asyncio.create_task(to_broker()), asyncio.create_task(to_browser())]
             done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
@@ -116,6 +210,7 @@ async def execution(ws: WebSocket):
         for task in tasks:
             task.cancel()
         if tasks:
-            await asyncio.gather(*tasks, return_exceptions=True)
-        with contextlib.suppress(Exception):
+            with contextlib.suppress(asyncio.CancelledError):
+                await asyncio.gather(*tasks, return_exceptions=True)
+        with contextlib.suppress(Exception, asyncio.CancelledError):
             await ws.close()

@@ -1,3 +1,6 @@
+import { Sources, ResourceLinks } from "./Resources";
+import type { Access, Resource } from "./types";
+import type { Concept } from "./concepts";
 import { useEffect, useRef, useState } from "react";
 import type { Course, Page, Progress } from "./types";
 import { concepts } from "./concepts";
@@ -16,6 +19,7 @@ export function CourseSidebar({
   current,
   view,
   progress,
+  access,
   onConcept,
   onPractice,
   onSyllabus,
@@ -26,6 +30,7 @@ export function CourseSidebar({
   current: string;
   view: string;
   progress: Progress[];
+  access: Access;
   onConcept: (page: Page) => void;
   onPractice: (id: string) => void;
   onSyllabus: () => void;
@@ -99,6 +104,7 @@ export function CourseSidebar({
                           <li key={s.id}>
                             <button
                               onClick={() => onPractice(s.id)}
+                              aria-disabled={access[s.id]?.unlocked === false}
                               aria-current={
                                 view === "practice" && current === s.id
                                   ? "step"
@@ -107,6 +113,7 @@ export function CourseSidebar({
                             >
                               <span>
                                 {String(i + 2).padStart(2, "0")}{" "}
+                                {access[s.id]?.unlocked === false ? "🔒 " : ""}
                                 {s.reading ? "단원 정리" : `실습 ${i + 1}`}
                               </span>
                               {progress.some(
@@ -123,6 +130,11 @@ export function CourseSidebar({
             </ol>
           </section>
         ))}
+        <ResourceLinks
+          resources={(course.resources || []).filter(
+            (r) => r.page_id === page.id || !r.page_id,
+          )}
+        />
       </nav>
     </aside>
   );
@@ -164,8 +176,12 @@ export function Syllabus({
       </ol>
       <p className="field-help">
         Python 기초 12개 장 · 61개 단원 / Module 1 응용 8개 과제. 순서대로
-        배우거나 필요한 단원으로 이동할 수 있습니다. 실습 통과와 내용 읽기는
+        배우며 필요한 설명은 자유롭게 읽을 수 있습니다. 실습 통과와 내용 읽기는
         별도로 기록합니다.
+      </p>
+      <p>
+        실습은 Python 기초와 Module 1 안에서 순서대로 열립니다. 개념·읽기·영상은
+        자유롭게 볼 수 있습니다.
       </p>
       {chapters(course).map((ch, i) => (
         <section className="syllabus-chapter" key={ch.id}>
@@ -209,19 +225,44 @@ export function Syllabus({
           </ol>
         </section>
       ))}
+      <section>
+        <h2>확장 읽기 · 네트워크</h2>
+        {Array.from(
+          new Set(
+            (course.resources || [])
+              .filter((r) => !r.page_id)
+              .map((r) => r.topic),
+          ),
+        ).map((topic) => (
+          <section key={topic}>
+            <h3>
+              {course.resources?.find((r) => r.topic === topic)?.group_title}
+            </h3>
+            <ResourceLinks
+              resources={(course.resources || []).filter(
+                (r) => r.topic === topic,
+              )}
+            />
+          </section>
+        ))}
+      </section>
     </main>
   );
 }
 export function ConceptLesson({
   page,
+  conceptData,
+  resources = [],
   onPractice,
   onSyllabus,
 }: {
   page: Page;
+  conceptData?: Concept;
+  resources?: Resource[];
   onPractice: () => void;
   onSyllabus: () => void;
 }) {
-  const concept = concepts[page.diagram];
+  const concept = conceptData || concepts[page.diagram];
   const titles = [
     "생활 속 문제",
     "핵심 규칙",
@@ -360,6 +401,7 @@ export function ConceptLesson({
           {card === 5 && (
             <>
               <p className="concept-lead">{concept.transfer}</p>
+              <ResourceLinks resources={resources} />
               <div className="concept-takeaway">
                 <strong>실습에서 해 볼 일</strong>
                 <ul>
@@ -380,6 +422,7 @@ export function ConceptLesson({
               </div>
             </>
           )}
+          <Sources concept />
         </div>
       </section>
       <nav className="concept-pagination" aria-label="개념 페이지 이동">

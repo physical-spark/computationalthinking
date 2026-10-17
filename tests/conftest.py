@@ -14,6 +14,7 @@ from backend.db import SessionLocal, engine
 from backend.models import Base, Learner, Session
 from backend.main import digest
 import secrets, time
+from datetime import date
 from backend.main import app
 
 
@@ -29,7 +30,7 @@ def client():
     with TestClient(app, headers={"Origin": "http://localhost:5173"}) as c:
         token = secrets.token_urlsafe(32)
         with SessionLocal.begin() as db:
-            u = Learner(nickname="테스트 회원", google_sub="test-"+secrets.token_hex(12))
+            u = Learner(nickname="테스트 회원", full_name="테스트 회원", birth_date=date(2000,1,1), avatar_id="sprout", google_sub="test-"+secrets.token_hex(12))
             db.add(u); db.flush()
             db.add(Session(token_hash=digest(token), learner_id=u.id, expires=time.time()+3600))
         c.cookies.set("ct-session", token)
@@ -41,7 +42,7 @@ def other():
     with TestClient(app, headers={"Origin": "http://localhost:5173"}) as c:
         token = secrets.token_urlsafe(32)
         with SessionLocal.begin() as db:
-            u = Learner(nickname="테스트 회원", google_sub="test-"+secrets.token_hex(12))
+            u = Learner(nickname="테스트 회원", full_name="테스트 회원", birth_date=date(2000,1,1), avatar_id="sprout", google_sub="test-"+secrets.token_hex(12))
             db.add(u); db.flush()
             db.add(Session(token_hash=digest(token), learner_id=u.id, expires=time.time()+3600))
         c.cookies.set("ct-session", token)

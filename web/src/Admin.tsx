@@ -1,3 +1,5 @@
+import ContentEditor from "./ContentEditor";
+import { Avatar } from "./Profile";
 import { useEffect, useState } from "react";
 import { api } from "./api";
 import type { Question } from "./types";
@@ -47,6 +49,11 @@ export default function Admin() {
     <main className="admin-page">
       <a href="/">학습 화면으로 돌아가기</a>
       <h1>수업의 흐름 살펴보기</h1>
+      <p>
+        <a className="button" href="/?preview=1#syllabus">
+          학습 미리보기 · 전체 과정
+        </a>
+      </p>
       <p>
         학생의 실행·실패·힌트·질문을 보고 다음 도움을 준비하세요. 통과 기록은
         자율학습을 돕는 기록입니다.
@@ -135,7 +142,7 @@ export default function Admin() {
             </select>
           </label>
           <label>
-            닉네임 찾기
+            성명 찾기
             <input value={search} onChange={(e) => setSearch(e.target.value)} />
           </label>
           <a className="button" href={"/api/v1/admin/export.csv" + suffix}>
@@ -164,6 +171,7 @@ export default function Admin() {
                     <td>
                       <button
                         className="text-button"
+                        aria-label={l.nickname}
                         onClick={() =>
                           action(async () =>
                             setDetail(
@@ -172,7 +180,10 @@ export default function Admin() {
                           )
                         }
                       >
-                        {l.nickname}
+                        <Avatar id={l.avatar_id} /> {l.nickname}
+                        <small className="identity-detail">
+                          {l.birth_date || "프로필 미등록"} · {l.id.slice(0, 8)}
+                        </small>
                       </button>
                       <small>{l.connected ? "Google 연결" : "익명"}</small>
                     </td>
@@ -245,6 +256,18 @@ export default function Admin() {
       {detail && (
         <section className="admin-section">
           <h2>{detail.nickname}의 기록</h2>
+          <p>생년월일: {detail.birth_date || "프로필 미등록"}</p>
+          <a
+            className="button"
+            href={
+              "/?student=" +
+              detail.id +
+              "#" +
+              (detail.current_step || "syllabus")
+            }
+          >
+            학생 화면 보기 · 읽기 전용
+          </a>
           <button onClick={() => setDetail(null)}>상세 기록 닫기</button>
           <h3>최근 코드와 실행</h3>
           {[...detail.attempts]
@@ -341,6 +364,7 @@ export default function Admin() {
             </article>
           ))}
       </section>
+      <ContentEditor />
     </main>
   );
 }

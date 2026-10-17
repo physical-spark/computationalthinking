@@ -16,8 +16,8 @@ def test_google_identity_and_admin_denial(client):
         "/api/v1/admin/stats",
     ]:
         assert client.get(path).status_code == 403
-    assert client.patch("/api/v1/me", json={"nickname": "새 닉네임"}).status_code == 200
-    assert client.get("/api/v1/me").json()["nickname"] == "새 닉네임"
+    assert client.patch("/api/v1/me", json={"full_name": "새 성명", "birth_date":"2000-01-01", "avatar_id":"cat"}).status_code == 200
+    assert client.get("/api/v1/me").json()["nickname"] == "새 성명"
 
 
 def test_origin_is_required(client, task):
@@ -29,15 +29,10 @@ def test_origin_is_required(client, task):
     )
 
 
-def test_attempt_is_idempotent_and_progress_is_monotonic(client, other, task):
-    event = {**task, "id": str(uuid4()), "code": "1+2", "passed": True, "hints": 0}
-    assert client.post("/api/v1/attempts", json=event).status_code == 200
-    assert client.post("/api/v1/attempts", json=event).json()["duplicate"]
-    assert other.post("/api/v1/attempts", json=event).status_code == 409
-    client.post("/api/v1/attempts", json={**event, "id": str(uuid4()), "passed": False})
-    p = client.get("/api/v1/progress").json()["progress"]
-    assert p[0]["passed"]
-    assert not other.get("/api/v1/progress").json()["progress"]
+def test_browser_cannot_claim_pass(client, other, task):
+    event = {**task, "id": str(uuid4()), "code": "1+2", "passed": True}
+    assert client.post("/api/v1/attempts", json=event).status_code == 409
+    assert client.get("/api/v1/progress").json()["progress"] == []
 
 
 def test_draft_revision_conflict_preserves_code(client, task):
@@ -98,9 +93,8 @@ def test_admin_moves_lobby_members_and_students_cannot_assign(administrator, oth
 def test_merge_preserves_progress_questions_and_both_drafts(client, other, task):
     guest_id = client.get("/api/v1/me").json()["id"]
     target_id = other.get("/api/v1/me").json()["id"]
-    client.post(
-        "/api/v1/attempts", json={**task, "id": str(uuid4()), "code": "1+2", "passed": True}
-    )
+    with SessionLocal.begin() as db:
+        db.add(Progress(learner_id=guest_id, step_id=task["step_id"], version=task["version"], passed=True))
     client.put("/api/v1/drafts", json={**task, "code": "guest code", "revision": 0})
     other.put("/api/v1/drafts", json={**task, "code": "account code", "revision": 0})
     qid = str(uuid4())
@@ -126,7 +120,7 @@ def test_merge_preserves_progress_questions_and_both_drafts(client, other, task)
 
 
 def test_csv_formula_is_escaped(administrator, other):
-    other.patch("/api/v1/me", json={"nickname": "=IMPORTXML(1)"})
+    other.patch("/api/v1/me", json={"full_name": "=IMPORTXML(1)", "birth_date":"2000-01-01", "avatar_id":"cat"})
     result = administrator.get("/api/v1/admin/export.csv")
     assert result.status_code == 200 and "'=IMPORTXML(1)" in result.text
 

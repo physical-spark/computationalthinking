@@ -4,6 +4,7 @@ COPY web/package*.json web/
 COPY runner/package*.json runner/
 RUN cd web && npm ci && cd ../runner && npm ci
 COPY web web
+COPY content/concepts.json content/concepts.json
 COPY runner runner
 ENV VITE_RUNNER_ORIGIN=https://computationalthinking-runner.futurereadycampus.com
 ENV VITE_CONTENT_LANGUAGE=ko
@@ -22,6 +23,8 @@ COPY backend backend
 COPY scripts/load_test.py scripts/load_test.py
 COPY alembic.ini ./
 COPY content/course.json content/course.json
+COPY content/concepts.json content/concepts.json
+COPY content/resources.json content/resources.json
 COPY --from=frontend /build/web/dist web/dist
 COPY --from=frontend /build/runner/dist runner/dist
 RUN useradd --uid 10001 --create-home app

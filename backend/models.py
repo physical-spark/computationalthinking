@@ -1,7 +1,8 @@
 import time
 import uuid
+from datetime import date
 
-from sqlalchemy import Boolean, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Date, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -17,6 +18,9 @@ class Learner(Base):
     __tablename__ = "learners"
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
     nickname: Mapped[str] = mapped_column(String(40))
+    full_name: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    birth_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    avatar_id: Mapped[str | None] = mapped_column(String(20), nullable=True)
     google_sub: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
     admin: Mapped[bool] = mapped_column(Boolean, default=False)
     created: Mapped[float] = mapped_column(Float, default=time.time)
@@ -162,4 +166,27 @@ class GroupMove(Base):
     admin_id: Mapped[str] = mapped_column(ForeignKey("learners.id"))
     previous_groups: Mapped[str] = mapped_column(Text)
     group_id: Mapped[str | None] = mapped_column(ForeignKey("cohorts.id"), nullable=True)
+    created: Mapped[float] = mapped_column(Float, default=time.time)
+
+
+class ExecutionRecord(Base):
+    __tablename__ = "execution_records"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    learner_id: Mapped[str] = mapped_column(ForeignKey("learners.id"), index=True)
+    step_id: Mapped[str] = mapped_column(String(200))
+    version: Mapped[str] = mapped_column(String(80))
+    code: Mapped[str] = mapped_column(Text)
+    outcome: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    completed: Mapped[bool] = mapped_column(Boolean, default=False)
+    created: Mapped[float] = mapped_column(Float, default=time.time)
+
+
+class ContentRevision(Base):
+    __tablename__ = "content_revisions"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    block_id: Mapped[str] = mapped_column(String(300), index=True)
+    author_id: Mapped[str] = mapped_column(ForeignKey("learners.id"))
+    body: Mapped[str] = mapped_column(Text)
+    base_hash: Mapped[str] = mapped_column(String(64))
+    state: Mapped[str] = mapped_column(String(20), default="draft")
     created: Mapped[float] = mapped_column(Float, default=time.time)

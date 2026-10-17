@@ -71,7 +71,7 @@ test("administrator reviews a class and privately answers a student", async ({
     },
   });
   await student.get("/api/v1/me");
-  await student.patch("/api/v1/me", { data: { nickname } });
+  await student.patch("/api/v1/me", { data: { full_name:nickname, birth_date:"2000-01-01", avatar_id:"cat" } });
   await page.reload();
   const memberRow = page
     .getByRole("row")
@@ -80,7 +80,7 @@ test("administrator reviews a class and privately answers a student", async ({
   await memberRow
     .getByRole("button", { name: "그룹 이동", exact: true })
     .click();
-  await expect(page.getByRole("status")).toContainText(
+  await expect(page.getByRole("status").first()).toContainText(
     nickname + " 회원의 그룹: " + name,
   );
 

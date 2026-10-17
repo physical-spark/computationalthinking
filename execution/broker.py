@@ -128,7 +128,7 @@ async def session(ws: WebSocket, learner: str):
     task = None
     inputs = asyncio.Queue(maxsize=1)
 
-    async def prepare():
+    async def prepare(announce=True):
         nonlocal sandbox
         await ws.send_json({"type": "progress", "message": "서버의 Python 실행 환경을 준비합니다."})
         try:
@@ -137,11 +137,19 @@ async def session(ws: WebSocket, learner: str):
             sandbox = Sandbox()
             async with slots:
                 await sandbox.start()
-        await ws.send_json({"type": "ready"})
+        if announce:
+            await ws.send_json({"type": "ready"})
 
-    async def execute(entry, run_id):
+    last_step = None
+
+    async def execute(entry, run_id, step_id):
+        nonlocal last_step
         held = False
         try:
+            if last_step is not None and last_step != step_id:
+                await sandbox.close()
+                await prepare(announce=False)
+            last_step = step_id
             await ws.send_json({"type": "progress", "message": "실행 순서를 기다립니다."})
             await asyncio.wait_for(slots.acquire(), 60)
             held = True
@@ -203,7 +211,7 @@ async def session(ws: WebSocket, learner: str):
                     break
                 while not inputs.empty():
                     inputs.get_nowait()
-                task = asyncio.create_task(execute(entry, str(data.get("id", ""))[:50]))
+                task = asyncio.create_task(execute(entry, str(data.get("id", ""))[:50], data.get("step_id")))
             elif (
                 kind == "input" and isinstance(data.get("text"), str) and len(data["text"]) <= 4000
             ):

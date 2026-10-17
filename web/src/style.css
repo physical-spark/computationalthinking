@@ -1911,3 +1911,142 @@ input[type="checkbox"] {
     padding-top: 12px;
   }
 }
+/* Identity, supplementary reading and editorial surfaces share existing tokens. */
+.profile-form {
+  display: grid;
+  gap: 16px;
+  max-width: 560px;
+}
+.profile-form label,
+.content-editor > label {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.profile-form input:not([type="radio"]) {
+  width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.avatar-grid label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 52px;
+  border: 1px solid #9ab7ae;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.avatar-grid .selected {
+  background: #dff2ec;
+  border-color: #086e63;
+}
+.avatar-grid span[aria-hidden] {
+  font-size: 26px;
+}
+.source-note {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #4c645e;
+  border-top: 1px solid #ccd9d4;
+  padding: 12px 0;
+  margin-top: 24px;
+  overflow-wrap: anywhere;
+}
+.source-note a {
+  color: #315c52;
+  text-decoration: underline;
+}
+.lesson-video {
+  width: 100%;
+  aspect-ratio: 16/9;
+  min-height: 200px;
+  border: 0;
+  border-radius: 8px;
+}
+.resource-links {
+  margin: 20px 0;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.resource-links li {
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
+.preview-banner {
+  padding: 10px 24px;
+  background: #fff3cb;
+  color: #4b3b09;
+  border-bottom: 1px solid #b8a76d;
+  flex-shrink: 0;
+}
+.preview-banner a {
+  margin-left: 12px;
+  color: inherit;
+  text-decoration: underline;
+}
+.identity-detail {
+  display: block;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.content-editor {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid #b9cdc5;
+  display: grid;
+  gap: 16px;
+}
+.content-editor textarea,
+.content-editor select,
+.content-editor input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+}
+.content-editor select {
+  max-width: 100%;
+}
+.content-editor h3 {
+  overflow-wrap: anywhere;
+}
+.content-editor textarea {
+  font: inherit;
+  line-height: 1.65;
+}
+.prose-preview,
+.revision-entry,
+.locked-code {
+  padding: 16px;
+  border: 1px solid #bdcec7;
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+}
+.locked-code {
+  background: #ecf1ee;
+}
+.content-editor pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.lesson-pane > fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+@media (max-width: 600px) {
+  .preview-banner {
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+  .content-editor .actions {
+    flex-wrap: wrap;
+  }
+}

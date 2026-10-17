@@ -1,3 +1,6 @@
+import Profile, { Avatar } from "./Profile";
+import ResourceLesson, { Sources, ResourceLinks } from "./Resources";
+import type { Access } from "./types";
 import { CourseSidebar, Syllabus, ConceptLesson } from "./LearningPath";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import DOMPurify from "dompurify";
@@ -136,6 +139,12 @@ function textOf(html: string) {
   );
 }
 export default function App() {
+  const params = new URLSearchParams(location.search);
+  const studentId = params.get("student");
+  const readOnly = !!studentId;
+  const [subjectName, setSubjectName] = useState("");
+  const [access, setAccess] = useState<Access>({});
+  const [resourceId, setResourceId] = useState("");
   const [user, setUser] = useState<User | null>(null),
     [course, setCourse] = useState<Course | null>(null),
     [error, setError] = useState(""),
@@ -153,7 +162,9 @@ export default function App() {
     [navOpen, setNavOpen] = useState(
       !matchMedia("(max-width: 1100px)").matches,
     ),
-    [view, setView] = useState<"syllabus" | "concept" | "practice">("syllabus"),
+    [view, setView] = useState<
+      "syllabus" | "concept" | "practice" | "resource"
+    >("syllabus"),
     [hints, setHints] = useState(0),
     [passed, setPassed] = useState(false),
     [inputText, setInputText] = useState(""),
@@ -196,13 +207,25 @@ export default function App() {
   };
   function syncRoute(c: Course, fallback = "") {
     const hash = decodeURIComponent(location.hash.slice(1));
+    const resource = c.resources?.find(
+      (r) => "resource/" + r.id === hash.split("/").slice(0, 2).join("/"),
+    );
+    setResourceId(resource?.id || "");
     const conceptPage = c.pages.find(
       (p) =>
         "concept/" + p.id === hash.split("/").slice(0, 2).join("/") ||
         p.id === hash,
     );
     const target = c.pages.flatMap((p) => p.steps).find((s) => s.id === hash);
-    setView(conceptPage ? "concept" : target ? "practice" : "syllabus");
+    setView(
+      resource
+        ? "resource"
+        : conceptPage
+          ? "concept"
+          : target
+            ? "practice"
+            : "syllabus",
+    );
     setCurrent(
       conceptPage?.steps[0].id ||
         target?.id ||
@@ -222,10 +245,15 @@ export default function App() {
     if (mobile) setNavOpen(false);
   }
   async function refresh() {
-    const p = await api<any>("/api/v1/progress");
+    const p = await api<any>(
+      studentId && user?.admin
+        ? "/api/v1/admin/learners/" + studentId
+        : "/api/v1/progress",
+    );
+    setAccess(p.access || {});
     setProgress(p.progress);
     setDrafts(p.drafts);
-    setConflicts(p.conflicts);
+    setConflicts(p.conflicts || []);
     setReflections(p.reflections || []);
   }
   useEffect(() => {
@@ -233,7 +261,12 @@ export default function App() {
       try {
         const me = await api<User>("/api/v1/me");
         setUser(me);
-        if (!me.connected || location.pathname === "/privacy") return;
+        if (
+          !me.connected ||
+          (!me.admin && !me.profile_complete) ||
+          location.pathname === "/privacy"
+        )
+          return;
         const connecting = localGet<string | null>("ct-connecting-user", null);
         if (me.connected && connecting) {
           if (connecting !== me.id) {
@@ -290,17 +323,28 @@ export default function App() {
         }
         setUser(me);
         const [c, p, q] = await Promise.all([
-          api<Course>("/api/v1/course"),
-          api<any>("/api/v1/progress"),
+          api<Course>(
+            params.get("revision") && me.admin
+              ? "/api/v1/admin/content/preview?revision=" +
+                  params.get("revision")
+              : "/api/v1/course",
+          ),
+          api<any>(
+            studentId && me.admin
+              ? "/api/v1/admin/learners/" + studentId
+              : "/api/v1/progress",
+          ),
           api<Question[]>("/api/v1/questions"),
         ]);
         setCourse(c);
+        if (studentId && me.admin) setSubjectName(p.nickname || "학습자");
+        setAccess(p.access || {});
         setProgress(p.progress);
         setDrafts(p.drafts);
-        setConflicts(p.conflicts);
+        setConflicts(p.conflicts || []);
         setReflections(p.reflections || []);
         setQuestions(q);
-        syncRoute(c, me.current_step);
+        syncRoute(c, p.current_step || me.current_step);
         if (new URLSearchParams(location.search).has("login"))
           setNotice("Google 로그인을 마치지 못했습니다. 다시 로그인해 주세요.");
       } catch (e) {
@@ -335,6 +379,7 @@ export default function App() {
       location.pathname !== "/" ||
       view !== "concept" ||
       !user ||
+      user.admin ||
       !course ||
       !step
     )
@@ -370,6 +415,24 @@ export default function App() {
     )
       return;
     const draftKey = "ct-draft:" + user.id + ":" + step.id;
+    if (user.admin || access[step.id]?.unlocked === false) {
+      setCode(
+        readOnly
+          ? drafts.find((d) => d.step_id === step.id)?.code || step.starter
+          : sessionStorage.getItem("ct-preview-code") || step.starter,
+      );
+      if (!readOnly) sessionStorage.removeItem("ct-preview-code");
+      setOutput("");
+      setResultPending(null);
+      setPrediction(null);
+      setTrace([]);
+      setDebugUrl("");
+      setPassed(progress.some((p) => p.step_id === step.id && p.passed));
+      setSaved(
+        readOnly ? "학생 코드 · 읽기 전용" : "관리자 미리보기 · 기록하지 않음",
+      );
+      return;
+    }
     const stored = localGet<any>(draftKey, null);
     const local =
       typeof stored === "string"
@@ -426,7 +489,7 @@ export default function App() {
     heading.current?.focus();
   }, [current, !!course, !!user, view]);
   useEffect(() => {
-    if (!user) return;
+    if (!user || user.admin) return;
     const flush = () =>
       flushQueue(user.id)
         .then(() => {
@@ -458,6 +521,7 @@ export default function App() {
       !course
     )
       return;
+    if (user.admin || access[step.id]?.unlocked === false) return;
     const key = "ct-draft:" + user.id + ":" + step.id;
     const stored = localGet<any>(key, null);
     const baseline = typeof stored === "object" && stored ? stored.revision : 0;
@@ -520,10 +584,12 @@ export default function App() {
     if (mobile) setNavOpen(false);
   }
   function changeCode(value: string) {
+    if (readOnly) return;
     setCode(value);
-    setSaved("저장 중");
+    setSaved(user?.admin ? "관리자 미리보기 · 기록하지 않음" : "저장 중");
   }
   function run(source = mode) {
+    if (readOnly || access[step?.id || ""]?.unlocked === false) return;
     if (!step || !page) return;
     if (runnerState !== "ready") {
       setNotice(
@@ -561,35 +627,27 @@ export default function App() {
       );
       return;
     }
+    if (!result.recorded) {
+      setNotice("서버 저장을 확인하지 못했습니다. 다시 실행해 주세요.");
+      return;
+    }
     const ok = !!result.passed;
     setPassed(ok || passed);
-    if (ok)
-      setProgress((ps) => [
-        ...ps.filter((p) => p.step_id !== step.id),
-        { step_id: step.id, viewed: true, passed: true },
-      ]);
+    if (result.access) setAccess(result.access);
+    if (!user.admin) await refresh();
     if (result.message_sections)
       for (const section of result.message_sections)
         for (const message of section.messages || [])
           setOutput((v) => v + "\n" + textOf(message));
     setNotice(
-      ok
-        ? "통과했습니다. 다음 과제로 이동하거나 선택 복습을 해 보세요."
-        : "결과와 힌트를 확인하고 다시 시도해 보세요.",
+      user.admin
+        ? "관리자 미리보기 실행입니다. 학습 기록은 변경하지 않았습니다."
+        : ok
+          ? "통과했습니다. 다음 과제를 시작할 수 있습니다."
+          : "결과와 힌트를 확인하고 다시 시도해 보세요.",
     );
-    try {
-      await queueEvent(user.id, "/api/v1/attempts", {
-        id: crypto.randomUUID(),
-        step_id: step.id,
-        version: course.version,
-        code,
-        passed: ok,
-        hints,
-      });
-    } catch {
-      setSaved("연결되면 실행 기록을 저장합니다.");
-    }
   }
+
   function result(result: any) {
     if (result.trace) {
       setTrace(result.trace);
@@ -608,6 +666,11 @@ export default function App() {
     }
   }
   function rememberReflection(text: string, selected: number | null = choice) {
+    if (readOnly) return;
+    if (user?.admin) {
+      setExplanation(text);
+      return;
+    }
     setExplanation(text);
     const key = "ct-reflection:" + user!.id + ":" + step!.id;
     if (
@@ -623,6 +686,10 @@ export default function App() {
       );
   }
   async function saveReflection(quizOnly = false) {
+    if (user?.admin) {
+      setNotice("관리자 미리보기에서는 기록하지 않습니다.");
+      return;
+    }
     if (!step || !user || !course) return;
     const entry = {
       id: crypto.randomUUID(),
@@ -652,6 +719,10 @@ export default function App() {
   }
   async function submitQuestion(e: React.FormEvent) {
     e.preventDefault();
+    if (user?.admin) {
+      setNotice("관리자 미리보기에서는 질문을 저장하지 않습니다.");
+      return;
+    }
     if (!user || !step) return;
     try {
       await queueEvent(user.id, "/api/v1/questions", {
@@ -679,9 +750,10 @@ export default function App() {
       <main className="welcome">
         <h1>학습 기록과 개인정보</h1>
         <p>
-          닉네임, Google 계정 연결 식별자, 코드·진도·질문·그룹 배정 기록을 학습
-          지원 목적으로 저장합니다. 관리자만 수업 기록을 조회할 수 있습니다.
-          실명·전화번호·프로필 사진을 요구하지 않습니다.
+          성명·생년월일·선택한 이모지, Google 계정 연결 식별자,
+          코드·진도·질문·그룹 배정 기록을 학습 지원과 동명이인 구분 목적으로
+          저장합니다. 생년월일은 본인과 관리자만 볼 수 있습니다. 전화번호와
+          프로필 사진은 수집하지 않습니다.
         </p>
         <p>
           Google 로그인으로 본인의 학습 기록을 이어서 볼 수 있습니다. 기존 익명
@@ -733,6 +805,21 @@ export default function App() {
         </p>
       </main>
     );
+  if (user?.connected && !user.admin && !user.profile_complete)
+    return (
+      <main className="welcome">
+        <h1>학습 프로필 등록</h1>
+        <Profile user={user} onSaved={() => location.reload()} />
+        <button
+          onClick={async () => {
+            await api("/api/v1/logout", "POST", {});
+            location.reload();
+          }}
+        >
+          로그아웃
+        </button>
+      </main>
+    );
   if (!user || !course || !page || !step)
     return (
       <main className="welcome">
@@ -748,7 +835,9 @@ export default function App() {
           <a className="brand" href="/">
             ct <span>컴퓨팅 사고력</span>
           </a>
-          <span>{user.nickname}</span>
+          <span>
+            <Avatar id={user.avatar_id} /> {user.nickname}
+          </span>
         </header>
         {user.admin ? (
           <Suspense fallback={<p>관리자 화면 준비 중</p>}>
@@ -806,7 +895,7 @@ export default function App() {
             className="account-button"
             onClick={() => account.current?.showModal()}
           >
-            {user.nickname}
+            <Avatar id={user.avatar_id} /> {user.nickname}
             <small>{user.admin ? "관리자" : user.group_name || "로비"}</small>
           </button>
           {user.admin && (
@@ -833,6 +922,22 @@ export default function App() {
                 : "직접 실행하는 학습"}
         </span>
       </div>
+      {user.admin && (
+        <div className="preview-banner" role="status">
+          {readOnly
+            ? `${subjectName} · 학생 화면 보기 · 읽기 전용 · 학생 기록은 변경하지 않습니다.`
+            : "관리자 미리보기 · 실행과 열람은 학습 통계에 기록하지 않습니다."}{" "}
+          <a href="/admin">관리자 화면</a>
+          {readOnly && (
+            <a
+              href={"/?preview=1#" + current}
+              onClick={() => sessionStorage.setItem("ct-preview-code", code)}
+            >
+              이 코드를 관리자 미리보기에서 실행
+            </a>
+          )}
+        </div>
+      )}
       <div className={"course-workspace" + (navOpen ? " sidebar-open" : "")}>
         {navOpen && (
           <CourseSidebar
@@ -841,6 +946,7 @@ export default function App() {
             current={current}
             view={view}
             progress={progress}
+            access={access}
             onConcept={(p) => openPath("concept", p)}
             onPractice={navigate}
             onSyllabus={() => openPath("syllabus")}
@@ -862,11 +968,63 @@ export default function App() {
             <ConceptLesson
               key={page.id}
               page={page}
+              conceptData={course.concepts?.[page.diagram]}
+              resources={(course.resources || []).filter(
+                (r) => r.page_id === page.id,
+              )}
               onPractice={() => navigate(page.steps[0].id)}
               onSyllabus={() => openPath("syllabus")}
             />
           )}
-          {view === "practice" && (
+          {view === "resource" &&
+            course.resources?.find((r) => r.id === resourceId) && (
+              <ResourceLesson
+                key={resourceId}
+                resource={course.resources.find((r) => r.id === resourceId)!}
+                onDone={() => {
+                  const resource = course.resources!.find(
+                    (r) => r.id === resourceId,
+                  )!;
+                  const group = course.resources!.filter(
+                    (r) => r.page_id === resource.page_id,
+                  );
+                  const following =
+                    group[group.findIndex((r) => r.id === resourceId) + 1];
+                  if (following)
+                    location.hash = "resource/" + following.id + "/1";
+                  else {
+                    const target = course.pages.find(
+                      (p) => p.id === resource.page_id,
+                    );
+                    if (target)
+                      navigate(
+                        target.steps.find(
+                          (s) =>
+                            access[s.id]?.unlocked &&
+                            !progress.some(
+                              (p) => p.step_id === s.id && p.passed,
+                            ),
+                        )?.id || target.steps[0].id,
+                      );
+                    else openPath("syllabus");
+                  }
+                }}
+              />
+            )}
+          {view === "practice" && access[step.id]?.unlocked === false && (
+            <main className="welcome">
+              <h1>앞선 과제를 먼저 통과해 주세요</h1>
+              <p>
+                이 실습은 아직 잠겨 있습니다. 설명과 영상은 자유롭게 볼 수
+                있습니다.
+              </p>
+              <button onClick={() => navigate(access[step.id].requires!)}>
+                현재 과제 풀기
+              </button>
+              <button onClick={() => openPath("concept")}>개념 읽기</button>
+            </main>
+          )}
+          {view === "practice" && access[step.id]?.unlocked !== false && (
             <>
               <div className="practice-path">
                 <button
@@ -1038,19 +1196,21 @@ export default function App() {
                       <p>읽기와 코드 통과는 따로 기록합니다.</p>
                     </section>
                   )}
-                  <ThinkingJournal
-                    key={step.id}
-                    page={page}
-                    step={step}
-                    answer={explanation}
-                    onChange={rememberReflection}
-                    onSave={() => saveReflection()}
-                    code={code}
-                    output={output}
-                    passed={passed}
-                  />
+                  <fieldset disabled={readOnly}>
+                    <ThinkingJournal
+                      key={step.id}
+                      page={page}
+                      step={step}
+                      answer={explanation}
+                      onChange={rememberReflection}
+                      onSave={() => saveReflection()}
+                      code={code}
+                      output={output}
+                      passed={passed}
+                    />
+                  </fieldset>
                   {
-                    <section className="review">
+                    <fieldset disabled={readOnly} className="review">
                       <h2>개념 확인하기 · 선택</h2>
                       <span className="eyebrow">선택 복습</span>
                       <h2>내가 이해한 것을 확인해 볼까요?</h2>
@@ -1082,7 +1242,7 @@ export default function App() {
                       <button onClick={() => saveReflection(true)}>
                         복습 기록 저장
                       </button>
-                    </section>
+                    </fieldset>
                   }
                   <section className="ask-section">
                     <h2>관리자에게 질문 남기기</h2>
@@ -1113,11 +1273,17 @@ export default function App() {
                     {next ? (
                       <button
                         className="primary"
-                        onClick={() =>
-                          next.page.id === page.id
-                            ? navigate(next.step.id)
-                            : openPath("concept", next.page)
-                        }
+                        disabled={!step.reading && !passed && !user.admin}
+                        onClick={() => {
+                          const related = (course.resources || []).filter(
+                            (r) => r.page_id === page.id,
+                          );
+                          if (related.length && step.id === page.steps[0].id)
+                            location.hash = "resource/" + related[0].id + "/1";
+                          else if (next.page.id === page.id)
+                            navigate(next.step.id);
+                          else openPath("concept", next.page);
+                        }}
                       >
                         {passed || step.reading
                           ? "다음 단계로"
@@ -1131,6 +1297,12 @@ export default function App() {
                       </p>
                     )}
                   </div>
+                  <ResourceLinks
+                    resources={(course.resources || []).filter(
+                      (r) => r.page_id === page.id,
+                    )}
+                  />
+                  <Sources sources={step.sources} />
                   <footer className="lesson-footer">
                     <a href="/privacy">학습 기록 안내</a>
                     <span>Futurecoder 기반 · MIT License · Alex Hall</span>
@@ -1179,7 +1351,7 @@ export default function App() {
                         <div className="run-toolbar" aria-label="실행 도구">
                           <button
                             className="run-button"
-                            disabled={runnerState !== "ready"}
+                            disabled={readOnly || runnerState !== "ready"}
                             onClick={() => run()}
                           >
                             ▶ 실행
@@ -1210,6 +1382,7 @@ export default function App() {
                       )}
                       <Suspense fallback={<p>편집기 준비 중</p>}>
                         <Editor
+                          readOnly={readOnly}
                           shell={mode === "shell"}
                           value={code}
                           onChange={changeCode}
@@ -1273,7 +1446,7 @@ export default function App() {
                             </label>
                           ))}
                           <button
-                            onClick={() => {
+                            onClick={async () => {
                               if (prediction === null) {
                                 setNotice("먼저 예상 결과를 선택해 주세요.");
                                 return;
@@ -1286,7 +1459,25 @@ export default function App() {
                               }
                               setOutput(pendingOutput.current);
                               pendingOutput.current = "";
-                              commitResult(resultPending);
+                              try {
+                                if (!user.admin) {
+                                  const done = await api(
+                                    "/api/v1/executions/" +
+                                      resultPending.run_id +
+                                      "/prediction",
+                                    "POST",
+                                    { answer: selected },
+                                  );
+                                  await commitResult({
+                                    ...resultPending,
+                                    ...done,
+                                    recorded: true,
+                                  });
+                                } else await commitResult(resultPending);
+                              } catch (e) {
+                                setNotice((e as Error).message);
+                                return;
+                              }
                               setResultPending(null);
                             }}
                           >
@@ -1343,39 +1534,41 @@ export default function App() {
                         </p>
                         <div className="tool-actions">
                           <button
-                            disabled={runnerState !== "ready"}
+                            disabled={readOnly || runnerState !== "ready"}
                             onClick={() => run("snoop")}
                           >
                             변수 변화 보기
                           </button>
                           <button
-                            disabled={runnerState !== "ready"}
+                            disabled={readOnly || runnerState !== "ready"}
                             onClick={() => run("pythontutor")}
                           >
                             한 줄씩 보기
                           </button>
                           <button
-                            disabled={runnerState !== "ready"}
+                            disabled={readOnly || runnerState !== "ready"}
                             onClick={() => run("birdseye")}
                           >
                             표현식 값 보기
                           </button>
                         </div>
                       </section>
-                      <Runner
-                        ref={runner}
-                        onOutput={(s) => {
-                          if (step.prediction.choices?.length)
-                            pendingOutput.current = (
-                              pendingOutput.current + s
-                            ).slice(-64000);
-                          else setOutput((v) => (v + s).slice(-64000));
-                        }}
-                        onResult={result}
-                        onInput={() => {}}
-                        onState={setRunnerState}
-                        onProgress={setRunnerDetail}
-                      />
+                      {!readOnly && (
+                        <Runner
+                          ref={runner}
+                          onOutput={(s) => {
+                            if (step.prediction.choices?.length)
+                              pendingOutput.current = (
+                                pendingOutput.current + s
+                              ).slice(-64000);
+                            else setOutput((v) => (v + s).slice(-64000));
+                          }}
+                          onResult={result}
+                          onInput={() => {}}
+                          onState={setRunnerState}
+                          onProgress={setRunnerDetail}
+                        />
+                      )}
                       <p className="keyboard-tip">
                         {mode === "shell"
                           ? "Enter로 실행"
@@ -1413,32 +1606,15 @@ export default function App() {
         </form>
         <h2 id="account-title">이어서 학습하기</h2>
         <p>Google 계정에 학습 기록을 연결했습니다.</p>
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const nickname = new FormData(e.currentTarget).get("nickname");
-            try {
-              await api("/api/v1/me", "PATCH", { nickname });
-              setUser({ ...user, nickname: String(nickname) });
-              setNotice("닉네임을 저장했습니다.");
-            } catch (e) {
-              setNotice((e as Error).message);
-            }
-          }}
-        >
-          <label>
-            닉네임
-            <input
-              name="nickname"
-              defaultValue={user.nickname}
-              minLength={2}
-              maxLength={24}
-              autoComplete="nickname"
-              required
-            />
-          </label>
-          <button>닉네임 저장</button>
-        </form>
+        {!user.admin && (
+          <Profile
+            user={user}
+            onSaved={(u) => {
+              setUser(u);
+              setNotice("프로필을 저장했습니다.");
+            }}
+          />
+        )}
         {user.connected && (
           <button
             onClick={async () => {

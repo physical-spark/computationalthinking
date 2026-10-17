@@ -15,6 +15,8 @@ export async function api<T = any>(
   method = "GET",
   body?: unknown,
 ): Promise<T> {
+  if (method !== "GET" && new URLSearchParams(location.search).has("student"))
+    throw new Error("학생 화면 보기는 읽기 전용입니다.");
   const r = await fetch(path, {
     method,
     credentials: "same-origin",
@@ -64,7 +66,8 @@ export async function flushQueue(user: string) {
       const pending = localGet<Pending[]>(key, []);
       if (!pending.length) break;
       const item = pending[0];
-      await api(item.path, "POST", item.body);
+      if (item.path !== "/api/v1/attempts")
+        await api(item.path, "POST", item.body);
       const current = localGet<Pending[]>(key, []);
       current.shift();
       localSet(key, current);
