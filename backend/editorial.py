@@ -16,7 +16,10 @@ from .db import database
 from .models import ContentRevision
 
 router = APIRouter()
-CODE = re.compile(r"<(?:pre|code)\b[^>]*>.*?</(?:pre|code)>", re.S | re.I)
+CODE = re.compile(
+    r"<pre\b[^>]*>.*?</pre>|<code\b[^>]*>.*?</code>|<table\b[^>]*>.*?</table>|<blockquote\b[^>]*>.*?</blockquote>|<hr\b[^>]*>",
+    re.S | re.I,
+)
 
 
 def fingerprint(text):
@@ -85,9 +88,18 @@ class SafeProse(HTMLParser):
     def __init__(self):
         super().__init__()
         self.classes = []
+        self.headings = []
 
     def handle_starttag(self, tag, attrs):
+        if tag in {"h1", "h2", "h3", "h4", "h5", "h6"}:
+            self.headings.append(tag)
         if tag not in {
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6",
             "p",
             "ul",
             "ol",
@@ -130,12 +142,12 @@ def validate_prose(body, original, block_id=None):
     if block_id and not rich_block(block_id) and re.search(r"<[^>]*>", body):
         raise HTTPException(422, "이 문구는 서식 없이 글자로 입력해 주세요.")
     if CODE.findall(body) != CODE.findall(original):
-        raise HTTPException(422, "코드 블록은 웹에서 변경할 수 없습니다.")
+        raise HTTPException(422, "코드와 표 등 고정 블록은 웹에서 변경할 수 없습니다.")
     try:
         before, after = SafeProse(), SafeProse()
-        before.feed(original)
-        after.feed(body)
-        if before.classes != after.classes:
+        before.feed(CODE.sub("", original))
+        after.feed(CODE.sub("", body))
+        if before.classes != after.classes or before.headings != after.headings:
             raise ValueError("레이아웃 클래스는 웹에서 변경할 수 없습니다.")
     except ValueError as e:
         raise HTTPException(422, str(e)) from e

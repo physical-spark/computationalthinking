@@ -313,3 +313,10 @@ def test_prose_rejects_unquoted_layout_and_missing_attribute_value():
         with pytest.raises(HTTPException) as exc:
             validate_prose(body, "<p>text</p>")
         assert exc.value.status_code == 422
+
+
+def test_all_existing_prose_blocks_round_trip_without_changing_code():
+    from backend.editorial import base_course, blocks, validate_prose
+
+    for block_id, (obj, key) in blocks(base_course()).items():
+        validate_prose(obj[key], obj[key], block_id)

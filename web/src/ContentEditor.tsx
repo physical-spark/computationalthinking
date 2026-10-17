@@ -27,7 +27,9 @@ export default function ContentEditor() {
       setNotice((e as Error).message);
     }
   };
-  const parts = body.split(/(<(?:pre|code)\b[^>]*>[\s\S]*?<\/(?:pre|code)>)/gi);
+  const parts = body.split(
+    /(<pre\b[^>]*>[\s\S]*?<\/pre>|<code\b[^>]*>[\s\S]*?<\/code>|<table\b[^>]*>[\s\S]*?<\/table>|<blockquote\b[^>]*>[\s\S]*?<\/blockquote>|<hr\b[^>]*>)/gi,
+  );
   return (
     <section className="content-editor">
       <h2>학습 문구 편집</h2>
@@ -93,13 +95,13 @@ export default function ContentEditor() {
           </div>
           <p>
             {block.rich_text
-              ? "문단·목록·강조·링크 HTML을 사용할 수 있습니다. 코드 블록은 잠겨 있습니다."
+              ? "문단·목록·강조·링크 HTML을 사용할 수 있습니다. 코드·표 등 고정 블록은 잠겨 있습니다."
               : "이 문구는 서식 없이 글자로 입력하세요. 본문과 힌트에서는 문단·목록·강조·링크를 사용할 수 있습니다."}
           </p>
           {parts.map((part, i) =>
             i % 2 ? (
               <section key={i}>
-                <small>코드 · 편집할 수 없음</small>
+                <small>고정 블록 · 편집할 수 없음</small>
                 <div
                   className="locked-code"
                   dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(part) }}
