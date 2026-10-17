@@ -5,6 +5,7 @@ import io
 import json
 from pathlib import Path
 
+from anyio import CapacityLimiter, to_thread
 from fastapi import APIRouter, HTTPException, Request, Response
 from PIL import Image, ImageOps, UnidentifiedImageError
 from pydantic import BaseModel
@@ -20,16 +21,17 @@ AVATARS = {row[0] for row in json.loads(
 MAX_UPLOAD_BYTES = 5 * 1024 * 1024
 MAX_PIXELS = 20_000_000
 router = APIRouter()
+image_decoder = CapacityLimiter(1)
 
 
 def normalize_image(raw):
     try:
-        with Image.open(io.BytesIO(raw)) as source:
+        with Image.open(io.BytesIO(raw), formats=["JPEG", "PNG", "WEBP"]) as source:
             if source.format not in {"JPEG", "PNG", "WEBP"}:
                 raise ValueError("format")
             if source.width * source.height > MAX_PIXELS or getattr(source, "n_frames", 1) != 1:
                 raise ValueError("dimensions")
-            source.load()
+            source.thumbnail((512, 512), Image.Resampling.LANCZOS)
             corrected = ImageOps.exif_transpose(source)
             thumb = ImageOps.fit(corrected.convert("RGBA"), (256, 256), Image.Resampling.LANCZOS)
             # A fresh canvas keeps no EXIF, XMP, ICC, comments or source filenames.
@@ -72,7 +74,7 @@ async def upload(request: Request):
         if len(raw) + len(chunk) > MAX_UPLOAD_BYTES:
             raise HTTPException(413, "사진은 5MB 이하로 선택해 주세요.")
         raw.extend(chunk)
-    image = await run_in_threadpool(normalize_image, raw)
+    image = await to_thread.run_sync(normalize_image, raw, limiter=image_decoder)
     return await run_in_threadpool(store_image, uid, image)
 
 
