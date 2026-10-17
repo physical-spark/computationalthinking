@@ -490,3 +490,75 @@
   padding-block: 4px;
   line-height: 1.5;
 }
+
+/* Recaps are reading pages, with the same bottom navigation and no idle editor. */
+.course-workspace .course-content .recap-shell .lesson-pane {
+  width: 100%;
+  max-width: 920px;
+  margin-inline: auto;
+}
+.unit-recap {
+  max-width: 720px;
+  margin-inline: auto;
+}
+.unit-recap .recap-eyebrow {
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.unit-recap h2 {
+  font-size: 1.5rem;
+  line-height: 1.4;
+  margin-block: 8px 16px;
+}
+.unit-recap .recap-did {
+  font-size: 1.0625rem;
+}
+.unit-recap .recap-skills {
+  list-style: none;
+  padding: 0;
+  counter-reset: thought;
+  margin-block: 24px;
+}
+.unit-recap .recap-skills li {
+  counter-increment: thought;
+  padding: 16px 0 16px 40px;
+  position: relative;
+  border-block-start: 1px solid var(--border);
+}
+.unit-recap .recap-skills li::before {
+  content: "0" counter(thought);
+  position: absolute;
+  inset-inline-start: 0;
+  top: 18px;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.8125rem;
+}
+.unit-recap h3 {
+  margin-block: 0 6px;
+  font-size: 1rem;
+}
+.unit-recap .recap-skills p {
+  margin: 0;
+}
+.unit-recap .recap-transfer {
+  border-inline-start: 3px solid var(--accent-solid);
+  padding-inline-start: 16px;
+}
+.unit-recap .recap-research-note {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  margin-block-start: 28px;
+}
+.unit-recap .recap-papers {
+  padding-inline-start: 20px;
+  font-size: 0.8125rem;
+}
+.unit-recap .recap-papers li {
+  margin-block-end: 16px;
+}
+.unit-recap .recap-papers p {
+  margin-block: 4px 0;
+  color: var(--muted);
+}

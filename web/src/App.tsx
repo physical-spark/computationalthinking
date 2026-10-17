@@ -26,6 +26,7 @@ import type {
 } from "./types";
 import Diagram from "./Diagram";
 import ExpressionProblem from "./ExpressionProblem";
+import PassCelebration, { type PassMoment } from "./PassCelebration";
 import { ThinkingGoal, ThinkingJournal } from "./Thinking";
 import Runner, { type RunnerHandle } from "./Runner";
 const Editor = lazy(() => import("./Editor"));
@@ -182,6 +183,18 @@ export default function App() {
     [questions, setQuestions] = useState<Question[]>([]),
     [reflections, setReflections] = useState<Reflection[]>([]),
     [parsons, setParsons] = useState<string[]>([]);
+  const [passMoment, setPassMoment] = useState<PassMoment | null>(null);
+  const submittedRun = useRef({ stepId: "", code: "", output: "", source: "" });
+  const celebratedRun = useRef("");
+  useEffect(() => {
+    setPassMoment(null);
+    submittedRun.current = { stepId: "", code: "", output: "", source: "" };
+  }, [current, view]);
+  useEffect(() => {
+    if (!passMoment) return;
+    const timer = setTimeout(() => setPassMoment(null), 2500);
+    return () => clearTimeout(timer);
+  }, [passMoment]);
   const pendingOutput = useRef("");
   const runner = useRef<RunnerHandle>(null),
     account = useRef<HTMLDialogElement>(null),
@@ -620,6 +633,10 @@ export default function App() {
       );
       return;
     }
+    setPassMoment(null);
+    setResultPending(null);
+    setPrediction(null);
+    submittedRun.current = { stepId: step.id, code, output: "", source };
     setOutput("");
     pendingOutput.current = "";
     setTrace([]);
@@ -654,6 +671,24 @@ export default function App() {
     setPassed(ok || passed);
     if (result.access) setAccess(result.access);
     if (!user.admin) await refresh();
+    const submitted = result.submission;
+    if (
+      ok &&
+      result.run_id &&
+      celebratedRun.current !== result.run_id &&
+      submitted?.stepId === step.id &&
+      currentRef.current === step.id &&
+      submitted.source === mode &&
+      !readOnly
+    ) {
+      celebratedRun.current = result.run_id;
+      setPassMoment({
+        id: result.run_id,
+        stepId: step.id,
+        code: submitted.code,
+        output: submitted.output,
+      });
+    }
     if (result.message_sections)
       for (const section of result.message_sections)
         for (const message of section.messages || [])
@@ -668,6 +703,7 @@ export default function App() {
   }
 
   function result(result: any) {
+    result = { ...result, submission: { ...submittedRun.current } };
     if (result.trace) {
       setTrace(result.trace);
       setTraceIndex(0);
@@ -1069,9 +1105,13 @@ export default function App() {
                 >
                   ← 단원 개념 다시 보기
                 </button>
-                <span>02 코드로 확인하기</span>
+                <span>
+                  {step.recap ? "03 생각 돌아보기" : "02 코드로 확인하기"}
+                </span>
               </div>
-              <div className="learning-shell">
+              <div
+                className={`learning-shell${step.recap ? " recap-shell" : ""}`}
+              >
                 <main className="lesson-pane" id="lesson" tabIndex={-1}>
                   <div className="lesson-breadcrumb">
                     <span>
@@ -1084,34 +1124,42 @@ export default function App() {
                   <h1 ref={heading} tabIndex={-1}>
                     {page.title}
                   </h1>
-                  <p className="lesson-intro">
-                    읽고, 예상하고, 직접 확인하세요. 한 번에 한 가지씩 바꿔
-                    봅니다.
-                  </p>
+                  {!step.recap && (
+                    <p className="lesson-intro">
+                      읽고, 예상하고, 직접 확인하세요. 한 번에 한 가지씩 바꿔
+                      봅니다.
+                    </p>
+                  )}
                   <div className="step-meta">
                     <span>
                       {step.reading
-                        ? "페이지 정리"
+                        ? "단원 정리"
                         : `학습 단계 ${page.steps.indexOf(step) + 1} / ${page.steps.filter((s) => !s.reading).length}`}
                     </span>
                     {passed && <span className="passed-label">✓ 통과</span>}
                   </div>
-                  <ThinkingGoal step={step} />
-                  {everydayExpression ? (
-                    <ExpressionProblem />
-                  ) : (
-                    <Diagram
-                      key={page.id}
-                      index={page.diagram}
-                      concept={page.concept}
-                    />
-                  )}
+                  {!step.recap && <ThinkingGoal step={step} />}
+                  {!step.recap &&
+                    (everydayExpression ? (
+                      <ExpressionProblem />
+                    ) : (
+                      <Diagram
+                        key={page.id}
+                        index={page.diagram}
+                        concept={page.concept}
+                      />
+                    ))}
                   {page.track === "module1" && (
                     <p className="simulation-label">
                       모의실습 · 실제 API와 LLM을 호출하지 않습니다.
                     </p>
                   )}
-                  <section aria-label="과제 설명">
+                  <section
+                    className={step.recap ? "unit-recap" : undefined}
+                    aria-label={
+                      step.recap ? "컴퓨팅 사고 단원 정리" : "과제 설명"
+                    }
+                  >
                     <Html text={step.text} />
                   </section>
                   {page.prerequisite && (
@@ -1223,7 +1271,7 @@ export default function App() {
                         )}
                       </section>
                     )}
-                  {mobile && (
+                  {mobile && !step.reading && (
                     <section className="mobile-code">
                       <h2>코드 읽기</h2>
                       {user.admin && step.solution && !step.reading && (
@@ -1274,7 +1322,7 @@ export default function App() {
                       passed={passed}
                     />
                   </fieldset>
-                  {
+                  {!step.reading && (
                     <fieldset disabled={readOnly} className="review">
                       <h2>개념 확인 · 선택</h2>
                       <p>건너뛰어도 다음 과제로 이동할 수 있습니다.</p>
@@ -1306,7 +1354,7 @@ export default function App() {
                         복습 기록 저장
                       </button>
                     </fieldset>
-                  }
+                  )}
                   <section className="ask-section">
                     <h2>멘토에게 질문 남기기</h2>
                     <p>질문과 답변은 본인과 멘토만 볼 수 있습니다.</p>
@@ -1371,10 +1419,13 @@ export default function App() {
                     </a>
                   </footer>
                 </main>
-                {!mobile && (
+                {!mobile && !step.reading && (
                   <>
                     <section
                       className="coding-pane"
+                      data-celebrating={
+                        passMoment?.stepId === step.id ? "true" : undefined
+                      }
                       aria-label="코드 작성과 실행"
                     >
                       <div className="coding-top">
@@ -1460,6 +1511,12 @@ export default function App() {
                         />
                       </Suspense>
                       <div className="output-heading">
+                        {passMoment?.stepId === step.id && (
+                          <PassCelebration
+                            key={passMoment.id}
+                            moment={passMoment}
+                          />
+                        )}
                         <h2>실행 결과</h2>
                         <span role="status">
                           {
@@ -1628,6 +1685,9 @@ export default function App() {
                         <Runner
                           ref={runner}
                           onOutput={(s) => {
+                            submittedRun.current.output = (
+                              submittedRun.current.output + s
+                            ).slice(-64000);
                             if (step.prediction.choices?.length)
                               pendingOutput.current = (
                                 pendingOutput.current + s

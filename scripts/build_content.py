@@ -11,6 +11,7 @@ from core.text import load_chapters, get_pages, pages
 from core import translation as t
 from module1 import PROJECTS
 import life_expression
+from unit_recaps import apply_recaps
 
 lang = sys.argv[1] if len(sys.argv) > 1 else "en"
 t.set_language(lang)
@@ -150,6 +151,9 @@ for page in out:
                     {**step["sources"][0], "label": "학습 흐름 참고: futurecoder · Alex Hall · MIT"},
                 ],
             )
+
+if lang == "ko":
+    apply_recaps(out, ROOT)
 
 content = {"language": lang, "upstream": "def491c2a348371f56249d05c64e0cf70f33ac2b", "pages": out}
 content["runtime_version"] = hashlib.sha256(

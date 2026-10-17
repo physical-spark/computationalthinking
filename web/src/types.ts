@@ -13,6 +13,7 @@ export type Reflection = {
   version: string;
 };
 export type Step = {
+  recap?: boolean;
   sources?: Source[];
   thinking: Thinking;
   id: string;

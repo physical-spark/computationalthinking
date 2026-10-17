@@ -32,6 +32,12 @@ test("everyday expression needs a correct model and opens the next step after sa
   await page.getByRole("button", { name: "▶ 실행", exact: true }).click();
   await expect(page.getByLabel("Python 실행 결과")).toContainText("10000");
   await expect(next).toBeEnabled();
+  await expect(page.locator(".pass-celebration")).toContainText(
+    "내 코드가 해냈어요!",
+  );
+  await expect(
+    page.locator(".pass-celebration .pass-outcome code"),
+  ).toContainText("10000");
   await expect(page.locator(".solution")).toContainText("풀이 예시");
   await expect(page.locator(".review legend")).toContainText("영화표 네 장");
   await page.screenshot({
