@@ -943,7 +943,7 @@ export default function App() {
           </span>
           <span>
             통과 <b>{counts.passed}</b>
-            <span className="progress-total"> / 265</span>
+            <span className="progress-total"> / {course.pages.reduce((count, page) => count + page.steps.filter((step) => !step.reading).length, 0)}</span>
           </span>
         </div>
         <nav className="header-actions" aria-label="학습 메뉴">

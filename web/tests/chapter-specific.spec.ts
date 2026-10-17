@@ -56,6 +56,7 @@ for (const width of [320, 390, 1440])
       const heading = page.locator("#concept-card-title");
       titles.push(await heading.innerText());
       await expect(heading).toHaveText(data.page_concepts[id].title);
+      await expect(page.locator(".progress-total")).toHaveText("/ " + data.pages.reduce((sum: number, p: any) => sum + p.steps.filter((s: any) => !s.reading).length, 0));
       await expect(page.locator(".concept-card-content")).toContainText(
         data.page_concepts[id].analogy,
       );
