@@ -45,6 +45,11 @@ for (const width of [390, 1068, 1440]) {
         available: el.clientHeight,
       }));
       expect(panel.content).toBeLessThanOrEqual(panel.available + 1);
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollHeight <= innerHeight + 1,
+        ),
+      ).toBe(true);
       for (const label of ["변수 변화 보기", "한 줄씩 보기", "표현식 값 보기"])
         await expect(
           page.getByRole("button", { name: label, exact: true }),

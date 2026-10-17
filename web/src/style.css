@@ -1432,7 +1432,7 @@ input[type="checkbox"] {
   flex-shrink: 0;
   position: sticky;
   inset-block-start: 0;
-  max-height: calc(100dvh - var(--lesson-chrome));
+  max-height: calc(100dvh - var(--lesson-chrome) - var(--lesson-footer));
   overflow-y: auto;
   overscroll-behavior: contain;
   scroll-padding-block: 16px;
