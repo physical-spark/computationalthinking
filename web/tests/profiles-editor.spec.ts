@@ -159,4 +159,23 @@ test("administrator preview, student read only and prose publishing", async ({
   await expect(
     page.locator(".content-editor").getByRole("status"),
   ).toContainText("게시했습니다");
+  await page
+    .getByLabel("편집할 문구", { exact: true })
+    .selectOption("IntroducingTheShell.first_expression/text");
+  await expect(page.locator(".locked-code").first()).toBeVisible();
+  const prose = page.getByLabel("문구 1", { exact: true });
+  await prose.fill("<p>검증용 본문 안내</p>" + (await prose.inputValue()));
+  await page.getByRole("button", { name: "초안 저장", exact: true }).click();
+  const proseUrl = await page
+    .getByRole("link", { name: "학습 화면 미리보기", exact: true })
+    .getAttribute("href");
+  const prosePreview = await context.newPage();
+  await prosePreview.goto(proseUrl!);
+  await expect(
+    prosePreview.getByText("검증용 본문 안내", { exact: true }),
+  ).toBeVisible();
+  await expect(prosePreview.locator(".lesson-prose").first()).toContainText(
+    "1+2",
+  );
+  await prosePreview.close();
 });
