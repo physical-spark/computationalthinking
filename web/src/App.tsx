@@ -166,6 +166,7 @@ export default function App() {
       "syllabus" | "concept" | "practice" | "resource"
     >("syllabus"),
     [hints, setHints] = useState(0),
+    [answerStep, setAnswerStep] = useState<string | null>(null),
     [passed, setPassed] = useState(false),
     [inputText, setInputText] = useState(""),
     [prediction, setPrediction] = useState<number | null>(null),
@@ -201,6 +202,7 @@ export default function App() {
   const index = all.findIndex((x) => x.step.id === current);
   const next = all[index + 1];
   const previous = all[index - 1];
+  useEffect(() => setAnswerStep(null), [current, view, user?.id, studentId]);
   const counts = {
     viewed: progress.filter((p) => p.viewed).length,
     passed: progress.filter((p) => p.passed).length,
@@ -1213,6 +1215,34 @@ export default function App() {
                   {mobile && (
                     <section className="mobile-code">
                       <h2>코드 읽기</h2>
+                      {user.admin && step.solution && !step.reading && (
+                        <button
+                          type="button"
+                          aria-expanded={answerStep === step.id}
+                          aria-controls="admin-answer-code"
+                          onClick={() =>
+                            setAnswerStep(
+                              answerStep === step.id ? null : step.id,
+                            )
+                          }
+                        >
+                          {answerStep === step.id ? "정답 닫기" : "정답 보기"}
+                        </button>
+                      )}
+                      {user.admin &&
+                        answerStep === step.id &&
+                        step.solution && (
+                          <section
+                            id="admin-answer-code"
+                            className="admin-answer"
+                            aria-label="정답 코드"
+                          >
+                            <h3>정답 코드</h3>
+                            <pre>
+                              <code>{step.solution.tokens.join("")}</code>
+                            </pre>
+                          </section>
+                        )}
                       <pre>
                         {code ||
                           "설명에 나온 코드를 읽어 보세요. 직접 작성하고 실행하는 실습은 PC에서 이어 할 수 있습니다."}
@@ -1377,6 +1407,23 @@ export default function App() {
                           </span>
                         </div>
                         <div className="run-toolbar" aria-label="실행 도구">
+                          {user.admin && step.solution && !step.reading && (
+                            <button
+                              type="button"
+                              className="answer-button"
+                              aria-expanded={answerStep === step.id}
+                              aria-controls="admin-answer-code"
+                              onClick={() =>
+                                setAnswerStep(
+                                  answerStep === step.id ? null : step.id,
+                                )
+                              }
+                            >
+                              {answerStep === step.id
+                                ? "정답 닫기"
+                                : "정답 보기"}
+                            </button>
+                          )}
                           <button
                             className="run-button"
                             disabled={readOnly || runnerState !== "ready"}
@@ -1395,6 +1442,20 @@ export default function App() {
                           </button>
                         </div>
                       </div>
+                      {user.admin &&
+                        answerStep === step.id &&
+                        step.solution && (
+                          <section
+                            id="admin-answer-code"
+                            className="admin-answer"
+                            aria-label="정답 코드"
+                          >
+                            <h3>정답 코드</h3>
+                            <pre>
+                              <code>{step.solution.tokens.join("")}</code>
+                            </pre>
+                          </section>
+                        )}
                       {["loading", "error"].includes(runnerState) && (
                         <div className="runner-status">
                           <p role="status">{runnerDetail}</p>

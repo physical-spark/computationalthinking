@@ -27,6 +27,62 @@ with SessionLocal.begin() as db:
     },
   );
 }
+test("only administrators can reveal an answer beside the code without changing drafts", async ({
+  page,
+}) => {
+  await page.goto("/#IntroducingTheShell.first_expression");
+  const answer = page.getByRole("button", { name: "정답 보기", exact: true });
+  await expect(answer).toHaveCount(0);
+  const me = await (await page.request.get("/api/v1/me")).json();
+  change(me.id, "u.admin=True");
+  await page.reload();
+  const editor = page.getByRole("textbox", {
+    name: "Python 코드 편집기",
+    exact: true,
+  });
+  await editor.fill("1+5");
+  await answer.click();
+  await expect(answer).toHaveCount(0);
+  const shown = page.getByRole("region", { name: "정답 코드", exact: true });
+  await expect(shown.locator("code")).toHaveText("1+2");
+  await expect(editor).toHaveText("1+5");
+  await page.getByRole("button", { name: "정답 닫기", exact: true }).click();
+  await expect(shown).toHaveCount(0);
+  await answer.click();
+  await page.goto("/#m1-day1.solve");
+  await expect(shown).toHaveCount(0);
+  await answer.click();
+  await expect(shown.locator("code")).toContainText("def filter_failed(logs):");
+  await expect(shown.locator("code")).toContainText('log["status"] == "FAIL"');
+  await page.screenshot({
+    path: test.info().outputPath("admin-answer-desktop.png"),
+  });
+  await page.setViewportSize({ width: 390, height: 900 });
+  await expect(shown).toBeVisible();
+  await expect(page.locator(".cm-editor")).toHaveCount(0);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({
+    path: test.info().outputPath("admin-answer-mobile.png"),
+  });
+  const student = testIdentity("정답 미리보기 합성 학생");
+  const before = await (
+    await page.request.get("/api/v1/admin/learners/" + student.id)
+  ).json();
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto(
+    "/?student=" + student.id + "#IntroducingTheShell.first_expression",
+  );
+  await answer.click();
+  await expect(shown.locator("code")).toHaveText("1+2");
+  const after = await (
+    await page.request.get("/api/v1/admin/learners/" + student.id)
+  ).json();
+  expect(after).toEqual(before);
+});
 for (const width of [320, 390, 768, 1440])
   test(`required profile, locked practice and resources ${width}px`, async ({
     page,

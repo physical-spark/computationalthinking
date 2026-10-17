@@ -949,9 +949,35 @@ dialog::backdrop {
 }
 .run-toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   margin-inline-start: auto;
+}
+.coding-pane .answer-button {
+  background: #24383a;
+  color: #e3ede7;
+  border-color: #78928b;
+}
+.admin-answer {
+  padding: 16px 20px;
+  border-bottom: 1px solid #78928b;
+}
+.coding-pane .admin-answer {
+  background: #24383a;
+  color: #e3ede7;
+}
+.admin-answer h3 {
+  font-size: 0.875rem;
+  margin: 0 0 8px;
+}
+.admin-answer pre {
+  max-height: 220px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 0;
+  line-height: 1.8;
 }
 .coding-pane > * {
   flex-shrink: 0;
