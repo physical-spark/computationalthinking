@@ -1,4 +1,3 @@
-import LessonAddress from "./LessonAddress";
 import Profile, { Avatar } from "./Profile";
 import ResourceLesson, { Sources, ResourceLinks } from "./Resources";
 import type { Access } from "./types";
@@ -952,7 +951,6 @@ export default function App() {
           )}
         </div>
       )}
-      <LessonAddress />
       <div className={"course-workspace" + (navOpen ? " sidebar-open" : "")}>
         {navOpen && (
           <CourseSidebar

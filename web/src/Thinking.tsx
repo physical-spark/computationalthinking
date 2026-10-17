@@ -1,4 +1,4 @@
-import { lessonUrl } from "./LessonAddress";
+import { lessonUrl } from "./lessonUrl";
 import { useEffect, useRef, useState } from "react";
 import type { Page, Step } from "./types";
 
