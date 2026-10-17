@@ -2050,3 +2050,30 @@ input[type="checkbox"] {
     flex-wrap: wrap;
   }
 }
+
+/* At high zoom or in a short landscape window, preserve a readable stage.
+   Allow page scrolling instead of squeezing content underneath the header. */
+@media (max-height: 600px) {
+  #root:has(.paged-concept) {
+    height: auto;
+    min-height: 100dvh;
+  }
+  .course-workspace:has(.paged-concept) {
+    flex: none;
+    overflow: visible;
+  }
+  .course-workspace:has(.paged-concept) .course-sidebar {
+    max-height: 60dvh;
+  }
+  .paged-concept {
+    flex: none;
+  }
+  .concept-stage {
+    flex: none;
+    min-height: 200px;
+    height: 50dvh;
+  }
+  .concept-pagination {
+    flex-shrink: 0;
+  }
+}

@@ -179,3 +179,40 @@ test("administrator preview, student read only and prose publishing", async ({
   );
   await prosePreview.close();
 });
+
+test("short viewport preserves reading area and reachable pagination", async ({
+  page,
+}) => {
+  const me = await (await page.request.get("/api/v1/me")).json();
+  change(me.id, "u.admin=True");
+  const c = await (await page.request.get("/api/v1/course")).json();
+  for (const size of [
+    { width: 756, height: 402 },
+    { width: 320, height: 360 },
+  ]) {
+    await page.setViewportSize(size);
+    await page.goto("/#resource/" + c.resources[0].id + "/1");
+    await expect(
+      page.getByRole("heading", { name: "왜 지금 보는가" }),
+    ).toBeVisible();
+    expect(
+      await page.locator(".concept-stage").evaluate((e) => e.clientHeight),
+    ).toBeGreaterThanOrEqual(200);
+    const next = page.getByRole("button", { name: "다음 →", exact: true });
+    await next.scrollIntoViewIfNeeded();
+    await expect(next).toBeInViewport();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBeTruthy();
+    await next.focus();
+    await page.keyboard.press("Enter");
+    await expect(
+      page.getByRole("button", { name: "영상 불러오기", exact: true }),
+    ).toBeVisible();
+    await page.screenshot({
+      path: test.info().outputPath(`short-${size.width}.png`),
+    });
+  }
+});
